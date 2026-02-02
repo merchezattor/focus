@@ -1,12 +1,9 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
-import {
-    SidebarInset,
-    SidebarProvider,
-} from "@/components/ui/sidebar"
+import { useSearchParams } from "next/navigation"
+
 import { TaskList } from "@/components/tasks/TaskList"
 import { AddTaskDialog } from "@/components/tasks/AddTaskDialog"
 import { EditTaskDialog } from "@/components/tasks/EditTaskDialog"
@@ -22,8 +19,9 @@ export function DashboardClient({ initialTasks, initialProjects }: DashboardClie
     const [projects, setProjects] = useState<Project[]>(initialProjects)
     const [error, setError] = useState<string | null>(null)
     const [editingTask, setEditingTask] = useState<Task | null>(null)
-    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
     const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
+    const searchParams = useSearchParams()
+    const selectedProjectId = searchParams.get('project')
 
     const fetchData = useCallback(async () => {
         try {
@@ -79,48 +77,28 @@ export function DashboardClient({ initialTasks, initialProjects }: DashboardClie
 
     if (error) {
         return (
-            <SidebarProvider>
-                <AppSidebar />
-                <SidebarInset>
-                    <SiteHeader />
-                    <div className="flex-1 flex items-center justify-center">
-                        <div className="text-red-500">Error: {error}</div>
-                    </div>
-                </SidebarInset>
-            </SidebarProvider>
+            <>
+                <SiteHeader pageTitle="Error" />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-red-500">Error: {error}</div>
+                </div>
+            </>
         )
     }
 
     return (
-        <SidebarProvider
-            style={
-                {
-                    "--sidebar-width": "calc(var(--spacing) * 72)",
-                    "--header-height": "calc(var(--spacing) * 12)",
-                } as React.CSSProperties
-            }
-        >
-            <AppSidebar
-                projects={projects}
-                selectedProjectId={selectedProjectId}
-                onSelectProject={setSelectedProjectId}
-                onAddTask={() => setIsAddTaskOpen(true)}
-            />
-            <SidebarInset>
-                <SiteHeader />
-                <div className="flex flex-1 flex-col">
-                    <div className="@container/main flex flex-1 flex-col gap-2">
-                        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
-                            <TaskList
-                                tasks={filteredTasks}
-                                projects={new Map(projects.map(p => [p.id, p]))}
-                                onToggle={handleToggle}
-                                onEdit={handleEdit}
-                            />
-                        </div>
-                    </div>
+        <>
+            <SiteHeader pageTitle={projects.find(p => p.id === selectedProjectId)?.name || "Inbox"} />
+            <div className="flex flex-1 flex-col p-4 md:p-6">
+                <div className="@container/main flex flex-1 flex-col gap-2">
+                    <TaskList
+                        tasks={filteredTasks}
+                        projects={new Map(projects.map(p => [p.id, p]))}
+                        onToggle={handleToggle}
+                        onEdit={handleEdit}
+                    />
                 </div>
-            </SidebarInset>
+            </div>
 
             <AddTaskDialog
                 projects={projects}
@@ -140,6 +118,6 @@ export function DashboardClient({ initialTasks, initialProjects }: DashboardClie
                     trigger={null}
                 />
             )}
-        </SidebarProvider>
+        </>
     )
 }

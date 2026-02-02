@@ -38,7 +38,7 @@ const data = {
   navMain: [
     {
       title: "Inbox",
-      url: "#",
+      url: "/",
       icon: IconInbox,
       count: 12,
     },
@@ -50,7 +50,7 @@ const data = {
     },
     {
       title: "Upcoming",
-      url: "#",
+      url: "/upcoming",
       icon: IconCalendar,
     },
     {
@@ -149,13 +149,13 @@ export function AppSidebar({
                     asChild
                     className={`w-full justify-start ${selectedProjectId === project.id ? 'bg-accent' : ''}`}
                   >
-                    <button
+                    <a
+                      href={`/?project=${project.id}`}
                       className="flex items-center gap-2 w-full"
-                      onClick={() => onSelectProject?.(selectedProjectId === project.id ? null : project.id)}
                     >
                       <div className="h-2 w-2 rounded-full" style={{ backgroundColor: project.color }} />
                       <span>{project.name}</span>
-                    </button>
+                    </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -175,13 +175,13 @@ export function AppSidebar({
                     asChild
                     className={`w-full justify-start ${selectedProjectId === project.id ? 'bg-accent' : ''}`}
                   >
-                    <button
+                    <a
+                      href={`/?project=${project.id}`}
                       className="flex items-center gap-2 w-full"
-                      onClick={() => onSelectProject?.(selectedProjectId === project.id ? null : project.id)}
                     >
                       <div className="h-2 w-2 rounded-full" style={{ backgroundColor: project.color }} />
                       <span>{project.name}</span>
-                    </button>
+                    </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
