@@ -1,0 +1,214 @@
+"use client"
+
+import * as React from "react"
+import {
+  IconCalendar,
+  IconCheck,
+  IconClock,
+  IconFilter,
+  IconInbox,
+  IconPlus,
+  IconSearch,
+} from "@tabler/icons-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarInput,
+} from "@/components/ui/sidebar"
+import { Badge } from "@/components/ui/badge"
+import type { Project } from "@/types"
+import { ModeToggle } from "@/components/mode-toggle"
+
+const data = {
+  user: {
+    name: "Mikhail",
+    email: "mikhail@example.com",
+    avatar: "",
+  },
+  navMain: [
+    {
+      title: "Inbox",
+      url: "#",
+      icon: IconInbox,
+      count: 12,
+    },
+    {
+      title: "Today",
+      url: "#",
+      icon: IconClock,
+      count: 5,
+    },
+    {
+      title: "Upcoming",
+      url: "#",
+      icon: IconCalendar,
+    },
+    {
+      title: "Filters & Labels",
+      url: "#",
+      icon: IconFilter,
+    },
+    {
+      title: "Completed",
+      url: "#",
+      icon: IconCheck,
+    },
+  ],
+}
+
+interface AppSidebarProps {
+  variant?: "sidebar" | "inset" | "floating"
+  onAddTask?: () => void
+  projects?: Project[]
+  selectedProjectId?: string | null
+  onSelectProject?: (projectId: string | null) => void
+}
+
+export function AppSidebar({
+  variant = "sidebar",
+  onAddTask,
+  projects = [],
+  selectedProjectId,
+  onSelectProject,
+}: AppSidebarProps) {
+  return (
+    <Sidebar variant={variant}>
+      <SidebarHeader className="flex flex-row items-center justify-between px-2 py-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
+            {data.user.name.charAt(0)}
+          </div>
+          <span className="font-semibold">{data.user.name}</span>
+        </div>
+        <ModeToggle />
+      </SidebarHeader>
+
+      <SidebarContent>
+        <div className="px-3 pb-3">
+          <Button
+            className="w-full justify-start gap-2 bg-primary hover:bg-primary/90"
+            size="sm"
+            onClick={onAddTask}
+          >
+            <IconPlus className="h-4 w-4" />
+            Add task
+          </Button>
+        </div>
+
+        <div className="px-3 pb-3">
+          <div className="relative">
+            <IconSearch className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <SidebarInput
+              placeholder="Search"
+              className="pl-8 bg-background/50"
+            />
+          </div>
+        </div>
+
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {data.navMain.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild className="w-full justify-start">
+                    <a href={item.url} className="flex items-center gap-2">
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                      {item.count && (
+                        <Badge variant="secondary" className="ml-auto text-xs">
+                          {item.count}
+                        </Badge>
+                      )}
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="flex items-center justify-between px-2">
+            <span>Favorites</span>
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {projects.filter(p => p.isFavorite).map((project) => (
+                <SidebarMenuItem key={project.id}>
+                  <SidebarMenuButton
+                    asChild
+                    className={`w-full justify-start ${selectedProjectId === project.id ? 'bg-accent' : ''}`}
+                  >
+                    <button
+                      className="flex items-center gap-2 w-full"
+                      onClick={() => onSelectProject?.(selectedProjectId === project.id ? null : project.id)}
+                    >
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: project.color }} />
+                      <span>{project.name}</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="flex items-center justify-between px-2">
+            <span>My Projects</span>
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {projects.filter(p => !p.isFavorite).map((project) => (
+                <SidebarMenuItem key={project.id}>
+                  <SidebarMenuButton
+                    asChild
+                    className={`w-full justify-start ${selectedProjectId === project.id ? 'bg-accent' : ''}`}
+                  >
+                    <button
+                      className="flex items-center gap-2 w-full"
+                      onClick={() => onSelectProject?.(selectedProjectId === project.id ? null : project.id)}
+                    >
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: project.color }} />
+                      <span>{project.name}</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild className="w-full justify-start text-muted-foreground">
+                  <a href="#" className="flex items-center gap-2">
+                    <IconPlus className="h-4 w-4" />
+                    <span>Add project</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <a href="#" className="flex items-center gap-2 text-muted-foreground">
+                <span>Show more</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  )
+}
