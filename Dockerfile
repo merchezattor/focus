@@ -42,6 +42,13 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy migrations and scripts
+COPY --chown=nextjs:nodejs drizzle ./drizzle
+COPY --chown=nextjs:nodejs db/migrate.ts ./db/migrate.ts
+COPY --chown=nextjs:nodejs start.sh ./start.sh
+COPY --chown=nextjs:nodejs db ./db
+COPY --chown=nextjs:nodejs drizzle.config.ts ./drizzle.config.ts
+
 USER nextjs
 
 EXPOSE 3000
@@ -50,4 +57,4 @@ ENV PORT 3000
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["bun", "server.js"]
+CMD ["./start.sh"]
