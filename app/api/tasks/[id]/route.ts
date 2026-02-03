@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateTask, deleteTask } from '@/lib/storage';
+import { updateTask, deleteTask, syncComments } from '@/lib/storage';
 import { taskSchema, type Task } from '@/types';
 import { z } from 'zod';
 
@@ -44,6 +44,11 @@ export async function PATCH(
     // For now, let's trust the input and return matched data + timestamps assuming success.
 
     await updateTask(id, result.data);
+
+    // Sync comments if provided
+    if (result.data.comments) {
+      await syncComments(id, result.data.comments);
+    }
 
     // Creating a mock response of what the task likely looks like to satisfy the client's expectation
     // of receiving the updated task data.

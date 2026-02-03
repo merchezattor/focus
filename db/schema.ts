@@ -7,6 +7,7 @@ export const projects = pgTable('projects', {
     id: text('id').primaryKey(), // using UUID string
     name: text('name').notNull(),
     color: text('color').notNull(),
+    description: text('description'),
     isFavorite: boolean('is_favorite').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

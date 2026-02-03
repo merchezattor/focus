@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge"
 import type { Project } from "@/types"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useSetAtom } from "jotai"
-import { isAddTaskOpenAtom } from "@/lib/atoms"
+import { isAddTaskOpenAtom, isAddProjectOpenAtom } from "@/lib/atoms"
 
 const data = {
   user: {
@@ -83,6 +83,7 @@ export function AppSidebar({
   onSelectProject,
 }: AppSidebarProps) {
   const setAddTaskOpen = useSetAtom(isAddTaskOpenAtom)
+  const setAddProjectOpen = useSetAtom(isAddProjectOpenAtom)
 
   return (
     <Sidebar variant={variant}>
@@ -189,11 +190,15 @@ export function AppSidebar({
                 </SidebarMenuItem>
               ))}
               <SidebarMenuItem>
-                <SidebarMenuButton asChild className="w-full justify-start text-muted-foreground">
-                  <a href="#" className="flex items-center gap-2">
+                <SidebarMenuButton
+                  asChild
+                  className="w-full justify-start text-muted-foreground cursor-pointer"
+                  onClick={() => setAddProjectOpen(true)}
+                >
+                  <span className="flex items-center gap-2">
                     <IconPlus className="h-4 w-4" />
                     <span>Add project</span>
-                  </a>
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

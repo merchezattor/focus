@@ -3,6 +3,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { readProjects } from "@/lib/storage";
 import { CSSProperties } from "react";
 import { GlobalAddTaskDialog } from "@/components/tasks/GlobalAddTaskDialog";
+import { GlobalAddProjectDialog } from "@/components/projects/GlobalAddProjectDialog";
 
 export default async function MainLayout({
     children,
@@ -23,6 +24,7 @@ export default async function MainLayout({
         >
             <AppSidebar projects={projects} />
             <GlobalAddTaskDialog projects={projects} />
+            <GlobalAddProjectDialog />
             <SidebarInset>
                 {children}
             </SidebarInset>

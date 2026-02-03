@@ -11,6 +11,7 @@ export async function readProjects(): Promise<Project[]> {
     id: p.id,
     name: p.name,
     color: p.color,
+    description: p.description || undefined,
     isFavorite: p.isFavorite,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
@@ -22,6 +23,7 @@ export async function createProject(project: Project): Promise<void> {
     id: project.id,
     name: project.name,
     color: project.color,
+    description: project.description,
     isFavorite: project.isFavorite,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
@@ -121,6 +123,28 @@ export async function createComment(taskId: string, comment: Comment): Promise<v
 
 export async function deleteComment(commentId: string): Promise<void> {
   await db.delete(comments).where(eq(comments.id, commentId));
+}
+
+export async function syncComments(taskId: string, newComments: Comment[]): Promise<void> {
+  // 1. Get existing comments
+  // (We could optimize by fetching IDs only, but for now select * is fine for MVP)
+  const existingDbComments = await db.select().from(comments).where(eq(comments.task_id, taskId));
+  const existingIds = new Set(existingDbComments.map(c => c.id));
+  const newIds = new Set(newComments.map(c => c.id));
+
+  // 2. Identify deletions
+  const toDelete = existingDbComments.filter(c => !newIds.has(c.id));
+  for (const c of toDelete) {
+    await deleteComment(c.id);
+  }
+
+  // 3. Identify additions
+  const toAdd = newComments.filter(c => !existingIds.has(c.id));
+  for (const c of toAdd) {
+    await createComment(taskId, c);
+  }
+
+  // (Optional) Identify updates (not implemented for MVP as UI doesn't allow editing comments)
 }
 
 // --- Legacy Support (Deprecated) ---
