@@ -13,15 +13,9 @@ import {
     useState,
 } from "react"
 import { Button } from "@/components/ui/button"
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from "@/components/ui/command"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+
 import { cn } from "@/lib/utils"
 
 export interface CalendarState {
@@ -246,11 +240,14 @@ export const CalendarBody = ({ features, children }: CalendarBodyProps) => {
     }
 
     return (
-        <div className="grid flex-grow grid-cols-7 border-l border-t bg-background">
+        <div
+            className="grid flex-grow grid-cols-7 border-l border-t bg-background"
+            style={{ gridAutoRows: "1fr" }}
+        >
             {days.map((day, index) => (
                 <div
                     className={cn(
-                        "relative aspect-square overflow-hidden border-b border-r min-h-[100px]",
+                        "relative overflow-hidden border-b border-r",
                         index % 7 === 6 && "border-r-0",
                     )}
                     key={index}
@@ -388,7 +385,7 @@ export const CalendarHeader = ({ className }: CalendarHeaderProps) => {
     }, [locale, startDay])
 
     return (
-        <div className={cn("grid flex-grow grid-cols-7 border-b", className)}>
+        <div className={cn("grid grid-cols-7 border-b", className)}>
             {daysData.map(day => (
                 <div className="p-3 text-center text-muted-foreground font-medium text-xs uppercase tracking-wide" key={day}>
                     {day}
@@ -401,10 +398,17 @@ export const CalendarHeader = ({ className }: CalendarHeaderProps) => {
 export interface CalendarItemProps {
     feature: Feature
     className?: string
+    onClick?: () => void
 }
 
-export const CalendarItem = memo(({ feature, className }: CalendarItemProps) => (
-    <div className={cn("flex items-center gap-2 bg-primary/10 rounded-sm px-1.5 py-0.5 w-full overflow-hidden", className)}>
+export const CalendarItem = memo(({ feature, className, onClick }: CalendarItemProps) => (
+    <div
+        onClick={onClick}
+        className={cn(
+            "flex items-center gap-2 bg-primary/10 rounded-sm px-1.5 py-0.5 w-full overflow-hidden w-full cursor-pointer hover:bg-primary/20 transition-colors",
+            className
+        )}
+    >
         <div
             className="h-1.5 w-1.5 shrink-0 rounded-full"
             style={{
