@@ -1,142 +1,138 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { z } from 'zod';
-import { taskSchema, projectSchema, type Task, type Project } from '@/types';
+import { db } from '@/db';
+import { tasks, projects, comments } from '@/db/schema';
+import { type Task, type Project, type Comment } from '@/types';
+import { eq, desc } from 'drizzle-orm';
 
-const DATA_DIR = join(process.cwd(), 'data');
-const TASKS_FILE = join(DATA_DIR, 'tasks.json');
-const PROJECTS_FILE = join(DATA_DIR, 'projects.json');
-
-const tasksArraySchema = z.array(taskSchema);
-const projectsArraySchema = z.array(projectSchema);
-
-const defaultTasks: Task[] = [];
-
-const defaultProjects: Project[] = [
-  {
-    id: '00000000-0000-0000-0000-000000000001',
-    name: 'Inbox',
-    color: '#808080',
-    isFavorite: true,
-  },
-];
-
-async function ensureDataDir(): Promise<void> {
-  try {
-    await fs.access(DATA_DIR);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  }
-}
-
-async function atomicWriteFile(filePath: string, data: string): Promise<void> {
-  const tempPath = `${filePath}.tmp.${Date.now()}.${Math.random().toString(36).slice(2)}`;
-
-  try {
-    await fs.writeFile(tempPath, data, 'utf-8');
-    await fs.rename(tempPath, filePath);
-  } catch (error) {
-    try {
-      await fs.unlink(tempPath);
-    } catch { }
-    throw error;
-  }
-}
-
-export async function readTasks(): Promise<Task[]> {
-  try {
-    await ensureDataDir();
-    const data = await fs.readFile(TASKS_FILE, 'utf-8');
-    const parsed = JSON.parse(data, (key, value) => {
-      const dateFields = ['dueDate', 'planDate', 'createdAt', 'updatedAt', 'postedAt'];
-      if (dateFields.includes(key) && value) {
-        return new Date(value);
-      }
-      return value;
-    });
-
-    const result = tasksArraySchema.safeParse(parsed);
-
-    if (!result.success) {
-      console.error('Tasks validation failed:', result.error.format());
-      throw new Error(`Invalid tasks data: ${result.error.message}`);
-    }
-
-    return result.data;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return [...defaultTasks];
-    }
-    throw error;
-  }
-}
-
-export async function writeTasks(tasks: Task[]): Promise<void> {
-  const result = tasksArraySchema.safeParse(tasks);
-
-  if (!result.success) {
-    console.error('Tasks validation failed:', result.error.format());
-    throw new Error(`Cannot write invalid tasks: ${result.error.message}`);
-  }
-
-  await ensureDataDir();
-  const data = JSON.stringify(tasks, null, 2);
-  await atomicWriteFile(TASKS_FILE, data);
-}
+// --- Projects ---
 
 export async function readProjects(): Promise<Project[]> {
-  try {
-    await ensureDataDir();
-    const data = await fs.readFile(PROJECTS_FILE, 'utf-8');
-    const parsed = JSON.parse(data, (key, value) => {
-      const dateFields = ['dueDate', 'createdAt', 'updatedAt'];
-      if (dateFields.includes(key) && value) {
-        return new Date(value);
-      }
-      return value;
+  const dbProjects = await db.select().from(projects).orderBy(projects.createdAt);
+  return dbProjects.map(p => ({
+    id: p.id,
+    name: p.name,
+    color: p.color,
+    isFavorite: p.isFavorite,
+    createdAt: p.createdAt,
+    updatedAt: p.updatedAt,
+  }));
+}
+
+export async function createProject(project: Project): Promise<void> {
+  await db.insert(projects).values({
+    id: project.id,
+    name: project.name,
+    color: project.color,
+    isFavorite: project.isFavorite,
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
+  });
+}
+
+// --- Tasks ---
+
+export async function readTasks(): Promise<Task[]> {
+  const dbTasks = await db.select().from(tasks).orderBy(desc(tasks.created_at));
+
+  // Fetch comments for all tasks - lazy loading or secondary query
+  // For MVP efficiency with small data, fetching all comments is okay, but ideally we'd join or batch.
+  // Drizzle "query" builder (relational) is easier for this if we had set it up with relations.
+  // For now, let's just do a second query to get all comments and map them.
+  const dbComments = await db.select().from(comments);
+
+  const commentsByTaskId: Record<string, Comment[]> = {};
+  for (const c of dbComments) {
+    if (!commentsByTaskId[c.task_id]) {
+      commentsByTaskId[c.task_id] = [];
+    }
+    commentsByTaskId[c.task_id].push({
+      id: c.id,
+      content: c.content,
+      postedAt: c.posted_at,
     });
-
-    const result = projectsArraySchema.safeParse(parsed);
-
-    if (!result.success) {
-      console.error('Projects validation failed:', result.error.format());
-      throw new Error(`Invalid projects data: ${result.error.message}`);
-    }
-
-    return result.data;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return [...defaultProjects];
-    }
-    throw error;
   }
+
+  return dbTasks.map(t => ({
+    id: t.id,
+    title: t.content,
+    description: t.description || undefined,
+    completed: t.completed,
+    projectId: t.project_id,
+    priority: t.priority as "p1" | "p2" | "p3" | "p4", // cast safe if enum matches
+    dueDate: t.due_date,
+    planDate: t.plan_date,
+    createdAt: t.created_at,
+    updatedAt: t.updated_at,
+    comments: commentsByTaskId[t.id] || [],
+  }));
+}
+
+export async function createTask(task: Task): Promise<void> {
+  await db.insert(tasks).values({
+    id: task.id,
+    content: task.title,
+    description: task.description || null,
+    completed: task.completed,
+    priority: task.priority,
+    project_id: task.projectId || null,
+    due_date: task.dueDate,
+    plan_date: task.planDate,
+    created_at: task.createdAt,
+    updated_at: task.updatedAt,
+  });
+
+  if (task.comments && task.comments.length > 0) {
+    for (const c of task.comments) {
+      await createComment(task.id, c);
+    }
+  }
+}
+
+export async function updateTask(id: string, updates: Partial<Task>): Promise<void> {
+  // Map partial Task to partial DB Task
+  const dbUpdates: any = {};
+  if (updates.title !== undefined) dbUpdates.content = updates.title;
+  if (updates.description !== undefined) dbUpdates.description = updates.description;
+  if (updates.completed !== undefined) dbUpdates.completed = updates.completed;
+  if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
+  if (updates.projectId !== undefined) dbUpdates.project_id = updates.projectId;
+  if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
+  if (updates.planDate !== undefined) dbUpdates.plan_date = updates.planDate;
+  if (updates.updatedAt !== undefined) dbUpdates.updated_at = updates.updatedAt;
+
+  if (Object.keys(dbUpdates).length > 0) {
+    await db.update(tasks).set(dbUpdates).where(eq(tasks.id, id));
+  }
+}
+
+export async function deleteTask(id: string): Promise<void> {
+  await db.delete(tasks).where(eq(tasks.id, id));
+}
+
+// --- Comments ---
+
+export async function createComment(taskId: string, comment: Comment): Promise<void> {
+  await db.insert(comments).values({
+    id: comment.id,
+    content: comment.content,
+    posted_at: comment.postedAt,
+    task_id: taskId,
+  });
+}
+
+export async function deleteComment(commentId: string): Promise<void> {
+  await db.delete(comments).where(eq(comments.id, commentId));
+}
+
+// --- Legacy Support (Deprecated) ---
+// These are kept to avoid breaking build if something still imports them, 
+// but they should be removed. 
+// writeTasks was used to overwrite the whole JSON. We will log a warning.
+
+export async function writeTasks(tasks: Task[]): Promise<void> {
+  console.warn("Deprecated writeTasks called! This does nothing in DB mode. Use create/updateTask.");
 }
 
 export async function writeProjects(projects: Project[]): Promise<void> {
-  const result = projectsArraySchema.safeParse(projects);
-
-  if (!result.success) {
-    console.error('Projects validation failed:', result.error.format());
-    throw new Error(`Cannot write invalid projects: ${result.error.message}`);
-  }
-
-  await ensureDataDir();
-  const data = JSON.stringify(projects, null, 2);
-  await atomicWriteFile(PROJECTS_FILE, data);
+  console.warn("Deprecated writeProjects called! This does nothing in DB mode.");
 }
 
-export async function initializeStorage(): Promise<void> {
-  await ensureDataDir();
-
-  try {
-    await fs.access(TASKS_FILE);
-  } catch {
-    await writeTasks(defaultTasks);
-  }
-
-  try {
-    await fs.access(PROJECTS_FILE);
-  } catch {
-    await writeProjects(defaultProjects);
-  }
-}

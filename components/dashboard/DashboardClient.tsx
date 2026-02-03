@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { SiteHeader } from "@/components/site-header"
 import { useSearchParams } from "next/navigation"
 
@@ -22,6 +22,15 @@ export function DashboardClient({ initialTasks, initialProjects }: DashboardClie
     const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
     const searchParams = useSearchParams()
     const selectedProjectId = searchParams.get('project')
+
+    // Sync state with props when router.refresh() updates them
+    useEffect(() => {
+        setTasks(initialTasks)
+    }, [initialTasks])
+
+    useEffect(() => {
+        setProjects(initialProjects)
+    }, [initialProjects])
 
     const fetchData = useCallback(async () => {
         try {

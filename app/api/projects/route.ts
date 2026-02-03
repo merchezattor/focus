@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readProjects, writeProjects } from '@/lib/storage';
+import { readProjects, createProject } from '@/lib/storage';
 import { projectSchema, type Project } from '@/types';
 import { z } from 'zod';
 
@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Validate request body
     const result = createProjectSchema.safeParse(body);
     if (!result.success) {
@@ -33,21 +33,19 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    // Read existing projects
-    const projects = await readProjects();
-    
+
     // Add new project with generated id
+    // DB will handle createdAt/updatedAt defaults if not provided,
+    // but better to be explicit.
     const newProject: Project = {
       ...result.data,
       id: crypto.randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    
-    projects.push(newProject);
-    
-    // Write back to file
-    await writeProjects(projects);
-    
+
+    await createProject(newProject);
+
     return NextResponse.json({ project: newProject }, { status: 201 });
   } catch (error) {
     console.error('Failed to create project:', error);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readTasks, writeTasks } from '@/lib/storage';
+import { readTasks, createTask } from '@/lib/storage';
 import { taskSchema, type Task } from '@/types';
 import { z } from 'zod';
 
@@ -54,21 +54,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read existing tasks
-    const tasks = await readTasks();
-
     // Add new task with generated id and timestamps
     const newTask: Task = {
       ...result.data,
       id: crypto.randomUUID(),
       createdAt: new Date(),
       updatedAt: new Date(),
+      comments: []
     };
 
-    tasks.push(newTask);
-
-    // Write back to file
-    await writeTasks(tasks);
+    await createTask(newTask);
 
     return NextResponse.json({ task: newTask }, { status: 201 });
   } catch (error) {
