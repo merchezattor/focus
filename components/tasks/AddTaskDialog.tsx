@@ -1,17 +1,28 @@
+"use client"
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Plus, Flag } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Flag, AlarmClock, MoreHorizontal, Inbox } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Project } from '@/types';
 import { z } from 'zod';
+import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 
 const priorities = [
   { value: 'p1', label: 'Priority 1', color: '#ef4444' }, // Red
@@ -44,11 +55,11 @@ export function AddTaskDialog({ projects, onTaskCreated, open: controlledOpen, o
   const setIsOpen = isControlled ? onOpenChange! : setInternalOpen;
   const open = isOpen;
   const setOpen = setIsOpen;
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [projectId, setProjectId] = useState('');
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
-  const [planDate, setPlanDate] = useState<Date | undefined>(undefined);
   const [priority, setPriority] = useState('p4');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -60,7 +71,6 @@ export function AddTaskDialog({ projects, onTaskCreated, open: controlledOpen, o
       description: description || undefined,
       projectId: projectId || undefined,
       dueDate: dueDate?.toISOString(),
-      planDate: planDate?.toISOString(),
     });
 
     if (!result.success) {
@@ -77,9 +87,8 @@ export function AddTaskDialog({ projects, onTaskCreated, open: controlledOpen, o
         body: JSON.stringify({
           title,
           description: description || undefined,
-          projectId: projectId || null,
+          projectId: (projectId && projectId !== 'inbox') ? projectId : null,
           dueDate: dueDate?.toISOString(),
-          planDate: planDate?.toISOString(),
           completed: false,
           priority,
         }),
@@ -89,12 +98,7 @@ export function AddTaskDialog({ projects, onTaskCreated, open: controlledOpen, o
 
       toast.success('Task created successfully');
       setOpen(false);
-      setTitle('');
-      setDescription('');
-      setProjectId('');
-      setDueDate(undefined);
-      setPlanDate(undefined);
-      setPriority('p4');
+      resetForm();
       onTaskCreated();
       router.refresh();
     } catch (error) {
@@ -105,8 +109,25 @@ export function AddTaskDialog({ projects, onTaskCreated, open: controlledOpen, o
     }
   };
 
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setProjectId('');
+    setDueDate(undefined);
+    setPriority('p4');
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      // Optional: reset form on close? Maybe not for better UX if accidentally closed.
+    }
+  }
+
+  const selectedProject = projects.find(p => p.id === projectId);
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       {trigger !== null && (
         <DialogTrigger asChild>
           {trigger ? (
@@ -119,124 +140,161 @@ export function AddTaskDialog({ projects, onTaskCreated, open: controlledOpen, o
           )}
         </DialogTrigger>
       )}
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Task</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Title</label>
+      <DialogContent showCloseButton={false} className="sm:max-w-[550px] p-0 gap-0 overflow-hidden border-none shadow-xl">
+        <DialogTitle className="sr-only">Add New Task</DialogTitle>
+        <form onSubmit={handleSubmit} className="flex flex-col">
+          <div className="p-4 space-y-2">
             <Input
-              placeholder="What needs to be done?"
+              placeholder="Task name"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              required
+              className="border-none shadow-none text-xl font-bold px-0 focus-visible:ring-0 placeholder:font-bold"
+              autoFocus
             />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Description</label>
             <Textarea
-              placeholder="Add details..."
+              placeholder="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="min-h-[50px] border-none shadow-none resize-none px-0 focus-visible:ring-0 text-muted-foreground text-sm"
             />
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Project</label>
-            <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: project.color }} />
-                      {project.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="flex items-center gap-2 pt-2">
+              {/* Due Date */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-8 rounded-md px-2 text-xs font-normal border-dashed border-muted-foreground/30 hover:bg-muted/50",
+                      dueDate && "text-primary border-primary/30 bg-primary/5 border-solid"
+                    )}
+                  >
+                    <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                    {dueDate ? format(dueDate, 'MMM d') : 'Today'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dueDate}
+                    onSelect={setDueDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Due Date</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`w-full justify-start text-left ${!dueDate && 'text-muted-foreground'}`}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dueDate ? format(dueDate, 'PPP') : 'Select date'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-[100]">
-                <Calendar
-                  mode="single"
-                  selected={dueDate}
-                  onSelect={setDueDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Plan Date</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`w-full justify-start text-left ${!planDate && 'text-muted-foreground'}`}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {planDate ? format(planDate, 'PPP') : 'Select plan date'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-[100]">
-                <Calendar
-                  mode="single"
-                  selected={planDate}
-                  onSelect={setPlanDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Priority</label>
-            <Select value={priority} onValueChange={setPriority}>
-              <SelectTrigger>
-                <div className="flex items-center gap-2">
-                  <Flag className="h-4 w-4" style={{ color: priorities.find(p => p.value === priority)?.color }} />
-                  {priorities.find(p => p.value === priority)?.label}
-                </div>
-              </SelectTrigger>
-              <SelectContent className="z-[100]" position="popper">
-                {priorities.map((p) => (
-                  <SelectItem key={p.value} value={p.value}>
-                    <div className="flex items-center gap-2">
-                      <Flag className="h-4 w-4" style={{ color: p.color }} />
+              {/* Priority */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-8 rounded-md px-2 text-xs font-normal border-dashed border-muted-foreground/30 hover:bg-muted/50",
+                      priority !== 'p4' && "border-solid"
+                    )}
+                  >
+                    <Flag className={cn("mr-1.5 h-3.5 w-3.5", priorities.find(p => p.value === priority)?.color ? '' : 'text-muted-foreground')} style={{ color: priorities.find(p => p.value === priority)?.color }} />
+                    {priority === 'p4' ? 'Priority' : priorities.find(p => p.value === priority)?.label}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {priorities.map((p) => (
+                    <DropdownMenuItem key={p.value} onClick={() => setPriority(p.value)}>
+                      <Flag className="mr-2 h-4 w-4" style={{ color: p.color }} />
                       {p.label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Reminders (Visual Only) */}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-md px-2 text-xs font-normal border-dashed border-muted-foreground/30 hover:bg-muted/50 text-muted-foreground"
+                disabled
+              >
+                <AlarmClock className="mr-1.5 h-3.5 w-3.5" />
+                Reminders
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 ml-auto text-muted-foreground hover:text-foreground"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!title.trim() || isLoading}>
-              {isLoading ? 'Creating...' : 'Add Task'}
-            </Button>
+          <div className="border-t p-3 bg-muted/5 flex items-center justify-between">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 gap-2 border-transparent bg-transparent shadow-none hover:bg-muted/50 px-2 text-xs font-medium text-muted-foreground hover:text-foreground focus:ring-0">
+                  {selectedProject ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedProject.color }} />
+                      {selectedProject.name}
+                    </>
+                  ) : (
+                    <>
+                      <Inbox className="h-3.5 w-3.5" />
+                      Inbox
+                    </>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="z-[100]">
+                <DropdownMenuItem onClick={() => setProjectId('inbox')}>
+                  <div className="flex items-center gap-2">
+                    <Inbox className="h-4 w-4 text-muted-foreground" />
+                    Inbox
+                  </div>
+                </DropdownMenuItem>
+
+                {projects.some(p => p.isFavorite) && (
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>Favorites</DropdownMenuLabel>
+                    {projects.filter(p => p.isFavorite).map(project => (
+                      <DropdownMenuItem key={project.id} onClick={() => setProjectId(project.id)}>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: project.color }} />
+                          {project.name}
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuGroup>
+                )}
+
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>My Projects</DropdownMenuLabel>
+                  {projects.filter(p => !p.isFavorite).map((project) => (
+                    <DropdownMenuItem key={project.id} onClick={() => setProjectId(project.id)}>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: project.color }} />
+                        {project.name}
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)} className="h-8 font-medium">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={!title.trim() || isLoading} size="sm" className="h-8 px-4 font-medium bg-primary hover:bg-primary/90">
+                {isLoading ? 'Adding...' : 'Add task'}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

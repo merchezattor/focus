@@ -46,7 +46,7 @@ const data = {
     },
     {
       title: "Today",
-      url: "#",
+      url: "/today",
       icon: IconClock,
       count: 5,
     },

@@ -9,12 +9,16 @@ import { AddTaskDialog } from "@/components/tasks/AddTaskDialog"
 import { EditTaskDialog } from "@/components/tasks/EditTaskDialog"
 import type { Task, Project } from "@/types"
 
+import { isToday, isPast, isSameDay } from "date-fns"
+
 interface DashboardClientProps {
     initialTasks: Task[]
     initialProjects: Project[]
+    title?: string
+    filterType?: 'all' | 'today'
 }
 
-export function DashboardClient({ initialTasks, initialProjects }: DashboardClientProps) {
+export function DashboardClient({ initialTasks, initialProjects, title, filterType = 'all' }: DashboardClientProps) {
     const [tasks, setTasks] = useState<Task[]>(initialTasks)
     const [projects, setProjects] = useState<Project[]>(initialProjects)
     const [error, setError] = useState<string | null>(null)
@@ -79,10 +83,22 @@ export function DashboardClient({ initialTasks, initialProjects }: DashboardClie
         setEditingTask(task)
     }
 
-    // Filter tasks by selected project
-    const filteredTasks = selectedProjectId
-        ? tasks.filter(t => t.projectId === selectedProjectId)
-        : tasks
+    // Filter tasks
+    let filteredTasks = tasks
+    if (selectedProjectId) {
+        filteredTasks = tasks.filter(t => t.projectId === selectedProjectId)
+    } else if (filterType === 'today') {
+        filteredTasks = tasks.filter(t => {
+            if (!t.dueDate) return false
+            const date = new Date(t.dueDate)
+            return isToday(date) || (isPast(date) && !isSameDay(date, new Date()) && !t.completed) // Optionally show overdue? User said "Todays tasks". Usually implies Due Today. I'll stick to isToday for now.
+            // Actually, Todoist Today view usually shows Overdue tasks too. I'll include overdue.
+            // Wait, isPast includes today if time matches? isToday is safer.
+            // Let's stick to strict Today for now or Today + Overdue.
+            // User request: "show list of todays tasks". I'll default to isToday(date).
+            return isToday(date)
+        })
+    }
 
     if (error) {
         return (
@@ -97,7 +113,7 @@ export function DashboardClient({ initialTasks, initialProjects }: DashboardClie
 
     return (
         <>
-            <SiteHeader pageTitle={projects.find(p => p.id === selectedProjectId)?.name || "Inbox"} />
+            <SiteHeader pageTitle={title || projects.find(p => p.id === selectedProjectId)?.name || "Inbox"} />
             <div className="flex flex-1 flex-col p-4 md:p-6">
                 <div className="@container/main flex flex-1 flex-col gap-2">
                     <TaskList
