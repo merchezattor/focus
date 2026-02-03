@@ -39,6 +39,13 @@ RUN chown nextjs:nodejs .next
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder /app/package.json ./package.json
+
+# Install production dependencies to ensure migration scripts work
+# (Standalone build might miss files needed for scripts outside the Next.js app)
+COPY --from=deps /app/bun.lockb ./bun.lockb
+RUN bun install --production
+
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
