@@ -4,7 +4,7 @@ FROM oven/bun:1 AS base
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
-COPY package.json bun.lockb* ./
+COPY package.json bun.lockb* bun.lock* ./
 RUN bun install --frozen-lockfile
 
 # Rebuild the source code only when needed
@@ -43,7 +43,7 @@ COPY --from=builder /app/package.json ./package.json
 
 # Install production dependencies to ensure migration scripts work
 # (Standalone build might miss files needed for scripts outside the Next.js app)
-COPY --from=deps /app/bun.lockb ./bun.lockb
+COPY --from=deps /app/bun.lock ./bun.lock
 RUN bun install --production
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
