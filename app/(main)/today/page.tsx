@@ -2,11 +2,22 @@ import { Suspense } from "react";
 import { DashboardClient } from "@/components/dashboard/DashboardClient";
 import { readProjects, readTasks } from "@/lib/storage";
 import { isToday } from "date-fns";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 export default async function TodayPage() {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/login");
+    }
+
     const [tasks, projects] = await Promise.all([
-        readTasks(),
-        readProjects(),
+        readTasks(session.user.id),
+        readProjects(session.user.id),
     ]);
 
     // Pre-filter on server for initial render, though DashboardClient re-filters.

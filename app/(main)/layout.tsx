@@ -1,6 +1,9 @@
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { readProjects } from "@/lib/storage";
+import { readProjects, getTaskCounts } from "@/lib/storage";
 import { CSSProperties } from "react";
 import { GlobalAddTaskDialog } from "@/components/tasks/GlobalAddTaskDialog";
 import { GlobalAddProjectDialog } from "@/components/projects/GlobalAddProjectDialog";
@@ -10,7 +13,16 @@ export default async function MainLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const projects = await readProjects();
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/login");
+    }
+
+    const projects = await readProjects(session.user.id);
+    const counts = await getTaskCounts(session.user.id);
 
     return (
         <SidebarProvider
@@ -22,7 +34,7 @@ export default async function MainLayout({
                 } as CSSProperties
             }
         >
-            <AppSidebar projects={projects} />
+            <AppSidebar projects={projects} user={session.user} counts={counts} />
             <GlobalAddTaskDialog projects={projects} />
             <GlobalAddProjectDialog />
             <SidebarInset>

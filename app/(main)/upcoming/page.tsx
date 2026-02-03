@@ -2,11 +2,22 @@ import { readProjects, readTasks } from "@/lib/storage";
 import { UpcomingClient } from "@/components/upcoming/upcoming-client";
 import { SiteHeader } from "@/components/site-header";
 import { Suspense } from "react";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 export default async function UpcomingPage() {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/login");
+    }
+
     const [tasks, projects] = await Promise.all([
-        readTasks(),
-        readProjects(),
+        readTasks(session.user.id),
+        readProjects(session.user.id),
     ]);
 
     return (

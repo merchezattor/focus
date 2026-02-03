@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readTasks, createTask } from '@/lib/storage';
 import { taskSchema, type Task } from '@/types';
 import { z } from 'zod';
+import { getAuthenticatedUser } from '@/lib/api-auth';
 
 // Schema for creating a task (id, createdAt, updatedAt are generated server-side)
 const createTaskSchema = taskSchema.omit({
@@ -20,10 +21,16 @@ const createTaskSchema = taskSchema.omit({
 // GET /api/tasks - Get all tasks (optionally filtered by project)
 export async function GET(request: NextRequest) {
   try {
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
 
-    let tasks = await readTasks();
+    let tasks = await readTasks(user.id);
 
     // Filter by project if specified
     if (projectId) {
@@ -43,6 +50,12 @@ export async function GET(request: NextRequest) {
 // POST /api/tasks - Create new task
 export async function POST(request: NextRequest) {
   try {
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
 
     // Validate request body
@@ -63,7 +76,7 @@ export async function POST(request: NextRequest) {
       comments: []
     };
 
-    await createTask(newTask);
+    await createTask(newTask, user.id);
 
     return NextResponse.json({ task: newTask }, { status: 201 });
   } catch (error) {

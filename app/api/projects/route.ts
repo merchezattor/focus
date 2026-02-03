@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readProjects, createProject } from '@/lib/storage';
 import { projectSchema, type Project } from '@/types';
-import { z } from 'zod';
+import { getAuthenticatedUser } from '@/lib/api-auth';
 
 // Schema for creating a project (id is generated server-side)
 const createProjectSchema = projectSchema.omit({ id: true });
 
 // GET /api/projects - Get all projects
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const projects = await readProjects();
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const projects = await readProjects(user.id);
     return NextResponse.json({ projects });
   } catch (error) {
     console.error('Failed to read projects:', error);
@@ -23,6 +29,12 @@ export async function GET() {
 // POST /api/projects - Create new project
 export async function POST(request: NextRequest) {
   try {
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
 
     // Validate request body
@@ -44,7 +56,7 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     };
 
-    await createProject(newProject);
+    await createProject(newProject, user.id);
 
     return NextResponse.json({ project: newProject }, { status: 201 });
   } catch (error) {

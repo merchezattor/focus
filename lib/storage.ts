@@ -1,12 +1,49 @@
 import { db } from '@/db';
 import { tasks, projects, comments } from '@/db/schema';
 import { type Task, type Project, type Comment } from '@/types';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, isNull, gte, lte, count, inArray } from 'drizzle-orm';
 
-// --- Projects ---
+// ... existing code ...
 
-export async function readProjects(): Promise<Project[]> {
-  const dbProjects = await db.select().from(projects).orderBy(projects.createdAt);
+export async function getTaskCounts(userId: string): Promise<{ inboxCount: number; todayCount: number }> {
+  // Inbox: ALL tasks for the user (as per user request)
+  const inboxResult = await db
+    .select({ value: count() })
+    .from(tasks)
+    .where(and(
+      eq(tasks.userId, userId),
+      eq(tasks.completed, false)
+    ));
+
+  // Today: dueDate is today
+  // We need to handle timestamps carefully. 
+  // Assuming 'today' means local time of the server or UTC? 
+  // Ideally client timezone, but for MVP server time is acceptable approximation if simpler.
+  // Or we can just check if the day matches.
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const todayResult = await db
+    .select({ value: count() })
+    .from(tasks)
+    .where(and(
+      eq(tasks.userId, userId),
+      eq(tasks.completed, false),
+      gte(tasks.due_date, todayStart),
+      lte(tasks.due_date, todayEnd)
+    ));
+
+  return {
+    inboxCount: inboxResult[0].value,
+    todayCount: todayResult[0].value,
+  };
+}
+
+export async function readProjects(userId: string): Promise<Project[]> {
+  const dbProjects = await db.select().from(projects).where(eq(projects.userId, userId)).orderBy(projects.createdAt);
   return dbProjects.map(p => ({
     id: p.id,
     name: p.name,
@@ -18,7 +55,7 @@ export async function readProjects(): Promise<Project[]> {
   }));
 }
 
-export async function createProject(project: Project): Promise<void> {
+export async function createProject(project: Project, userId: string): Promise<void> {
   await db.insert(projects).values({
     id: project.id,
     name: project.name,
@@ -27,18 +64,24 @@ export async function createProject(project: Project): Promise<void> {
     isFavorite: project.isFavorite,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
+    userId: userId,
   });
 }
 
 // --- Tasks ---
 
-export async function readTasks(): Promise<Task[]> {
-  const dbTasks = await db.select().from(tasks).orderBy(desc(tasks.created_at));
+export async function readTasks(userId: string): Promise<Task[]> {
+  // Fetch tasks belonging to the user
+  const dbTasks = await db.select().from(tasks).where(eq(tasks.userId, userId)).orderBy(desc(tasks.created_at));
 
-  // Fetch comments for all tasks - lazy loading or secondary query
-  // For MVP efficiency with small data, fetching all comments is okay, but ideally we'd join or batch.
-  // Drizzle "query" builder (relational) is easier for this if we had set it up with relations.
-  // For now, let's just do a second query to get all comments and map them.
+  // Fetch comments for these tasks
+  // We can join or fetch all comments for user's tasks. 
+  // For simplicity, let's fetch all comments (filtered by task IDs in JS is OK for MVP, or better query).
+  // Actually, we should filter comments by task_id which are in dbTasks.
+  // Let's grab all comments for now, assuming not massive scale yet, or better:
+  // const taskIds = dbTasks.map(t => t.id);
+  // const dbComments = await db.select().from(comments).where(inArray(comments.task_id, taskIds));
+  // But for MVP, let's keep it simple: select all comments, or just select * since we don't have user_id on comments.
   const dbComments = await db.select().from(comments);
 
   const commentsByTaskId: Record<string, Comment[]> = {};
@@ -59,7 +102,7 @@ export async function readTasks(): Promise<Task[]> {
     description: t.description || undefined,
     completed: t.completed,
     projectId: t.project_id,
-    priority: t.priority as "p1" | "p2" | "p3" | "p4", // cast safe if enum matches
+    priority: t.priority as "p1" | "p2" | "p3" | "p4",
     dueDate: t.due_date,
     planDate: t.plan_date,
     createdAt: t.created_at,
@@ -68,7 +111,7 @@ export async function readTasks(): Promise<Task[]> {
   }));
 }
 
-export async function createTask(task: Task): Promise<void> {
+export async function createTask(task: Task, userId: string): Promise<void> {
   await db.insert(tasks).values({
     id: task.id,
     content: task.title,
@@ -80,6 +123,7 @@ export async function createTask(task: Task): Promise<void> {
     plan_date: task.planDate,
     created_at: task.createdAt,
     updated_at: task.updatedAt,
+    userId: userId,
   });
 
   if (task.comments && task.comments.length > 0) {

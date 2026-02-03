@@ -30,13 +30,9 @@ import type { Project } from "@/types"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useSetAtom } from "jotai"
 import { isAddTaskOpenAtom, isAddProjectOpenAtom } from "@/lib/atoms"
+import { NavUser } from "@/components/nav-user"
 
 const data = {
-  user: {
-    name: "Mikhail",
-    email: "mikhail@example.com",
-    avatar: "",
-  },
   navMain: [
     {
       title: "Inbox",
@@ -54,6 +50,7 @@ const data = {
       title: "Upcoming",
       url: "/upcoming",
       icon: IconCalendar,
+      count: 0,
     },
     {
       title: "Filters & Labels",
@@ -74,6 +71,15 @@ interface AppSidebarProps {
   projects?: Project[]
   selectedProjectId?: string | null
   onSelectProject?: (projectId: string | null) => void
+  user: {
+    name: string
+    email: string
+    image?: string | null
+  }
+  counts: {
+    inboxCount: number
+    todayCount: number
+  }
 }
 
 export function AppSidebar({
@@ -81,18 +87,26 @@ export function AppSidebar({
   projects = [],
   selectedProjectId,
   onSelectProject,
+  user,
+  counts,
 }: AppSidebarProps) {
   const setAddTaskOpen = useSetAtom(isAddTaskOpenAtom)
   const setAddProjectOpen = useSetAtom(isAddProjectOpenAtom)
+
+  const navMainWithCounts = data.navMain.map(item => {
+    if (item.title === "Inbox") return { ...item, count: counts?.inboxCount ?? 0 }
+    if (item.title === "Today") return { ...item, count: counts?.todayCount ?? 0 }
+    return item
+  })
 
   return (
     <Sidebar variant={variant}>
       <SidebarHeader className="flex flex-row items-center justify-between px-2 py-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
-            {data.user.name.charAt(0)}
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
+            T
           </div>
-          <span className="font-semibold">{data.user.name}</span>
+          <span className="font-semibold">Todoist</span>
         </div>
         <ModeToggle />
       </SidebarHeader>
@@ -122,13 +136,13 @@ export function AppSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {data.navMain.map((item) => (
+              {navMainWithCounts.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="w-full justify-start">
                     <a href={item.url} className="flex items-center gap-2">
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
-                      {item.count && (
+                      {!!item.count && (
                         <Badge variant="secondary" className="ml-auto text-xs">
                           {item.count}
                         </Badge>
@@ -207,15 +221,7 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <a href="#" className="flex items-center gap-2 text-muted-foreground">
-                <span>Show more</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )
