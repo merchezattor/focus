@@ -26,8 +26,10 @@ WORKDIR /app
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Check if groupadd/useradd is available, otherwise allow fallback or just use what works in debian-slim
+# oven/bun:1 is based on debian-slim which has useradd/groupadd but not adduser/addgroup by default
+RUN groupadd -g 1001 -r nodejs
+RUN useradd -u 1001 -r -g nodejs -s /bin/false nextjs
 
 COPY --from=builder /app/public ./public
 
