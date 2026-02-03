@@ -25,8 +25,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgrespassword@postgres:5432/todoist
       - AUTH_SECRET=${AUTH_SECRET}
-      - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      - BETTER_AUTH_URL=http://localhost:3000
+      - NEXT_PUBLIC_APP_URL=https://todo.michaelukhin.xyz
+      - BETTER_AUTH_URL=https://todo.michaelukhin.xyz
     depends_on:
       postgres:
         condition: service_healthy
