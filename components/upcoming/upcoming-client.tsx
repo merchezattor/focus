@@ -28,7 +28,7 @@ import {
     ContextMenuSubTrigger,
     ContextMenuTrigger,
 } from "@/components/ui/context-menu"
-import { Check, Flag } from "lucide-react"
+import { Check, Flag, Trash } from "lucide-react"
 
 const priorityColors = {
     p1: "#ef4444", // Red
@@ -94,9 +94,24 @@ export function UpcomingClient({ tasks, projects }: { tasks: Task[], projects: P
         }
     };
 
+    const handleDelete = async (taskId: string) => {
+        if (!confirm("Are you sure you want to delete this task?")) return;
+        try {
+            await fetch(`/api/tasks/${taskId}`, {
+                method: "DELETE",
+            });
+            router.refresh();
+        } catch (error) {
+            console.error("Failed to delete task:", error);
+        }
+    };
+
     return (
         <div className="h-full w-full flex flex-col">
-            <CalendarProvider className="flex-1 border rounded-lg overflow-hidden bg-background shadow-sm">
+            <CalendarProvider
+                className="flex-1 border rounded-lg overflow-hidden bg-background shadow-sm"
+                startDay={1} // 1 = Monday
+            >
                 <CalendarDate>
                     <CalendarDatePicker>
                         <CalendarMonthPicker />
@@ -146,6 +161,11 @@ export function UpcomingClient({ tasks, projects }: { tasks: Task[], projects: P
                                         </ContextMenuRadioGroup>
                                     </ContextMenuSubContent>
                                 </ContextMenuSub>
+                                <ContextMenuSeparator />
+                                <ContextMenuItem inset onClick={() => handleDelete(feature.id)} className="text-destructive focus:text-destructive">
+                                    <Trash className="mr-2 h-4 w-4" />
+                                    Delete Task
+                                </ContextMenuItem>
                             </ContextMenuContent>
                         </ContextMenu>
                     )}
