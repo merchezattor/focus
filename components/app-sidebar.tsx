@@ -7,10 +7,10 @@ import {
   IconClock,
   IconFilter,
   IconInbox,
+  IconMap,
   IconPlus,
   IconSearch,
 } from "@tabler/icons-react"
-
 import { Button } from "@/components/ui/button"
 import {
   Sidebar,
@@ -56,6 +56,11 @@ const data = {
       title: "Filters & Labels",
       url: "#",
       icon: IconFilter,
+    },
+    {
+      title: "Map",
+      url: "/map",
+      icon: IconMap,
     },
     {
       title: "Completed",
