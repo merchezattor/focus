@@ -123,6 +123,7 @@ export function DashboardClient({ initialTasks, initialProjects, title, filterTy
                         projects={new Map(projects.map(p => [p.id, p]))}
                         onToggle={handleToggle}
                         onEdit={handleEdit}
+                        hideProjectName={!!selectedProjectId}
                     />
                 </div>
             </div>
@@ -134,6 +135,7 @@ export function DashboardClient({ initialTasks, initialProjects, title, filterTy
                 open={isAddTaskOpen}
                 onOpenChange={setIsAddTaskOpen}
                 trigger={null}
+                defaultProjectId={selectedProjectId || undefined}
             />
 
             {editingTask && (

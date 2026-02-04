@@ -24,7 +24,7 @@ export function TaskItem({
   return (
     <div
       className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all",
+        "group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-all text-left",
         "hover:bg-accent/50 cursor-pointer",
         task.completed && "opacity-50"
       )}
@@ -77,11 +77,9 @@ export function TaskItem({
             </div>
           )}
         </div>
-        {task.dueDate && (
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Due {format(new Date(task.dueDate), "MMM d")}
-          </p>
-        )}
+        <p className={cn("text-xs text-muted-foreground mt-0.5", !task.dueDate && "invisible")}>
+          {task.dueDate ? `Due ${format(new Date(task.dueDate), "MMM d")}` : "No date"}
+        </p>
       </div>
     </div>
   );

@@ -72,7 +72,7 @@ export async function createProject(project: Project, userId: string): Promise<v
 
 export async function readTasks(userId: string): Promise<Task[]> {
   // Fetch tasks belonging to the user
-  const dbTasks = await db.select().from(tasks).where(eq(tasks.userId, userId)).orderBy(desc(tasks.created_at));
+  const dbTasks = await db.select().from(tasks).where(eq(tasks.userId, userId)).orderBy(tasks.priority, desc(tasks.created_at));
 
   // Fetch comments for these tasks
   // We can join or fetch all comments for user's tasks. 

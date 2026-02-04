@@ -42,13 +42,14 @@ const createTaskSchema = z.object({
 interface AddTaskDialogProps {
   projects: Project[];
   onTaskCreated: () => void;
-  onOptimisticAdd?: (task: any) => void; // Using any for now to avoid strict type issues with Partial<Task>, but better to import Task
+  onOptimisticAdd?: (task: any) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
+  defaultProjectId?: string;
 }
 
-export function AddTaskDialog({ projects, onTaskCreated, onOptimisticAdd, open: controlledOpen, onOpenChange, trigger }: AddTaskDialogProps) {
+export function AddTaskDialog({ projects, onTaskCreated, onOptimisticAdd, open: controlledOpen, onOpenChange, trigger, defaultProjectId }: AddTaskDialogProps) {
   const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -59,7 +60,7 @@ export function AddTaskDialog({ projects, onTaskCreated, onOptimisticAdd, open: 
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [projectId, setProjectId] = useState('');
+  const [projectId, setProjectId] = useState(defaultProjectId || '');
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [priority, setPriority] = useState('p4');
   const [isLoading, setIsLoading] = useState(false);
@@ -144,7 +145,7 @@ export function AddTaskDialog({ projects, onTaskCreated, onOptimisticAdd, open: 
   const resetForm = () => {
     setTitle('');
     setDescription('');
-    setProjectId('');
+    setProjectId(defaultProjectId || '');
     setDueDate(undefined);
     setPriority('p4');
   };

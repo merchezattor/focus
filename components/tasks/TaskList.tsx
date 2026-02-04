@@ -8,9 +8,10 @@ interface TaskListProps {
   projects: Map<string, { name: string; color: string }>;
   onToggle: (id: string, completed: boolean) => void;
   onEdit: (task: Task) => void;
+  hideProjectName?: boolean;
 }
 
-export function TaskList({ tasks, projects, onToggle, onEdit }: TaskListProps) {
+export function TaskList({ tasks, projects, onToggle, onEdit, hideProjectName }: TaskListProps) {
   const groupedTasks = useMemo(() => {
     const groups: Record<string, Task[]> = {};
     const noDate: Task[] = [];
@@ -79,7 +80,7 @@ export function TaskList({ tasks, projects, onToggle, onEdit }: TaskListProps) {
                 onToggle={onToggle}
                 onEdit={onEdit}
                 projectColor={projects.get(task.projectId || '')?.color}
-                projectName={projects.get(task.projectId || '')?.name}
+                projectName={hideProjectName ? undefined : projects.get(task.projectId || '')?.name}
               />
             ))}
           </div>
@@ -99,7 +100,7 @@ export function TaskList({ tasks, projects, onToggle, onEdit }: TaskListProps) {
                 onToggle={onToggle}
                 onEdit={onEdit}
                 projectColor={projects.get(task.projectId || '')?.color}
-                projectName={projects.get(task.projectId || '')?.name}
+                projectName={hideProjectName ? undefined : projects.get(task.projectId || '')?.name}
               />
             ))}
           </div>
