@@ -21,8 +21,10 @@ export default async function MainLayout({
         redirect("/login");
     }
 
-    const projects = await readProjects(session.user.id);
-    const counts = await getTaskCounts(session.user.id);
+    const [projects, counts] = await Promise.all([
+        readProjects(session.user.id),
+        getTaskCounts(session.user.id)
+    ]);
 
     return (
         <SidebarProvider

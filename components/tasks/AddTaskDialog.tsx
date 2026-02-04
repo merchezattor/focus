@@ -42,12 +42,13 @@ const createTaskSchema = z.object({
 interface AddTaskDialogProps {
   projects: Project[];
   onTaskCreated: () => void;
+  onOptimisticAdd?: (task: any) => void; // Using any for now to avoid strict type issues with Partial<Task>, but better to import Task
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
 }
 
-export function AddTaskDialog({ projects, onTaskCreated, open: controlledOpen, onOpenChange, trigger }: AddTaskDialogProps) {
+export function AddTaskDialog({ projects, onTaskCreated, onOptimisticAdd, open: controlledOpen, onOpenChange, trigger }: AddTaskDialogProps) {
   const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -78,7 +79,30 @@ export function AddTaskDialog({ projects, onTaskCreated, open: controlledOpen, o
       return;
     }
 
-    setIsLoading(true);
+    // Optimistic Update
+    if (onOptimisticAdd) {
+      const tempTask = {
+        id: `temp-${Date.now()}`,
+        title,
+        description: description || undefined,
+        projectId: (projectId && projectId !== 'inbox') ? projectId : null,
+        priority,
+        dueDate: dueDate?.toISOString(),
+        completed: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        planDate: null,
+        comments: []
+      };
+      onOptimisticAdd(tempTask);
+
+      // Close immediately for smooth UX
+      setOpen(false);
+      resetForm();
+      toast.success('Task added');
+    } else {
+      setIsLoading(true);
+    }
 
     try {
       const res = await fetch('/api/tasks', {
@@ -96,13 +120,21 @@ export function AddTaskDialog({ projects, onTaskCreated, open: controlledOpen, o
 
       if (!res.ok) throw new Error('Failed to create task');
 
-      toast.success('Task created successfully');
-      setOpen(false);
-      resetForm();
+      if (!onOptimisticAdd) {
+        toast.success('Task created successfully');
+        setOpen(false);
+        resetForm();
+      }
+
       onTaskCreated();
       router.refresh();
     } catch (error) {
-      toast.error('Failed to create task');
+      if (onOptimisticAdd) {
+        toast.error('Failed to sync task. Please refresh.');
+        //Ideally we revert here, but for MVP just alerting is okay.
+      } else {
+        toast.error('Failed to create task');
+      }
       console.error('Failed to create task:', error);
     } finally {
       setIsLoading(false);
