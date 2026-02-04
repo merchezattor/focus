@@ -59,17 +59,6 @@ export function TaskItem({
           >
             {task.title}
           </span>
-          {projectName && (
-            <span
-              className="text-xs px-1.5 py-0.5 rounded-full"
-              style={{
-                backgroundColor: projectColor || "#e5e7eb",
-                color: projectColor ? "white" : "inherit",
-              }}
-            >
-              {projectName}
-            </span>
-          )}
           {task.comments && task.comments.length > 0 && (
             <div className="flex items-center gap-1 text-muted-foreground">
               <MessageSquare className="h-3 w-3" />
@@ -77,9 +66,18 @@ export function TaskItem({
             </div>
           )}
         </div>
-        <p className={cn("text-xs text-muted-foreground mt-0.5", !task.dueDate && "invisible")}>
-          {task.dueDate ? `Due ${format(new Date(task.dueDate), "MMM d")}` : "No date"}
-        </p>
+        <div className="flex items-center gap-2 mt-0.5 min-h-[1.25rem]">
+          {task.dueDate && (
+            <span className="text-xs text-muted-foreground">
+              Due {format(new Date(task.dueDate), "MMM d")}
+            </span>
+          )}
+
+          {/* Spacer for height consistency if empty */}
+          {!task.dueDate && (
+            <span className="text-xs text-muted-foreground invisible">No date</span>
+          )}
+        </div>
       </div>
     </div>
   );
