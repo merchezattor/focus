@@ -27,7 +27,7 @@ export async function generateApiToken() {
     if (!session) throw new Error("Unauthorized")
 
     // Generate simple token: "todoist_" prefix + 24 random bytes (48 hex chars)
-    const newToken = "todoist_" + randomBytes(24).toString('hex')
+    const newToken = "focus_" + randomBytes(24).toString('hex')
 
     const existing = await db.query.apiTokens.findFirst({
         where: eq(apiTokens.userId, session.user.id)

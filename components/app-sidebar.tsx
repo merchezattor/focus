@@ -104,9 +104,9 @@ export function AppSidebar({
       <SidebarHeader className="flex flex-row items-center justify-between px-2 py-3">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
-            T
+            F
           </div>
-          <span className="font-semibold">Todoist</span>
+          <span className="font-semibold">Focus</span>
         </div>
         <ModeToggle />
       </SidebarHeader>

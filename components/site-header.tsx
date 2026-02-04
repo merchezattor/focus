@@ -26,7 +26,7 @@ export function SiteHeader({ pageTitle = "Inbox" }: SiteHeaderProps) {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem className="hidden md:block">
-              <BreadcrumbLink href="/dashboard">Todoist</BreadcrumbLink>
+              <BreadcrumbLink href="/dashboard">Focus</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="hidden md:block" />
             <BreadcrumbItem>

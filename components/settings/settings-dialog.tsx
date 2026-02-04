@@ -167,7 +167,7 @@ function SettingsIntegrations() {
             <div>
                 <h2 className="text-lg font-medium mb-4">API token</h2>
                 <div className="text-sm text-muted-foreground mb-4">
-                    Your API token provides full access to view and modify your Todoist data. Please treat this like a password and take care when sharing it.
+                    Your API token provides full access to view and modify your Focus data. Please treat this like a password and take care when sharing it.
                 </div>
 
                 <div className="flex gap-2 mb-4">

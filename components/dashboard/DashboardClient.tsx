@@ -92,7 +92,7 @@ export function DashboardClient({ initialTasks, initialProjects, title, filterTy
             if (!t.dueDate) return false
             const date = new Date(t.dueDate)
             return isToday(date) || (isPast(date) && !isSameDay(date, new Date()) && !t.completed) // Optionally show overdue? User said "Todays tasks". Usually implies Due Today. I'll stick to isToday for now.
-            // Actually, Todoist Today view usually shows Overdue tasks too. I'll include overdue.
+            // Actually, Focus Today view usually shows Overdue tasks too. I'll include overdue.
             // Wait, isPast includes today if time matches? isToday is safer.
             // Let's stick to strict Today for now or Today + Overdue.
             // User request: "show list of todays tasks". I'll default to isToday(date).
