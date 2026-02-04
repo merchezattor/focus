@@ -2,8 +2,23 @@
 
 import { useAtom } from "jotai"
 import { tasksAtom } from "@/lib/atoms"
+import { useState, useCallback, useEffect } from "react"
+import { SiteHeader } from "@/components/site-header"
+import { useSearchParams } from "next/navigation"
 
-// ...
+import { TaskList } from "@/components/tasks/TaskList"
+import { AddTaskDialog } from "@/components/tasks/AddTaskDialog"
+import { EditTaskDialog } from "@/components/tasks/EditTaskDialog"
+import type { Task, Project } from "@/types"
+
+import { isToday, isPast, isSameDay } from "date-fns"
+
+interface DashboardClientProps {
+    initialTasks: Task[]
+    initialProjects: Project[]
+    title?: string
+    filterType?: 'all' | 'today'
+}
 
 export function DashboardClient({ initialTasks, initialProjects, title, filterType = 'all' }: DashboardClientProps) {
     const [tasks, setTasks] = useAtom(tasksAtom)
