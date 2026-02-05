@@ -1,9 +1,27 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { NextResponse } from "next/server";
-import { createGoal } from "@/lib/storage";
+import { NextResponse, NextRequest } from "next/server";
+import { createGoal, readGoals, updateGoal, deleteGoal } from "@/lib/storage";
 import { goalSchema } from "@/types/goal";
-import { z } from "zod";
+
+// Schema for updating - partial
+const updateGoalSchema = goalSchema.partial().omit({ id: true });
+
+export async function GET(_req: Request) {
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        });
+
+        if (!session) return new NextResponse("Unauthorized", { status: 401 });
+
+        const goals = await readGoals(session.user.id);
+        return NextResponse.json({ goals });
+    } catch (error) {
+        console.error('[GOALS_GET]', error);
+        return new NextResponse("Internal Error", { status: 500 });
+    }
+}
 
 export async function POST(req: Request) {
     try {
@@ -11,9 +29,7 @@ export async function POST(req: Request) {
             headers: await headers()
         });
 
-        if (!session) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
+        if (!session) return new NextResponse("Unauthorized", { status: 401 });
 
         const json = await req.json();
 
@@ -38,6 +54,53 @@ export async function POST(req: Request) {
         return NextResponse.json({ goal: result.data }, { status: 201 });
     } catch (error) {
         console.error('[GOALS_POST]', error);
+        return new NextResponse("Internal Error", { status: 500 });
+    }
+}
+
+export async function PUT(req: Request) {
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        });
+
+        if (!session) return new NextResponse("Unauthorized", { status: 401 });
+
+        const json = await req.json();
+        const { id, ...data } = json;
+
+        if (!id) return new NextResponse("Goal ID required", { status: 400 });
+
+        const result = updateGoalSchema.safeParse(data);
+        if (!result.success) {
+            return new NextResponse(JSON.stringify(result.error), { status: 400 });
+        }
+
+        await updateGoal(id, result.data);
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('[GOALS_PUT]', error);
+        return new NextResponse("Internal Error", { status: 500 });
+    }
+}
+
+export async function DELETE(req: NextRequest) {
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        });
+
+        if (!session) return new NextResponse("Unauthorized", { status: 401 });
+
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get('id');
+
+        if (!id) return new NextResponse("Goal ID required", { status: 400 });
+
+        await deleteGoal(id);
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('[GOALS_DELETE]', error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

@@ -1,5 +1,0 @@
-# Ignore all JSON data files
-*.json
-
-# Keep the .gitignore file itself
-!.gitignore

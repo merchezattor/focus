@@ -5,24 +5,23 @@ description: Interacts with the Focus application to manage tasks and projects. 
 
 # Focus App Skill
 
-Allows agents to interact with the Focus application via its API. 
+Allows agents to interact with the Focus application via its API.
 Capable of listing and creating tasks and projects.
 
 ## Quick Start
 
-1.  **Configure Environment**:
+1. **Configuration of Environment**:
+
     ```bash
     export FOCUS_API_URL="https://todo.michaelukhin.xyz/api"
     export FOCUS_API_TOKEN="<your_api_token>"
     ```
 
-2.  **Run Client**:
+2. **Run Client**:
+
     ```bash
     # List Tasks
     node scripts/api-client.js tasks list
-
-    # Create Task
-    node scripts/api-client.js tasks create '{"title": "Check emails", "priority": "p1"}'
     ```
 
 ## Core Workflow
@@ -32,47 +31,64 @@ The skill uses a NodeJS script `scripts/api-client.js` as a bridge to the API.
 ### 1. Listing Resources
 
 **Tasks:**
+
 ```bash
 node scripts/api-client.js tasks list
 ```
-*Returns a JSON array of tasks.*
 
 **Projects:**
+
 ```bash
 node scripts/api-client.js projects list
 ```
-*Returns a JSON array of projects.*
+
+**Goals:**
+
+```bash
+node scripts/api-client.js goals list
+```
 
 ### 2. Creating Resources
 
 **Create Task:**
-Provide a valid JSON string as the third argument.
+
 ```bash
-node scripts/api-client.js tasks create '{"title": "New Task", "description": "Details", "priority": "p1", "projectId": "optional_id"}'
+node scripts/api-client.js tasks create '{"title": "New Task", "priority": "p1", "projectId": "optional_id"}'
 ```
 
 **Create Project:**
+
 ```bash
 node scripts/api-client.js projects create '{"name": "New Project", "color": "#ff0000", "isFavorite": true}'
 ```
 
+**Create Goal:**
+
+```bash
+node scripts/api-client.js goals create '{"name": "New Goal", "color": "#00ff00", "priority": "p1"}'
+```
+
 ### 3. Modifying Resources
 
-**Update Task:**
-Update any field (title, description, priority, dueDate, etc).
-```bash
-node scripts/api-client.js tasks update <id> '{"title": "Updated Title", "priority": "p2"}'
-```
+**Update/Delete Tasks:**
 
-**Complete Task:**
-Set `completed` to true via update.
 ```bash
-node scripts/api-client.js tasks update <id> '{"completed": true}'
-```
-
-**Delete Task:**
-```bash
+node scripts/api-client.js tasks update <id> '{"title": "Updated", "priority": "p2"}'
 node scripts/api-client.js tasks delete <id>
+```
+
+**Update/Delete Projects:**
+
+```bash
+node scripts/api-client.js projects update <id> '{"name": "Updated Project"}'
+node scripts/api-client.js projects delete <id>
+```
+
+**Update/Delete Goals:**
+
+```bash
+node scripts/api-client.js goals update <id> '{"name": "Updated Goal"}'
+node scripts/api-client.js goals delete <id>
 ```
 
 ## Important Rules
@@ -80,4 +96,4 @@ node scripts/api-client.js tasks delete <id>
 - **ALWAYS** check that `FOCUS_API_TOKEN` is set before running commands.
 - **ALWAYS** validate JSON payloads before passing them to the creation commands.
 - **Priority Levels**: p1 (High), p2, p3, p4 (Low).
-- **Colors**: Use hex codes for project colors (e.g., `#ff0000`).
+- **Colors**: Use hex codes for colors (e.g., `#ff0000`).

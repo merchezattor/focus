@@ -15,7 +15,7 @@
  *   node api-client.js projects list
  */
 
-const fs = require('fs');
+
 
 const API_URL = process.env.FOCUS_API_URL;
 const API_TOKEN = process.env.FOCUS_API_TOKEN;
@@ -71,6 +71,7 @@ async function main() {
         let result;
 
         // --- PROEJCTS ---
+        // --- PROJECTS ---
         if (resource === 'projects') {
             if (action === 'list') {
                 const data = await request('/projects');
@@ -80,8 +81,51 @@ async function main() {
                 const body = JSON.parse(payload);
                 const data = await request('/projects', 'POST', body);
                 result = data.project;
+            } else if (action === 'update') {
+                const id = args[2];
+                const updatePayload = args[3];
+                if (!id) throw new Error('Missing project ID for update');
+                if (!updatePayload) throw new Error('Missing JSON payload for update');
+                const body = JSON.parse(updatePayload);
+                // API expects { id, ...data } in body
+                const data = await request('/projects', 'PUT', { id, ...body });
+                result = data;
+            } else if (action === 'delete') {
+                const id = args[2];
+                if (!id) throw new Error('Missing project ID for deletion');
+                await request(`/projects?id=${id}`, 'DELETE');
+                result = { success: true };
             } else {
                 throw new Error(`Unknown project action: ${action}`);
+            }
+        }
+
+        // --- GOALS ---
+        else if (resource === 'goals') {
+            if (action === 'list') {
+                const data = await request('/goals');
+                result = data.goals;
+            } else if (action === 'create') {
+                if (!payload) throw new Error('Missing JSON payload for goal creation');
+                const body = JSON.parse(payload);
+                const data = await request('/goals', 'POST', body);
+                result = data.goal;
+            } else if (action === 'update') {
+                const id = args[2];
+                const updatePayload = args[3];
+                if (!id) throw new Error('Missing goal ID for update');
+                if (!updatePayload) throw new Error('Missing JSON payload for update');
+                const body = JSON.parse(updatePayload);
+                // API expects { id, ...data } in body
+                const data = await request('/goals', 'PUT', { id, ...body });
+                result = data;
+            } else if (action === 'delete') {
+                const id = args[2];
+                if (!id) throw new Error('Missing goal ID for deletion');
+                await request(`/goals?id=${id}`, 'DELETE');
+                result = { success: true };
+            } else {
+                throw new Error(`Unknown goal action: ${action}`);
             }
         }
 

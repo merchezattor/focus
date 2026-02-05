@@ -7,7 +7,7 @@
     "build": "bun run db:migrate && next build",
     "start": "next start",
     "lint": "eslint",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit push"
   },
   "dependencies": {
     "@dagrejs/dagre": "^2.0.3",
