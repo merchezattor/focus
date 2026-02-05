@@ -5,6 +5,7 @@ export const projectSchema = z.object({
   name: z.string().min(1).max(100),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
   description: z.string().optional(),
+  goalId: z.string().nullable().optional(),
   isFavorite: z.boolean(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),

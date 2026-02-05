@@ -5,11 +5,12 @@ import { ReactFlow, Background, Controls, useNodesState, useEdgesState, Position
 // import dagre from '@dagrejs/dagre';
 const dagre = require('@dagrejs/dagre');
 import '@xyflow/react/dist/style.css';
-import { Task, Project } from '@/types';
+import { Task, Project, Goal } from '@/types';
 
 interface MapClientProps {
     initialProjects: Project[];
     initialTasks: Task[];
+    initialGoals: Goal[];
 }
 
 const nodeWidth = 200;
@@ -50,22 +51,42 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
     return { nodes: newNodes, edges };
 };
 
-export function MapClient({ initialProjects, initialTasks }: MapClientProps) {
+export function MapClient({ initialProjects, initialTasks, initialGoals }: MapClientProps) {
     const { nodes: initialLayoutNodes, edges: initialLayoutEdges } = useMemo(() => {
         const nodes = [];
         const edges = [];
 
-        // 1. Create Nodes for Projects
-        // We treat "Inbox" as a virtual project for tasks with no projectId
-        const allProjects = [...initialProjects, { id: 'inbox', name: 'Inbox', color: '#808080' }];
+        // 1. Create Nodes for Goals
+        for (const goal of initialGoals) {
+            nodes.push({
+                id: `goal-${goal.id}`,
+                type: 'input',
+                data: { label: goal.name },
+                style: {
+                    background: '#fff',
+                    border: '2px solid',
+                    borderColor: goal.color,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    width: nodeWidth,
+                    textAlign: 'center',
+                }
+            });
+        }
 
-        // Track which projects actually have content to maybe filter empty ones? 
-        // For now, let's show all user created projects.
+        // 2. Create Nodes for Projects and Edges from Goals
+        // 2. Create Nodes for Projects and Edges from Goals
+        // "Inbox" virtual project removed as per request
+        const allProjects = [...initialProjects];
 
         for (const project of allProjects) {
+            const nodeId = `proj-${project.id}`;
             nodes.push({
-                id: `proj-${project.id}`,
-                type: 'input', // Input type for roots usually
+                id: nodeId,
+                // type: project.goalId ? 'default' : 'input', // If it has a parent (goal), it's default, else input (root)
+                // Actually React Flow handles types loosely, 'default' is fine for intermediate. 
                 data: { label: project.name },
                 style: {
                     background: '#fff',
@@ -77,11 +98,22 @@ export function MapClient({ initialProjects, initialTasks }: MapClientProps) {
                     width: nodeWidth,
                 }
             });
+
+            if (project.goalId) {
+                edges.push({
+                    id: `e-goal-${project.goalId}-proj-${project.id}`,
+                    source: `goal-${project.goalId}`,
+                    target: nodeId,
+                    animated: true,
+                    style: { stroke: '#999', strokeWidth: 2 },
+                });
+            }
         }
 
-        // 2. Create Nodes for Tasks and Edges
+        // 3. Create Nodes for Tasks and Edges from Projects
         for (const task of initialTasks) {
-            const projectId = task.projectId || 'inbox';
+            if (!task.projectId) continue; // Skip inbox tasks
+            const projectId = task.projectId;
             const nodeId = `task-${task.id}`;
 
             nodes.push({
@@ -97,7 +129,7 @@ export function MapClient({ initialProjects, initialTasks }: MapClientProps) {
             });
 
             edges.push({
-                id: `e-${projectId}-${task.id}`,
+                id: `e-proj-${projectId}-${task.id}`,
                 source: `proj-${projectId}`,
                 target: nodeId,
                 animated: true,
@@ -105,7 +137,7 @@ export function MapClient({ initialProjects, initialTasks }: MapClientProps) {
         }
 
         return getLayoutedElements(nodes, edges, 'TB'); // Top to Bottom layout
-    }, [initialProjects, initialTasks]);
+    }, [initialProjects, initialTasks, initialGoals]);
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialLayoutNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialLayoutEdges);

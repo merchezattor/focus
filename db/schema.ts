@@ -50,12 +50,25 @@ export const verification = pgTable("verification", {
 
 export const priorityEnum = pgEnum('priority', ['p1', 'p2', 'p3', 'p4']);
 
+export const goals = pgTable('goals', {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    description: text('description'),
+    priority: text('priority').notNull(),
+    due_date: timestamp('due_date'),
+    color: text('color').notNull(), // Goals should have color too? User didn't specify but it's good for UI. Or maybe not? User said "displayed same way as projects list". Projects have color. So assume yes.
+    userId: text('user_id').references(() => user.id),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 export const projects = pgTable('projects', {
     id: text('id').primaryKey(), // using UUID string
     name: text('name').notNull(),
     color: text('color').notNull(),
     description: text('description'),
     isFavorite: boolean('is_favorite').default(false).notNull(),
+    goal_id: text('goal_id').references(() => goals.id), // Link project to goal
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     userId: text('user_id').references(() => user.id), // Link project to user (nullable for migration)

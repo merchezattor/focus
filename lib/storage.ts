@@ -1,6 +1,6 @@
 import { db } from '@/db';
-import { tasks, projects, comments } from '@/db/schema';
-import { type Task, type Project, type Comment } from '@/types';
+import { tasks, projects, comments, goals } from '@/db/schema';
+import { type Task, type Project, type Comment, type Goal } from '@/types';
 import { eq, desc, and, isNull, gte, lte, count, inArray } from 'drizzle-orm';
 
 // ... existing code ...
@@ -50,6 +50,7 @@ export async function readProjects(userId: string): Promise<Project[]> {
     color: p.color,
     description: p.description || undefined,
     isFavorite: p.isFavorite,
+    goalId: p.goal_id || undefined,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
   }));
@@ -62,10 +63,80 @@ export async function createProject(project: Project, userId: string): Promise<v
     color: project.color,
     description: project.description,
     isFavorite: project.isFavorite,
+    goal_id: project.goalId,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
     userId: userId,
   });
+}
+
+export async function updateProject(id: string, updates: Partial<Project>): Promise<void> {
+  const dbUpdates: any = {};
+  if (updates.name !== undefined) dbUpdates.name = updates.name;
+  if (updates.description !== undefined) dbUpdates.description = updates.description;
+  if (updates.color !== undefined) dbUpdates.color = updates.color;
+  if (updates.isFavorite !== undefined) dbUpdates.isFavorite = updates.isFavorite;
+  if (updates.goalId !== undefined) dbUpdates.goal_id = updates.goalId;
+  // Handle undefined goalId specifically if explicitly passed as undefined/null to clear it?
+  // Partial<Project> usually implies undefined = no change. 
+  // If we want to clear goalId, we might need explicit null. 
+  // Project type has `goalId?: string`.
+  // If we assume undefined means "do not update", then we can't clear it.
+  // But for now let's stick to update if present.
+
+  if (updates.updatedAt !== undefined) dbUpdates.updatedAt = updates.updatedAt;
+
+  if (Object.keys(dbUpdates).length > 0) {
+    await db.update(projects).set(dbUpdates).where(eq(projects.id, id));
+  }
+}
+
+// --- Goals ---
+
+export async function readGoals(userId: string): Promise<Goal[]> {
+  const dbGoals = await db.select().from(goals).where(eq(goals.userId, userId)).orderBy(goals.priority);
+  return dbGoals.map(g => ({
+    id: g.id,
+    name: g.name,
+    description: g.description || undefined,
+    priority: g.priority as 'p1' | 'p2' | 'p3' | 'p4',
+    dueDate: g.due_date || undefined,
+    color: g.color,
+    createdAt: g.createdAt,
+    updatedAt: g.updatedAt,
+  }));
+}
+
+export async function createGoal(goal: Goal, userId: string): Promise<void> {
+  await db.insert(goals).values({
+    id: goal.id,
+    name: goal.name,
+    description: goal.description,
+    priority: goal.priority,
+    due_date: goal.dueDate,
+    color: goal.color,
+    userId: userId,
+    createdAt: goal.createdAt,
+    updatedAt: goal.updatedAt,
+  });
+}
+
+export async function updateGoal(id: string, updates: Partial<Goal>): Promise<void> {
+  const dbUpdates: any = {};
+  if (updates.name !== undefined) dbUpdates.name = updates.name;
+  if (updates.description !== undefined) dbUpdates.description = updates.description;
+  if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
+  if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
+  if (updates.color !== undefined) dbUpdates.color = updates.color;
+  if (updates.updatedAt !== undefined) dbUpdates.updatedAt = updates.updatedAt;
+
+  if (Object.keys(dbUpdates).length > 0) {
+    await db.update(goals).set(dbUpdates).where(eq(goals.id, id));
+  }
+}
+
+export async function deleteGoal(id: string): Promise<void> {
+  await db.delete(goals).where(eq(goals.id, id));
 }
 
 // --- Tasks ---
@@ -200,7 +271,10 @@ export async function writeTasks(tasks: Task[]): Promise<void> {
   console.warn("Deprecated writeTasks called! This does nothing in DB mode. Use create/updateTask.");
 }
 
-export async function writeProjects(projects: Project[]): Promise<void> {
-  console.warn("Deprecated writeProjects called! This does nothing in DB mode.");
+// ... (legacy writeProjects)
+
+export async function deleteProject(id: string): Promise<void> {
+  await db.delete(tasks).where(eq(tasks.project_id, id));
+  await db.delete(projects).where(eq(projects.id, id));
 }
 

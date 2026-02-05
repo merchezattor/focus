@@ -5,13 +5,14 @@ import {
   IconCalendar,
   IconCheck,
   IconClock,
-  IconFilter,
   IconInbox,
   IconMap,
   IconPlus,
   IconSearch,
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import {
   Sidebar,
   SidebarContent,
@@ -23,14 +24,23 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuAction,
   SidebarInput,
 } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
-import type { Project } from "@/types"
+import type { Project, Goal } from "@/types"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useSetAtom } from "jotai"
-import { isAddTaskOpenAtom, isAddProjectOpenAtom } from "@/lib/atoms"
+import { isAddTaskOpenAtom, isAddProjectOpenAtom, projectToEditAtom } from "@/lib/atoms"
+import { isAddGoalOpenAtom } from "@/components/goals/GlobalAddGoalDialog"
 import { NavUser } from "@/components/nav-user"
+import { Flag, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const data = {
   navMain: [
@@ -53,11 +63,6 @@ const data = {
       count: 0,
     },
     {
-      title: "Filters & Labels",
-      url: "#",
-      icon: IconFilter,
-    },
-    {
       title: "Map",
       url: "/map",
       icon: IconMap,
@@ -74,6 +79,7 @@ interface AppSidebarProps {
   variant?: "sidebar" | "inset" | "floating"
 
   projects?: Project[]
+  goals?: Goal[]
   selectedProjectId?: string | null
   onSelectProject?: (projectId: string | null) => void
   user: {
@@ -90,6 +96,7 @@ interface AppSidebarProps {
 export function AppSidebar({
   variant = "sidebar",
   projects = [],
+  goals = [],
   selectedProjectId,
   onSelectProject,
   user,
@@ -97,6 +104,9 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const setAddTaskOpen = useSetAtom(isAddTaskOpenAtom)
   const setAddProjectOpen = useSetAtom(isAddProjectOpenAtom)
+  const setAddGoalOpen = useSetAtom(isAddGoalOpenAtom)
+  const setProjectToEdit = useSetAtom(projectToEditAtom)
+  const router = useRouter()
 
   const navMainWithCounts = data.navMain.map(item => {
     if (item.title === "Inbox") return { ...item, count: counts?.inboxCount ?? 0 }
@@ -162,26 +172,38 @@ export function AppSidebar({
 
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center justify-between px-2">
-            <span>Favorites</span>
+            <span>Goals</span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {projects.filter(p => p.isFavorite).map((project) => (
-                <SidebarMenuItem key={project.id}>
+              {goals.map((goal) => (
+                <SidebarMenuItem key={goal.id}>
                   <SidebarMenuButton
                     asChild
-                    className={`w-full justify-start ${selectedProjectId === project.id ? 'bg-accent' : ''}`}
+                    className="w-full justify-start"
                   >
-                    <a
-                      href={`/?project=${project.id}`}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: project.color }} />
-                      <span>{project.name}</span>
+                    <a href={`/map`} className="flex items-center gap-2">
+                      {/* For now link to map, or maybe filtering by goal later? User said displayed same way as projects list. */}
+                      {/* But what happens when you click? "Goal -> Project (s) -> Task (s)" hierarchy. */}
+                      {/* Maybe filter tasks by goal? Currently no page for Goal details. Map is the view. */}
+                      <Flag className="h-4 w-4" style={{ color: goal.color }} />
+                      <span>{goal.name}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  className="w-full justify-start text-muted-foreground cursor-pointer"
+                  onClick={() => setAddGoalOpen(true)}
+                >
+                  <span className="flex items-center gap-2">
+                    <IconPlus className="h-4 w-4" />
+                    <span>Add goal</span>
+                  </span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -206,6 +228,41 @@ export function AppSidebar({
                       <span>{project.name}</span>
                     </a>
                   </SidebarMenuButton>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuAction showOnHover>
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">More</span>
+                      </SidebarMenuAction>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="right" align="start">
+                      <DropdownMenuItem onClick={() => setProjectToEdit(project)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        <span>Edit Project</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (!confirm("Are you sure you want to delete this project?")) return;
+
+                          try {
+                            const res = await fetch(`/api/projects?id=${project.id}`, { method: 'DELETE' });
+                            if (!res.ok) throw new Error("Failed to delete");
+                            toast.success("Project deleted");
+                            router.refresh();
+                            router.push('/');
+                          } catch (err) {
+                            toast.error("Failed to delete project");
+                            console.error(err);
+                          }
+                        }}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Delete Project</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </SidebarMenuItem>
               ))}
               <SidebarMenuItem>
