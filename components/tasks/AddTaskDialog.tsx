@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogFooter, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,13 @@ export function AddTaskDialog({ projects, onTaskCreated, onOptimisticAdd, open: 
   const setIsOpen = isControlled ? onOpenChange! : setInternalOpen;
   const open = isOpen;
   const setOpen = setIsOpen;
+
+  // Sync state when opening
+  useEffect(() => {
+    if (open) {
+      setProjectId(defaultProjectId || '');
+    }
+  }, [open, defaultProjectId]);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

@@ -10,7 +10,6 @@ import {
   IconPlus,
   IconSearch,
 } from "@tabler/icons-react"
-import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
@@ -31,7 +30,7 @@ import { Badge } from "@/components/ui/badge"
 import type { Project, Goal } from "@/types"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useSetAtom } from "jotai"
-import { isAddTaskOpenAtom, isAddProjectOpenAtom, projectToEditAtom } from "@/lib/atoms"
+import { isAddProjectOpenAtom, projectToEditAtom } from "@/lib/atoms"
 import { isAddGoalOpenAtom } from "@/components/goals/GlobalAddGoalDialog"
 import { NavUser } from "@/components/nav-user"
 import { Flag, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
@@ -102,7 +101,6 @@ export function AppSidebar({
   user,
   counts,
 }: AppSidebarProps) {
-  const setAddTaskOpen = useSetAtom(isAddTaskOpenAtom)
   const setAddProjectOpen = useSetAtom(isAddProjectOpenAtom)
   const setAddGoalOpen = useSetAtom(isAddGoalOpenAtom)
   const setProjectToEdit = useSetAtom(projectToEditAtom)
@@ -127,16 +125,7 @@ export function AppSidebar({
       </SidebarHeader>
 
       <SidebarContent>
-        <div className="px-3 pb-3">
-          <Button
-            className="w-full justify-start gap-2 bg-primary hover:bg-primary/90"
-            size="sm"
-            onClick={() => setAddTaskOpen(true)}
-          >
-            <IconPlus className="h-4 w-4" />
-            Add task
-          </Button>
-        </div>
+
 
         <div className="px-3 pb-3">
           <div className="relative">

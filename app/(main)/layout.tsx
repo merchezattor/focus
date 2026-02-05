@@ -9,6 +9,7 @@ import { GlobalAddTaskDialog } from "@/components/tasks/GlobalAddTaskDialog";
 import { GlobalAddProjectDialog } from "@/components/projects/GlobalAddProjectDialog";
 import { GlobalEditProjectDialog } from "@/components/projects/GlobalEditProjectDialog";
 import { GlobalAddGoalDialog } from "@/components/goals/GlobalAddGoalDialog";
+import { AddTaskFab } from "@/components/tasks/AddTaskFab";
 
 export default async function MainLayout({
     children,
@@ -44,6 +45,7 @@ export default async function MainLayout({
             <GlobalAddProjectDialog goals={goals} />
             <GlobalEditProjectDialog goals={goals} />
             <GlobalAddGoalDialog />
+            <AddTaskFab />
             <SidebarInset>
                 {children}
             </SidebarInset>
