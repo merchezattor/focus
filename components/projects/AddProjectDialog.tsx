@@ -53,7 +53,7 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
                 setName(projectToEdit.name);
                 setDescription(projectToEdit.description || '');
                 setColor(projectToEdit.color);
-                setGoalId(projectToEdit.goalId);
+                setGoalId(projectToEdit.goalId || undefined);
             } else {
                 // Reset for Add mode
                 setName('');
