@@ -75,6 +75,7 @@ node scripts/api-client.js goals create '{"name": "New Goal", "color": "#00ff00"
 ```bash
 node scripts/api-client.js tasks update <id> '{"title": "Updated", "priority": "p2"}'
 node scripts/api-client.js tasks delete <id>
+node scripts/api-client.js tasks add_comment <id> "This is a comment"
 ```
 
 **Update/Delete Projects:**

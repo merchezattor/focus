@@ -19,6 +19,7 @@
 
 const API_URL = process.env.FOCUS_API_URL;
 const API_TOKEN = process.env.FOCUS_API_TOKEN;
+const crypto = require('crypto');
 
 if (!API_URL || !API_TOKEN) {
     console.error('Error: FOCUS_API_URL and FOCUS_API_TOKEN environment variables must be set.');
@@ -70,7 +71,6 @@ async function main() {
     try {
         let result;
 
-        // --- PROEJCTS ---
         // --- PROJECTS ---
         if (resource === 'projects') {
             if (action === 'list') {
@@ -152,6 +152,30 @@ async function main() {
 
                 const body = JSON.parse(updatePayload);
                 const data = await request(`/tasks/${id}`, 'PATCH', body);
+                result = data.task;
+            } else if (action === 'add_comment') {
+                const id = args[2];
+                const content = args[3];
+                if (!id) throw new Error('Missing task ID');
+                if (!content) throw new Error('Missing comment content');
+
+                // 1. Fetch existing task to preserve comments
+
+                const listData = await request('/tasks');
+                const task = listData.tasks.find(t => t.id === id);
+
+                if (!task) throw new Error(`Task ${id} not found`);
+
+                const existingComments = task.comments || [];
+                const newComment = {
+                    id: crypto.randomUUID(),
+                    content: content,
+                    postedAt: new Date().toISOString()
+                };
+
+                const updatedComments = [...existingComments, newComment];
+
+                const data = await request(`/tasks/${id}`, 'PATCH', { comments: updatedComments });
                 result = data.task;
             } else {
                 throw new Error(`Unknown task action: ${action}`);
