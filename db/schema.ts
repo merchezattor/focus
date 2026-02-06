@@ -84,7 +84,7 @@ export const tasks = pgTable('tasks', {
     priority: text('priority').notNull(), // Storing as text to be safe, or use enum if strictly enforced
     due_date: timestamp('due_date'),
     plan_date: timestamp('plan_date'),
-    project_id: text('project_id').references(() => projects.id),
+    project_id: text('project_id').references(() => projects.id, { onDelete: 'cascade' }),
     userId: text('user_id').references(() => user.id), // Link task to user (nullable for migration)
     created_at: timestamp('created_at').defaultNow().notNull(),
     updated_at: timestamp('updated_at').defaultNow().notNull(),

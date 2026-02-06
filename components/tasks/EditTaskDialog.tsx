@@ -9,10 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { IconCheck } from '@tabler/icons-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Trash2, Send, Flag, MoreHorizontal } from 'lucide-react';
+import { Calendar as CalendarIcon, Trash2, Send, Flag, MoreHorizontal, CheckCircle } from 'lucide-react';
 import type { Task, Project, Comment } from '@/types';
 
 const priorities = [
@@ -380,7 +381,31 @@ export function EditTaskDialog({ task, projects, onTaskUpdated, trigger, open: c
               </div>
             </div>
 
-            <div className="pt-4 border-t">
+            <div className="pt-4 border-t space-y-4">
+              <Button
+                variant="ghost"
+                size="lg"
+                className="w-full justify-start bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 font-medium h-12 rounded-xl"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/tasks/${task.id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ completed: true }),
+                    });
+                    if (!res.ok) throw new Error('Failed to complete task');
+                    setOpen(false);
+                    onTaskUpdated();
+                    router.refresh();
+                  } catch (error) {
+                    console.error('Failed to complete task:', error);
+                  }
+                }}
+              >
+                <CheckCircle className="h-5 w-5 mr-3" />
+                Complete
+              </Button>
+
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="sm" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10">
