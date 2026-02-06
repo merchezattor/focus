@@ -6,6 +6,7 @@ export const projectSchema = z.object({
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
   description: z.string().optional(),
   goalId: z.string().nullable().optional(),
+  viewType: z.enum(['list', 'board']).default('list').optional(),
   isFavorite: z.boolean(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),

@@ -87,3 +87,32 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+// PUT /api/tasks - Update task
+export async function PUT(request: NextRequest) {
+  try {
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { id, ...data } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
+    }
+
+    // Basic validation (can improve with Zod schema for updates)
+    // For now trust the partial update but sanitized via storage function types
+    await import('@/lib/storage').then(m => m.updateTask(id, data));
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Failed to update task:', error);
+    return NextResponse.json(
+      { error: 'Failed to update task' },
+      { status: 500 }
+    );
+  }
+}

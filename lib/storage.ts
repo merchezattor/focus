@@ -51,6 +51,7 @@ export async function readProjects(userId: string): Promise<Project[]> {
     description: p.description || undefined,
     isFavorite: p.isFavorite,
     goalId: p.goal_id || undefined,
+    viewType: (p.view_type as 'list' | 'board') || 'list',
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
   }));
@@ -64,6 +65,7 @@ export async function createProject(project: Project, userId: string): Promise<v
     description: project.description,
     isFavorite: project.isFavorite,
     goal_id: project.goalId,
+    view_type: project.viewType,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
     userId: userId,
@@ -76,7 +78,9 @@ export async function updateProject(id: string, updates: Partial<Project>): Prom
   if (updates.description !== undefined) dbUpdates.description = updates.description;
   if (updates.color !== undefined) dbUpdates.color = updates.color;
   if (updates.isFavorite !== undefined) dbUpdates.isFavorite = updates.isFavorite;
+  if (updates.isFavorite !== undefined) dbUpdates.isFavorite = updates.isFavorite;
   if (updates.goalId !== undefined) dbUpdates.goal_id = updates.goalId;
+  if (updates.viewType !== undefined) dbUpdates.view_type = updates.viewType;
   // Handle undefined goalId specifically if explicitly passed as undefined/null to clear it?
   // Partial<Project> usually implies undefined = no change. 
   // If we want to clear goalId, we might need explicit null. 
@@ -172,6 +176,7 @@ export async function readTasks(userId: string): Promise<Task[]> {
     title: t.content,
     description: t.description || undefined,
     completed: t.completed,
+    status: (t.status as 'todo' | 'in_progress' | 'done') || 'todo',
     projectId: t.project_id,
     priority: t.priority as "p1" | "p2" | "p3" | "p4",
     dueDate: t.due_date,
@@ -188,6 +193,7 @@ export async function createTask(task: Task, userId: string): Promise<void> {
     content: task.title,
     description: task.description || null,
     completed: task.completed,
+    status: task.status,
     priority: task.priority,
     project_id: task.projectId || null,
     due_date: task.dueDate,
@@ -210,6 +216,7 @@ export async function updateTask(id: string, updates: Partial<Task>): Promise<vo
   if (updates.title !== undefined) dbUpdates.content = updates.title;
   if (updates.description !== undefined) dbUpdates.description = updates.description;
   if (updates.completed !== undefined) dbUpdates.completed = updates.completed;
+  if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
   if (updates.projectId !== undefined) dbUpdates.project_id = updates.projectId;
   if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;

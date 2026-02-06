@@ -14,6 +14,7 @@ import { type Goal, type Project } from '@/types';
 const createProjectSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     description: z.string().optional(),
+    viewType: z.enum(['list', 'board']).default('list'),
 });
 
 interface AddProjectDialogProps {
@@ -42,7 +43,7 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [color, setColor] = useState(colors[Math.floor(Math.random() * colors.length)]);
-    const [type, setType] = useState('default');
+    const [viewType, setViewType] = useState('list');
     const [goalId, setGoalId] = useState<string | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -53,12 +54,14 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
                 setName(projectToEdit.name);
                 setDescription(projectToEdit.description || '');
                 setColor(projectToEdit.color);
+                setViewType(projectToEdit.viewType || 'list');
                 setGoalId(projectToEdit.goalId || undefined);
             } else {
                 // Reset for Add mode
                 setName('');
                 setDescription('');
                 setColor(colors[Math.floor(Math.random() * colors.length)]);
+                setViewType('list');
                 setGoalId(undefined);
             }
         }
@@ -67,7 +70,7 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const result = createProjectSchema.safeParse({ name, description });
+        const result = createProjectSchema.safeParse({ name, description, viewType });
         if (!result.success) {
             toast.error(result.error.issues[0].message);
             return;
@@ -86,6 +89,7 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
                         name,
                         description,
                         color,
+                        viewType,
                         goalId: goalId || null,
                     }),
                 });
@@ -104,6 +108,7 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
                         name,
                         description,
                         color,
+                        viewType,
                         goalId: goalId || null,
                         isFavorite: false,
                     }),
@@ -163,13 +168,14 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Type</label>
-                        <Select value={type} onValueChange={setType}>
+                        <label className="text-sm font-medium">View</label>
+                        <Select value={viewType} onValueChange={setViewType}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select type" />
+                                <SelectValue placeholder="Select view" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="default">Default</SelectItem>
+                                <SelectItem value="list">List</SelectItem>
+                                <SelectItem value="board">Board (Kanban)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

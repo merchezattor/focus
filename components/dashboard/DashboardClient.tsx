@@ -12,6 +12,8 @@ import { EditTaskDialog } from "@/components/tasks/EditTaskDialog"
 import type { Task, Project } from "@/types"
 
 import { isToday, isPast, isSameDay } from "date-fns"
+import { LinkKanban } from "@/components/projects/LinkKanban"
+import { toast } from "sonner";
 
 interface DashboardClientProps {
     initialTasks: Task[]
@@ -56,7 +58,7 @@ export function DashboardClient({ initialTasks, initialProjects, title, filterTy
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred')
         }
-    }, [])
+    }, [setTasks])
 
     const handleToggle = async (taskId: string, completed: boolean) => {
         try {
@@ -102,6 +104,29 @@ export function DashboardClient({ initialTasks, initialProjects, title, filterTy
         })
     }
 
+    const activeProject = projects.find(p => p.id === selectedProjectId);
+    const isBoardView = activeProject?.viewType === 'board';
+
+    const handleBoardTaskUpdate = async (taskId: string, newStatus: string) => {
+        // Optimistic update
+        setTasks(prev => prev.map(t =>
+            t.id === taskId ? { ...t, status: newStatus as Task['status'] } : t
+        ));
+
+        try {
+            const res = await fetch(`/api/tasks`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: taskId, status: newStatus })
+            });
+            if (!res.ok) throw new Error("Failed to update task status");
+        } catch (e) {
+            console.error(e);
+            toast.error("Failed to save task status");
+            fetchData(); // Revert
+        }
+    };
+
     if (error) {
         return (
             <>
@@ -115,16 +140,24 @@ export function DashboardClient({ initialTasks, initialProjects, title, filterTy
 
     return (
         <>
-            <SiteHeader pageTitle={title || projects.find(p => p.id === selectedProjectId)?.name || "Inbox"} />
+            <SiteHeader pageTitle={title || activeProject?.name || "Inbox"} />
             <div className="flex flex-1 flex-col p-4 md:p-6">
-                <div className="@container/main flex flex-1 flex-col gap-2">
-                    <TaskList
-                        tasks={filteredTasks}
-                        projects={new Map(projects.map(p => [p.id, p]))}
-                        onToggle={handleToggle}
-                        onEdit={handleEdit}
-                        hideProjectName={!!selectedProjectId}
-                    />
+                <div className="@container/main flex flex-1 flex-col gap-2 h-full">
+                    {isBoardView && selectedProjectId ? (
+                        <LinkKanban
+                            tasks={filteredTasks}
+                            onTaskUpdate={handleBoardTaskUpdate}
+                            onTaskClick={handleEdit}
+                        />
+                    ) : (
+                        <TaskList
+                            tasks={filteredTasks}
+                            projects={new Map(projects.map(p => [p.id, p]))}
+                            onToggle={handleToggle}
+                            onEdit={handleEdit}
+                            hideProjectName={!!selectedProjectId}
+                        />
+                    )}
                 </div>
             </div>
 

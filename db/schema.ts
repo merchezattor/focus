@@ -69,6 +69,7 @@ export const projects = pgTable('projects', {
     description: text('description'),
     isFavorite: boolean('is_favorite').default(false).notNull(),
     goal_id: text('goal_id').references(() => goals.id), // Link project to goal
+    view_type: text('view_type').default('list').notNull(), // 'list' | 'board'
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     userId: text('user_id').references(() => user.id), // Link project to user (nullable for migration)
@@ -79,6 +80,7 @@ export const tasks = pgTable('tasks', {
     content: text('content').notNull(), // maps to 'title' in app
     description: text('description'),
     completed: boolean('completed').default(false).notNull(),
+    status: text('status').default('todo').notNull(), // 'todo' | 'in_progress' | 'review' | 'done'
     priority: text('priority').notNull(), // Storing as text to be safe, or use enum if strictly enforced
     due_date: timestamp('due_date'),
     plan_date: timestamp('plan_date'),
