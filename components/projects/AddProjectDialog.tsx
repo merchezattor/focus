@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { type Goal, type Project } from '@/types';
@@ -22,6 +22,7 @@ interface AddProjectDialogProps {
     onOpenChange?: (open: boolean) => void;
     trigger?: React.ReactNode;
     goals?: Goal[];
+    projects?: Project[];
 }
 
 const colors = [
@@ -29,6 +30,28 @@ const colors = [
     "#06b6d4", "#3b82f6", "#6366f1", "#8b5cf6", "#d946ef",
     "#f43f5e", "#6b7280"
 ];
+
+/**
+ * Encode parentId + parentType into a single select value.
+ * Format: "goal:<uuid>" or "project:<uuid>" or "none"
+ */
+function encodeParentValue(parentId?: string, parentType?: string): string {
+    if (!parentId || !parentType) return "none";
+    return `${parentType}:${parentId}`;
+}
+
+/**
+ * Decode a composite select value back into parentId + parentType.
+ */
+function decodeParentValue(value: string): { parentId?: string; parentType?: 'goal' | 'project' } {
+    if (value === "none") return {};
+    const [type, ...idParts] = value.split(':');
+    const id = idParts.join(':'); // handle UUIDs safely
+    if (type === 'goal' || type === 'project') {
+        return { parentId: id, parentType: type };
+    }
+    return {};
+}
 
 export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?: Project | null }) {
     const { open: controlledOpen, onOpenChange, trigger, projectToEdit } = props;
@@ -44,7 +67,8 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
     const [description, setDescription] = useState('');
     const [color, setColor] = useState(colors[Math.floor(Math.random() * colors.length)]);
     const [viewType, setViewType] = useState('list');
-    const [goalId, setGoalId] = useState<string | undefined>(undefined);
+    const [parentId, setParentId] = useState<string | undefined>(undefined);
+    const [parentType, setParentType] = useState<'goal' | 'project' | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(false);
 
     // Sync state when opening with a project
@@ -55,17 +79,25 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
                 setDescription(projectToEdit.description || '');
                 setColor(projectToEdit.color);
                 setViewType(projectToEdit.viewType || 'list');
-                setGoalId(projectToEdit.goalId || undefined);
+                setParentId(projectToEdit.parentId || undefined);
+                setParentType(projectToEdit.parentType || undefined);
             } else {
                 // Reset for Add mode
                 setName('');
                 setDescription('');
                 setColor(colors[Math.floor(Math.random() * colors.length)]);
                 setViewType('list');
-                setGoalId(undefined);
+                setParentId(undefined);
+                setParentType(undefined);
             }
         }
     }, [open, projectToEdit]);
+
+    const handleParentChange = (value: string) => {
+        const decoded = decodeParentValue(value);
+        setParentId(decoded.parentId);
+        setParentType(decoded.parentType);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -90,7 +122,8 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
                         description,
                         color,
                         viewType,
-                        goalId: goalId || null,
+                        parentId: parentId || null,
+                        parentType: parentType || null,
                     }),
                 });
 
@@ -109,7 +142,8 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
                         description,
                         color,
                         viewType,
-                        goalId: goalId || null,
+                        parentId: parentId || null,
+                        parentType: parentType || null,
                         isFavorite: false,
                     }),
                 });
@@ -120,8 +154,6 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
                 }
                 const data = await res.json();
 
-                // Only redirect on create? Or maybe on edit too?
-                // Usually on edit we stay or just refresh. User might be on that project page.
                 if (!projectToEdit) {
                     router.push(`/?project=${data.project.id}`);
                 }
@@ -139,6 +171,9 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
             setIsLoading(false);
         }
     };
+
+    // Filter out the project being edited to prevent self-reference
+    const availableProjects = (props.projects || []).filter(p => p.id !== projectToEdit?.id);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -181,27 +216,48 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Goal</label>
+                        <label className="text-sm font-medium">Parent</label>
                         <Select
-                            value={goalId || "none"}
-                            onValueChange={(val) => setGoalId(val === "none" ? undefined : val)}
+                            value={encodeParentValue(parentId, parentType)}
+                            onValueChange={handleParentChange}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder="Select goal (optional)" />
+                                <SelectValue placeholder="Select parent (optional)" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="none">No Goal</SelectItem>
-                                {props.goals?.map(goal => (
-                                    <SelectItem key={goal.id} value={goal.id}>
-                                        <div className="flex items-center gap-2">
-                                            <span
-                                                className="w-2 h-2 rounded-full"
-                                                style={{ backgroundColor: goal.color }}
-                                            />
-                                            {goal.name}
-                                        </div>
-                                    </SelectItem>
-                                ))}
+                                <SelectItem value="none">No Parent</SelectItem>
+                                {props.goals && props.goals.length > 0 && (
+                                    <SelectGroup>
+                                        <SelectLabel>Goals</SelectLabel>
+                                        {props.goals.map(goal => (
+                                            <SelectItem key={goal.id} value={`goal:${goal.id}`}>
+                                                <div className="flex items-center gap-2">
+                                                    <span
+                                                        className="w-2 h-2 rounded-full"
+                                                        style={{ backgroundColor: goal.color }}
+                                                    />
+                                                    {goal.name}
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                )}
+                                {availableProjects.length > 0 && (
+                                    <SelectGroup>
+                                        <SelectLabel>Projects</SelectLabel>
+                                        {availableProjects.map(project => (
+                                            <SelectItem key={project.id} value={`project:${project.id}`}>
+                                                <div className="flex items-center gap-2">
+                                                    <span
+                                                        className="w-2 h-2 rounded-full"
+                                                        style={{ backgroundColor: project.color }}
+                                                    />
+                                                    {project.name}
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                )}
                             </SelectContent>
                         </Select>
                     </div>
@@ -220,7 +276,6 @@ export function AddProjectDialog(props: AddProjectDialogProps & { projectToEdit?
                             ))}
                         </div>
                     </div>
-
 
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>

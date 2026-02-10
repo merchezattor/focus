@@ -50,7 +50,8 @@ export async function readProjects(userId: string): Promise<Project[]> {
     color: p.color,
     description: p.description || undefined,
     isFavorite: p.isFavorite,
-    goalId: p.goal_id || undefined,
+    parentId: p.parent_id || undefined,
+    parentType: (p.parent_type as 'goal' | 'project') || undefined,
     viewType: (p.view_type as 'list' | 'board') || 'list',
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
@@ -64,7 +65,8 @@ export async function createProject(project: Project, userId: string): Promise<v
     color: project.color,
     description: project.description,
     isFavorite: project.isFavorite,
-    goal_id: project.goalId,
+    parent_id: project.parentId,
+    parent_type: project.parentType,
     view_type: project.viewType,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
@@ -79,14 +81,9 @@ export async function updateProject(id: string, updates: Partial<Project>): Prom
   if (updates.color !== undefined) dbUpdates.color = updates.color;
   if (updates.isFavorite !== undefined) dbUpdates.isFavorite = updates.isFavorite;
   if (updates.isFavorite !== undefined) dbUpdates.isFavorite = updates.isFavorite;
-  if (updates.goalId !== undefined) dbUpdates.goal_id = updates.goalId;
+  if (updates.parentId !== undefined) dbUpdates.parent_id = updates.parentId;
+  if (updates.parentType !== undefined) dbUpdates.parent_type = updates.parentType;
   if (updates.viewType !== undefined) dbUpdates.view_type = updates.viewType;
-  // Handle undefined goalId specifically if explicitly passed as undefined/null to clear it?
-  // Partial<Project> usually implies undefined = no change. 
-  // If we want to clear goalId, we might need explicit null. 
-  // Project type has `goalId?: string`.
-  // If we assume undefined means "do not update", then we can't clear it.
-  // But for now let's stick to update if present.
 
   if (updates.updatedAt !== undefined) dbUpdates.updatedAt = updates.updatedAt;
 

@@ -68,7 +68,8 @@ export const projects = pgTable('projects', {
     color: text('color').notNull(),
     description: text('description'),
     isFavorite: boolean('is_favorite').default(false).notNull(),
-    goal_id: text('goal_id').references(() => goals.id), // Link project to goal
+    parent_id: text('parent_id'), // UUID of parent Goal or Project
+    parent_type: text('parent_type'), // 'goal' | 'project'
     view_type: text('view_type').default('list').notNull(), // 'list' | 'board'
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

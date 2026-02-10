@@ -3,9 +3,9 @@
 import { useAtom } from "jotai"
 import { projectToEditAtom } from "@/lib/atoms"
 import { AddProjectDialog } from "./AddProjectDialog"
-import { type Goal } from "@/types"
+import { type Goal, type Project } from "@/types"
 
-export function GlobalEditProjectDialog({ goals }: { goals?: Goal[] }) {
+export function GlobalEditProjectDialog({ goals, projects }: { goals?: Goal[]; projects?: Project[] }) {
     const [projectToEdit, setProjectToEdit] = useAtom(projectToEditAtom)
 
     return (
@@ -16,6 +16,7 @@ export function GlobalEditProjectDialog({ goals }: { goals?: Goal[] }) {
             }}
             projectToEdit={projectToEdit}
             goals={goals}
+            projects={projects}
         />
     )
 }

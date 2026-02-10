@@ -42,8 +42,8 @@ export default async function MainLayout({
         >
             <AppSidebar projects={projects} user={session.user} counts={counts} goals={goals} />
             <GlobalAddTaskDialog projects={projects} />
-            <GlobalAddProjectDialog goals={goals} />
-            <GlobalEditProjectDialog goals={goals} />
+            <GlobalAddProjectDialog goals={goals} projects={projects} />
+            <GlobalEditProjectDialog goals={goals} projects={projects} />
             <GlobalAddGoalDialog />
             <AddTaskFab />
             <SidebarInset>

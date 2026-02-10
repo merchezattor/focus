@@ -152,10 +152,13 @@ export function MapClient({ initialProjects, initialTasks, initialGoals }: MapCl
                 }
             });
 
-            if (project.goalId) {
+            if (project.parentId && project.parentType) {
+                const sourceId = project.parentType === 'goal'
+                    ? `goal-${project.parentId}`
+                    : `proj-${project.parentId}`;
                 edges.push({
-                    id: `e-goal-${project.goalId}-proj-${project.id}`,
-                    source: `goal-${project.goalId}`,
+                    id: `e-parent-${project.parentId}-proj-${project.id}`,
+                    source: sourceId,
                     target: nodeId,
                     animated: true,
                     style: { stroke: '#999', strokeWidth: 2 },
