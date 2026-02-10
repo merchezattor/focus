@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from 'react';
-import { ReactFlow, Background, Controls, useNodesState, useEdgesState, Position } from '@xyflow/react';
+import { ReactFlow, Background, Controls, useNodesState, useEdgesState, Position, Handle, NodeProps } from '@xyflow/react';
 // import dagre from '@dagrejs/dagre';
 const dagre = require('@dagrejs/dagre');
 import '@xyflow/react/dist/style.css';
@@ -15,6 +15,57 @@ interface MapClientProps {
 
 const nodeWidth = 200;
 const nodeHeight = 50;
+const summaryNodeWidth = 180;
+const summaryNodeHeight = 120; // Estimated height for 4 lines
+
+// Custom Task Summary Node Component
+const TaskSummaryNode = ({ data }: NodeProps) => {
+    const counts = data.counts as Record<string, number>;
+    
+    return (
+        <div 
+            style={{
+                width: summaryNodeWidth,
+                padding: '10px',
+                borderRadius: '8px',
+                background: '#fff',
+                border: '1px solid #e5e7eb',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+                fontSize: '12px',
+            }}
+        >
+            <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
+            
+            <div style={{ fontWeight: 600, borderBottom: '1px solid #f3f4f6', paddingBottom: '4px', marginBottom: '4px' }}>
+                Tasks Summary
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ef4444' }}>
+                <span>High (P1)</span>
+                <span style={{ fontWeight: 'bold' }}>{counts.p1 || 0}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f97316' }}>
+                <span>Medium (P2)</span>
+                <span style={{ fontWeight: 'bold' }}>{counts.p2 || 0}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#3b82f6' }}>
+                <span>Low (P3)</span>
+                <span style={{ fontWeight: 'bold' }}>{counts.p3 || 0}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6b7280' }}>
+                <span>None (P4)</span>
+                <span style={{ fontWeight: 'bold' }}>{counts.p4 || 0}</span>
+            </div>
+        </div>
+    );
+};
+
+const nodeTypes = {
+    'task-summary': TaskSummaryNode,
+};
 
 const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
     const dagreGraph = new dagre.graphlib.Graph();
@@ -24,7 +75,10 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
     dagreGraph.setGraph({ rankdir: direction });
 
     nodes.forEach((node) => {
-        dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+        // Dynamic size based on node type
+        const width = node.type === 'task-summary' ? summaryNodeWidth : nodeWidth;
+        const height = node.type === 'task-summary' ? summaryNodeHeight : nodeHeight;
+        dagreGraph.setNode(node.id, { width, height });
     });
 
     edges.forEach((edge) => {
@@ -35,6 +89,9 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
 
     const newNodes = nodes.map((node) => {
         const nodeWithPosition = dagreGraph.node(node.id);
+        const width = node.type === 'task-summary' ? summaryNodeWidth : nodeWidth;
+        const height = node.type === 'task-summary' ? summaryNodeHeight : nodeHeight;
+
         return {
             ...node,
             targetPosition: isHorizontal ? Position.Left : Position.Top,
@@ -42,8 +99,8 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
             // We are shifting the dagre node position (anchor=center center) to the top left
             // so it matches the React Flow node anchor point (top left).
             position: {
-                x: nodeWithPosition.x - nodeWidth / 2,
-                y: nodeWithPosition.y - nodeHeight / 2,
+                x: nodeWithPosition.x - width / 2,
+                y: nodeWithPosition.y - height / 2,
             },
         };
     });
@@ -77,16 +134,12 @@ export function MapClient({ initialProjects, initialTasks, initialGoals }: MapCl
         }
 
         // 2. Create Nodes for Projects and Edges from Goals
-        // 2. Create Nodes for Projects and Edges from Goals
-        // "Inbox" virtual project removed as per request
         const allProjects = [...initialProjects];
 
         for (const project of allProjects) {
             const nodeId = `proj-${project.id}`;
             nodes.push({
                 id: nodeId,
-                // type: project.goalId ? 'default' : 'input', // If it has a parent (goal), it's default, else input (root)
-                // Actually React Flow handles types loosely, 'default' is fine for intermediate. 
                 data: { label: project.name },
                 style: {
                     background: '#fff',
@@ -110,30 +163,49 @@ export function MapClient({ initialProjects, initialTasks, initialGoals }: MapCl
             }
         }
 
-        // 3. Create Nodes for Tasks and Edges from Projects
+        // 3. Aggregate Tasks by Project and Create Summary Nodes
+        const tasksByProject: Record<string, Record<string, number>> = {};
+
         for (const task of initialTasks) {
             if (!task.projectId) continue; // Skip inbox tasks
-            const projectId = task.projectId;
-            const nodeId = `task-${task.id}`;
+            
+            if (!tasksByProject[task.projectId]) {
+                tasksByProject[task.projectId] = { p1: 0, p2: 0, p3: 0, p4: 0 };
+            }
+            
+            const p = task.priority || 'p4'; // Default to p4 if undefined
+            if (tasksByProject[task.projectId][p] !== undefined) {
+                tasksByProject[task.projectId][p]++;
+            } else {
+                 // handle unexpected priority values just in case
+                tasksByProject[task.projectId].p4++;
+            }
+        }
 
-            nodes.push({
-                id: nodeId,
-                data: { label: task.title },
-                style: {
-                    background: '#f9f9f9',
-                    border: '1px solid #ddd',
-                    padding: '5px 10px',
-                    fontSize: '12px',
-                    width: nodeWidth,
-                }
-            });
+        for (const [projectId, counts] of Object.entries(tasksByProject)) {
+             // Only create if associated project exists (it should, but safety check)
+             if (!allProjects.find(p => p.id === projectId)) continue;
 
-            edges.push({
-                id: `e-proj-${projectId}-${task.id}`,
-                source: `proj-${projectId}`,
-                target: nodeId,
-                animated: true,
-            });
+             const nodeId = `summary-${projectId}`;
+             
+             // Check if there are any tasks at all
+             const totalTasks = Object.values(counts).reduce((a, b) => a + b, 0);
+             if (totalTasks === 0) continue;
+
+             nodes.push({
+                 id: nodeId,
+                 type: 'task-summary',
+                 data: { counts },
+                 // style handled in component
+             });
+
+             edges.push({
+                 id: `e-proj-${projectId}-summary`,
+                 source: `proj-${projectId}`,
+                 target: nodeId,
+                 animated: true,
+                 style: { stroke: '#e5e7eb', strokeWidth: 1, strokeDasharray: '5,5' }, // Dashed line for summary
+             });
         }
 
         return getLayoutedElements(nodes, edges, 'TB'); // Top to Bottom layout
@@ -149,6 +221,7 @@ export function MapClient({ initialProjects, initialTasks, initialGoals }: MapCl
                 edges={edges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
+                nodeTypes={nodeTypes}
                 fitView
             >
                 <Background />
