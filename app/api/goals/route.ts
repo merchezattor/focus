@@ -1,21 +1,20 @@
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { NextResponse, NextRequest } from "next/server";
 import { createGoal, readGoals, updateGoal, deleteGoal } from "@/lib/storage";
 import { goalSchema } from "@/types/goal";
+import { getAuthenticatedUser } from "@/lib/api-auth";
 
 // Schema for updating - partial
 const updateGoalSchema = goalSchema.partial().omit({ id: true });
 
-export async function GET(_req: Request) {
+export async function GET(req: NextRequest) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        });
+        const user = await getAuthenticatedUser(req);
 
-        if (!session) return new NextResponse("Unauthorized", { status: 401 });
+        if (!user) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
 
-        const goals = await readGoals(session.user.id);
+        const goals = await readGoals(user.id);
         return NextResponse.json({ goals });
     } catch (error) {
         console.error('[GOALS_GET]', error);
@@ -23,13 +22,13 @@ export async function GET(_req: Request) {
     }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        });
+        const user = await getAuthenticatedUser(req);
 
-        if (!session) return new NextResponse("Unauthorized", { status: 401 });
+        if (!user) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
 
         const json = await req.json();
 
@@ -49,7 +48,7 @@ export async function POST(req: Request) {
             return new NextResponse(JSON.stringify(result.error), { status: 400 });
         }
 
-        await createGoal(result.data, session.user.id);
+        await createGoal(result.data, user.id);
 
         return NextResponse.json({ goal: result.data }, { status: 201 });
     } catch (error) {
@@ -58,13 +57,13 @@ export async function POST(req: Request) {
     }
 }
 
-export async function PUT(req: Request) {
+export async function PUT(req: NextRequest) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        });
+        const user = await getAuthenticatedUser(req);
 
-        if (!session) return new NextResponse("Unauthorized", { status: 401 });
+        if (!user) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
 
         const json = await req.json();
         const { id, ...data } = json;
@@ -86,11 +85,11 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: NextRequest) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        });
+        const user = await getAuthenticatedUser(req);
 
-        if (!session) return new NextResponse("Unauthorized", { status: 401 });
+        if (!user) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
 
         const { searchParams } = new URL(req.url);
         const id = searchParams.get('id');
