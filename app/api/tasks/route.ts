@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/api-auth";
-import { createTask, readTasks } from "@/lib/storage";
+import { createTask, readTasks, updateTask } from "@/lib/storage";
 import { type Task, taskSchema } from "@/types";
 
 // Schema for creating a task (id, createdAt, updatedAt are generated server-side)
@@ -124,7 +124,7 @@ export async function PUT(request: NextRequest) {
 
 		// Basic validation (can improve with Zod schema for updates)
 		// For now trust the partial update but sanitized via storage function types
-		await import("@/lib/storage").then((m) => m.updateTask(id, data));
+		await updateTask(id, data, user.id);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
