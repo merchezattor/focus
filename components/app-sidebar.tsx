@@ -10,7 +10,7 @@ import {
 	IconSearch,
 } from "@tabler/icons-react";
 import { useSetAtom } from "jotai";
-import { Flag, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Activity, Flag, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { isAddGoalOpenAtom } from "@/components/goals/GlobalAddGoalDialog";
@@ -69,6 +69,11 @@ const data = {
 			title: "Completed",
 			url: "#",
 			icon: IconCheck,
+		},
+		{
+			title: "Events",
+			url: "/events",
+			icon: Activity,
 		},
 	],
 };

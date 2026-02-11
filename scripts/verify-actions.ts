@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { actions, tasks, user } from "@/db/schema";
+import { actions, user } from "@/db/schema";
 import { getActions, markActionsRead } from "@/lib/actions";
 import { createTask, deleteTask, updateTask } from "@/lib/storage";
 
