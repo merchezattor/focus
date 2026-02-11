@@ -102,7 +102,7 @@ export async function PUT(request: NextRequest) {
 			);
 		}
 
-		await updateProject(id, result.data);
+		await updateProject(id, result.data, user.id);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
@@ -132,9 +132,7 @@ export async function DELETE(request: NextRequest) {
 			);
 		}
 
-		await deleteProject(request.nextUrl.searchParams.get("id")!); // Wait, I already got id.
-		// Also deleteProject import needs to be verified.
-		await deleteProject(id);
+		await deleteProject(id, user.id);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

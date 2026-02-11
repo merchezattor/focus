@@ -75,7 +75,7 @@ export async function PUT(req: NextRequest) {
 			return new NextResponse(JSON.stringify(result.error), { status: 400 });
 		}
 
-		await updateGoal(id, result.data);
+		await updateGoal(id, result.data, user.id);
 		return NextResponse.json({ success: true });
 	} catch (error) {
 		console.error("[GOALS_PUT]", error);
@@ -96,7 +96,7 @@ export async function DELETE(req: NextRequest) {
 
 		if (!id) return new NextResponse("Goal ID required", { status: 400 });
 
-		await deleteGoal(id);
+		await deleteGoal(id, user.id);
 		return NextResponse.json({ success: true });
 	} catch (error) {
 		console.error("[GOALS_DELETE]", error);

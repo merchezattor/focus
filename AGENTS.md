@@ -46,7 +46,7 @@ The project structure follows standard Next.js App Router conventions:
 - **UI:** Use **Shadcn UI** components from `@/components/ui` whenever possible. Do not invent new UI primitives unless necessary.
 - **State:** Use **Jotai** atoms for global UI state (Sidebar toggles, Dialog open states).
 
-### Linting & Formatting (CRITICAL)
+### Linting & Formatting
 
 - **Linter/Formatter:** Biome.
 - **Rule:** After making ANY changes, you **MUST** run the linter and fixer to ensure code quality and consistency.

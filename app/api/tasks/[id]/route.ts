@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getAuthenticatedUser } from "@/lib/api-auth";
 import { deleteTask, syncComments, updateTask } from "@/lib/storage";
 import { taskSchema } from "@/types";
 
@@ -9,6 +10,11 @@ export async function PATCH(
 	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
+		const user = await getAuthenticatedUser(request);
+		if (!user) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
 		const { id } = await params;
 		const body = await request.json();
 
@@ -50,21 +56,14 @@ export async function PATCH(
 		}
 
 		// Perform Update
-		// Note: In DB mode, we don't return the full updated task from updateTask,
-		// but the UI typically updates optimistically anyway.
-		// If we need the updated task, we would need to fetch it again or have updateTask return it.
-		// For now, let's trust the input and return matched data + timestamps assuming success.
-
-		await updateTask(id, result.data);
+		await updateTask(id, result.data, user.id);
 
 		// Sync comments if provided
 		if (result.data.comments) {
 			await syncComments(id, result.data.comments);
 		}
 
-		// Creating a mock response of what the task likely looks like to satisfy the client's expectation
-		// of receiving the updated task data.
-		// A fully correct implementation would fetch the task after update.
+		// Creating a mock response
 		const updatedResponse = {
 			...result.data,
 			id,
@@ -83,13 +82,18 @@ export async function PATCH(
 
 // DELETE /api/tasks/[id] - Delete task
 export async function DELETE(
-	_request: NextRequest,
+	request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
+		const user = await getAuthenticatedUser(request);
+		if (!user) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
 		const { id } = await params;
 
-		await deleteTask(id);
+		await deleteTask(id, user.id);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

@@ -1,4 +1,11 @@
-import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	jsonb,
+	pgEnum,
+	pgTable,
+	text,
+	timestamp,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
 	id: text("id").primaryKey(),
@@ -111,4 +118,44 @@ export const apiTokens = pgTable("api_tokens", {
 		.references(() => user.id, { onDelete: "cascade" })
 		.notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const actionTypeEnum = pgEnum("action_type", [
+	"create",
+	"update",
+	"delete",
+	"complete",
+	"uncomplete",
+]);
+
+export const entityTypeEnum = pgEnum("entity_type", [
+	"task",
+	"project",
+	"goal",
+]);
+
+export const actorTypeEnum = pgEnum("actor_type", ["user", "agent", "system"]);
+
+export const actions = pgTable("actions", {
+	id: text("id").primaryKey(),
+	entityId: text("entity_id").notNull(),
+	entityType: entityTypeEnum("entity_type").notNull(),
+
+	actorId: text("actor_id").notNull(),
+	actorType: actorTypeEnum("actor_type").notNull().default("user"),
+
+	actionType: actionTypeEnum("action_type").notNull(),
+
+	// JSON object storing NEW values only: { "title": "New Title" }
+	changes: jsonb("changes"),
+
+	// Metadata for pure "events"
+	metadata: jsonb("metadata"),
+
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+
+	// Single isRead field.
+	// - If Actor=User, this tracks if Agent has read it.
+	// - If Actor=Agent, this tracks if User has read it.
+	isRead: boolean("is_read").default(false).notNull(),
 });

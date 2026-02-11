@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { comments, goals, projects, tasks } from "@/db/schema";
 import type { Comment, Goal, Project, Task } from "@/types";
 
+import { type ActionType, ActorType, logAction } from "./actions";
+
 // ... existing code ...
 
 export async function getTaskCounts(
@@ -80,11 +82,21 @@ export async function createProject(
 		updatedAt: project.updatedAt,
 		userId: userId,
 	});
+
+	logAction({
+		entityId: project.id,
+		entityType: "project",
+		actorId: userId,
+		actorType: "user",
+		actionType: "create",
+		changes: { name: project.name },
+	});
 }
 
 export async function updateProject(
 	id: string,
 	updates: Partial<Project>,
+	actorId: string,
 ): Promise<void> {
 	const dbUpdates: any = {};
 	if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -104,6 +116,17 @@ export async function updateProject(
 
 	if (Object.keys(dbUpdates).length > 0) {
 		await db.update(projects).set(dbUpdates).where(eq(projects.id, id));
+
+		// Log action
+		// For updates, we log the *changes* requested
+		logAction({
+			entityId: id,
+			entityType: "project",
+			actorId: actorId,
+			actorType: "user",
+			actionType: "update",
+			changes: updates,
+		});
 	}
 }
 
@@ -139,11 +162,21 @@ export async function createGoal(goal: Goal, userId: string): Promise<void> {
 		createdAt: goal.createdAt,
 		updatedAt: goal.updatedAt,
 	});
+
+	logAction({
+		entityId: goal.id,
+		entityType: "goal",
+		actorId: userId,
+		actorType: "user",
+		actionType: "create",
+		changes: { name: goal.name },
+	});
 }
 
 export async function updateGoal(
 	id: string,
 	updates: Partial<Goal>,
+	actorId: string,
 ): Promise<void> {
 	const dbUpdates: any = {};
 	if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -156,11 +189,28 @@ export async function updateGoal(
 
 	if (Object.keys(dbUpdates).length > 0) {
 		await db.update(goals).set(dbUpdates).where(eq(goals.id, id));
+
+		logAction({
+			entityId: id,
+			entityType: "goal",
+			actorId: actorId,
+			actorType: "user",
+			actionType: "update",
+			changes: updates,
+		});
 	}
 }
 
-export async function deleteGoal(id: string): Promise<void> {
+export async function deleteGoal(id: string, actorId: string): Promise<void> {
 	await db.delete(goals).where(eq(goals.id, id));
+
+	logAction({
+		entityId: id,
+		entityType: "goal",
+		actorId: actorId,
+		actorType: "user",
+		actionType: "delete",
+	});
 }
 
 // --- Tasks ---
@@ -232,11 +282,21 @@ export async function createTask(task: Task, userId: string): Promise<void> {
 			await createComment(task.id, c);
 		}
 	}
+
+	logAction({
+		entityId: task.id,
+		entityType: "task",
+		actorId: userId,
+		actorType: "user",
+		actionType: "create",
+		changes: { content: task.title },
+	});
 }
 
 export async function updateTask(
 	id: string,
 	updates: Partial<Task>,
+	actorId: string,
 ): Promise<void> {
 	// Map partial Task to partial DB Task
 	const dbUpdates: any = {};
@@ -253,11 +313,35 @@ export async function updateTask(
 
 	if (Object.keys(dbUpdates).length > 0) {
 		await db.update(tasks).set(dbUpdates).where(eq(tasks.id, id));
+
+		const actionType: ActionType =
+			updates.completed === true
+				? "complete"
+				: updates.completed === false
+					? "uncomplete"
+					: "update";
+
+		logAction({
+			entityId: id,
+			entityType: "task",
+			actorId: actorId,
+			actorType: "user",
+			actionType: actionType,
+			changes: updates,
+		});
 	}
 }
 
-export async function deleteTask(id: string): Promise<void> {
+export async function deleteTask(id: string, actorId: string): Promise<void> {
 	await db.delete(tasks).where(eq(tasks.id, id));
+
+	logAction({
+		entityId: id,
+		entityType: "task",
+		actorId: actorId,
+		actorType: "user",
+		actionType: "delete",
+	});
 }
 
 // --- Comments ---
@@ -319,7 +403,18 @@ export async function writeTasks(_tasks: Task[]): Promise<void> {
 
 // ... (legacy writeProjects)
 
-export async function deleteProject(id: string): Promise<void> {
+export async function deleteProject(
+	id: string,
+	actorId: string,
+): Promise<void> {
 	await db.delete(tasks).where(eq(tasks.project_id, id));
 	await db.delete(projects).where(eq(projects.id, id));
+
+	logAction({
+		entityId: id,
+		entityType: "project",
+		actorId: actorId,
+		actorType: "user",
+		actionType: "delete",
+	});
 }
