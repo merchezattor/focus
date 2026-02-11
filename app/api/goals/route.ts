@@ -48,7 +48,10 @@ export async function POST(req: NextRequest) {
 			return new NextResponse(JSON.stringify(result.error), { status: 400 });
 		}
 
-		await createGoal(result.data, user.id);
+		// Determine actor from headers or default to user
+		const actorType = (req.headers.get("x-actor-type") as any) || "user";
+
+		await createGoal(result.data, user.id, actorType);
 
 		return NextResponse.json({ goal: result.data }, { status: 201 });
 	} catch (error) {
@@ -75,7 +78,10 @@ export async function PUT(req: NextRequest) {
 			return new NextResponse(JSON.stringify(result.error), { status: 400 });
 		}
 
-		await updateGoal(id, result.data, user.id);
+		// Determine actor from headers or default to user
+		const actorType = (req.headers.get("x-actor-type") as any) || "user";
+
+		await updateGoal(id, result.data, user.id, actorType);
 		return NextResponse.json({ success: true });
 	} catch (error) {
 		console.error("[GOALS_PUT]", error);
@@ -96,7 +102,10 @@ export async function DELETE(req: NextRequest) {
 
 		if (!id) return new NextResponse("Goal ID required", { status: 400 });
 
-		await deleteGoal(id, user.id);
+		// Determine actor from headers or default to user
+		const actorType = (req.headers.get("x-actor-type") as any) || "user";
+
+		await deleteGoal(id, user.id, actorType);
 		return NextResponse.json({ success: true });
 	} catch (error) {
 		console.error("[GOALS_DELETE]", error);

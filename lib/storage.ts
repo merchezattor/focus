@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { comments, goals, projects, tasks } from "@/db/schema";
 import type { Comment, Goal, Project, Task } from "@/types";
 
-import { type ActionType, logAction } from "./actions";
+import { type ActionType, type ActorType, logAction } from "./actions";
 
 // ... existing code ...
 
@@ -68,6 +68,7 @@ export async function readProjects(userId: string): Promise<Project[]> {
 export async function createProject(
 	project: Project,
 	userId: string,
+	actorType: ActorType = "user",
 ): Promise<void> {
 	await db.insert(projects).values({
 		id: project.id,
@@ -87,7 +88,7 @@ export async function createProject(
 		entityId: project.id,
 		entityType: "project",
 		actorId: userId,
-		actorType: "user",
+		actorType: actorType,
 		actionType: "create",
 		changes: { name: project.name },
 	});
@@ -95,8 +96,9 @@ export async function createProject(
 
 export async function updateProject(
 	id: string,
-	updates: Partial<Project>,
+	updates: Partial<Project> & { parentType?: "goal" | "project" },
 	actorId: string,
+	actorType: ActorType = "user",
 ): Promise<void> {
 	const dbUpdates: any = {};
 	if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -123,7 +125,7 @@ export async function updateProject(
 			entityId: id,
 			entityType: "project",
 			actorId: actorId,
-			actorType: "user",
+			actorType: actorType,
 			actionType: "update",
 			changes: updates,
 		});
@@ -150,7 +152,11 @@ export async function readGoals(userId: string): Promise<Goal[]> {
 	}));
 }
 
-export async function createGoal(goal: Goal, userId: string): Promise<void> {
+export async function createGoal(
+	goal: Goal,
+	userId: string,
+	actorType: ActorType = "user",
+): Promise<void> {
 	await db.insert(goals).values({
 		id: goal.id,
 		name: goal.name,
@@ -167,7 +173,7 @@ export async function createGoal(goal: Goal, userId: string): Promise<void> {
 		entityId: goal.id,
 		entityType: "goal",
 		actorId: userId,
-		actorType: "user",
+		actorType: actorType,
 		actionType: "create",
 		changes: { name: goal.name },
 	});
@@ -177,6 +183,7 @@ export async function updateGoal(
 	id: string,
 	updates: Partial<Goal>,
 	actorId: string,
+	actorType: ActorType = "user",
 ): Promise<void> {
 	const dbUpdates: any = {};
 	if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -194,21 +201,25 @@ export async function updateGoal(
 			entityId: id,
 			entityType: "goal",
 			actorId: actorId,
-			actorType: "user",
+			actorType: actorType,
 			actionType: "update",
 			changes: updates,
 		});
 	}
 }
 
-export async function deleteGoal(id: string, actorId: string): Promise<void> {
+export async function deleteGoal(
+	id: string,
+	actorId: string,
+	actorType: ActorType = "user",
+): Promise<void> {
 	await db.delete(goals).where(eq(goals.id, id));
 
 	logAction({
 		entityId: id,
 		entityType: "goal",
 		actorId: actorId,
-		actorType: "user",
+		actorType: actorType,
 		actionType: "delete",
 	});
 }
@@ -225,7 +236,7 @@ export async function readTasks(userId: string): Promise<Task[]> {
 
 	// Fetch comments for these tasks
 	// We can join or fetch all comments for user's tasks.
-	// For simplicity, let's fetch all comments (filtered by task IDs in JS is OK for MVP, or better query).
+	// For simplicity, let's fetch all comments for user's tasks.
 	// Actually, we should filter comments by task_id which are in dbTasks.
 	// Let's grab all comments for now, assuming not massive scale yet, or better:
 	// const taskIds = dbTasks.map(t => t.id);
@@ -261,7 +272,11 @@ export async function readTasks(userId: string): Promise<Task[]> {
 	}));
 }
 
-export async function createTask(task: Task, userId: string): Promise<void> {
+export async function createTask(
+	task: Task,
+	userId: string,
+	actorType: ActorType = "user",
+): Promise<void> {
 	await db.insert(tasks).values({
 		id: task.id,
 		content: task.title,
@@ -287,7 +302,7 @@ export async function createTask(task: Task, userId: string): Promise<void> {
 		entityId: task.id,
 		entityType: "task",
 		actorId: userId,
-		actorType: "user",
+		actorType: actorType,
 		actionType: "create",
 		changes: { content: task.title },
 	});
@@ -297,6 +312,7 @@ export async function updateTask(
 	id: string,
 	updates: Partial<Task>,
 	actorId: string,
+	actorType: ActorType = "user",
 ): Promise<void> {
 	// Map partial Task to partial DB Task
 	const dbUpdates: any = {};
@@ -325,21 +341,25 @@ export async function updateTask(
 			entityId: id,
 			entityType: "task",
 			actorId: actorId,
-			actorType: "user",
+			actorType: actorType,
 			actionType: actionType,
 			changes: updates,
 		});
 	}
 }
 
-export async function deleteTask(id: string, actorId: string): Promise<void> {
+export async function deleteTask(
+	id: string,
+	actorId: string,
+	actorType: ActorType = "user",
+): Promise<void> {
 	await db.delete(tasks).where(eq(tasks.id, id));
 
 	logAction({
 		entityId: id,
 		entityType: "task",
 		actorId: actorId,
-		actorType: "user",
+		actorType: actorType,
 		actionType: "delete",
 	});
 }
@@ -406,6 +426,7 @@ export async function writeTasks(_tasks: Task[]): Promise<void> {
 export async function deleteProject(
 	id: string,
 	actorId: string,
+	actorType: ActorType = "user",
 ): Promise<void> {
 	await db.delete(tasks).where(eq(tasks.project_id, id));
 	await db.delete(projects).where(eq(projects.id, id));
@@ -414,7 +435,7 @@ export async function deleteProject(
 		entityId: id,
 		entityType: "project",
 		actorId: actorId,
-		actorType: "user",
+		actorType: actorType,
 		actionType: "delete",
 	});
 }

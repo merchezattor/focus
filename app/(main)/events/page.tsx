@@ -39,6 +39,7 @@ export default async function EventsPage(props: PageProps) {
 		userId: session.user.id,
 		limit,
 		entityType,
+		includeOwn: true,
 	});
 
 	return (

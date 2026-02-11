@@ -72,14 +72,23 @@ export async function getActions(params: {
 	entityType?: EntityType;
 	entityId?: string;
 	limit?: number;
+	includeOwn?: boolean;
 }) {
-	const { userId, isRead, entityType, entityId, limit = 50 } = params;
+	const {
+		userId,
+		isRead,
+		entityType,
+		entityId,
+		limit = 50,
+		includeOwn = false,
+	} = params;
 
 	// Conditions
-	const filters = [
-		// Exclude own actions
-		ne(actions.actorId, userId),
-	];
+	const filters = [];
+
+	if (!includeOwn) {
+		filters.push(ne(actions.actorId, userId));
+	}
 
 	if (isRead !== undefined) {
 		filters.push(eq(actions.isRead, isRead));

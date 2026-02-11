@@ -71,6 +71,47 @@ async function verify() {
 		console.error("❌ Update action NOT found!");
 	}
 
+	// 2b. Update Task (simulate Agent)
+	console.log("2b. Updating Task (as Agent)...");
+	await updateTask(
+		taskId,
+		{
+			title: "Updated Title by Agent",
+		},
+		userId,
+		"agent",
+	);
+
+	await new Promise((r) => setTimeout(r, 1000));
+
+	const agentLogs = await getActions({
+		userId: userId,
+		limit: 10,
+		includeOwn: true,
+	}); // Agent action should appear even for own user if includeOwn is true, or strictly check actorType
+	// Actually getActions filters out own actions by default.
+	// If actorType is agent, it is NOT "own" action (actorId is userId, but actorType is different? No, actorId is userId).
+	// Let's check getActions logic: ne(actions.actorId, userId).
+	// If I pass actorId=userId for agent action, it will be filtered out by default getActions.
+	// But the Events page now uses includeOwn: true.
+	// Let's verify we can find it with includeOwn: true.
+
+	const agentLog = agentLogs.find(
+		(l) =>
+			l.entityId === taskId &&
+			l.actionType === "update" &&
+			l.actorType === "agent",
+	);
+
+	if (agentLog) {
+		console.log("✅ Agent Update action logged:", agentLog.id);
+		console.log("   Actor Type:", agentLog.actorType);
+	} else {
+		console.error(
+			"❌ Agent Update action NOT found (check actorType or filtering)!",
+		);
+	}
+
 	// 3. Mark as Read
 	if (createLog) {
 		console.log("3. Marking as Read...");

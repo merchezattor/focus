@@ -122,9 +122,12 @@ export async function PUT(request: NextRequest) {
 			);
 		}
 
+		// Determine actor from headers or default to user
+		const actorType = (request.headers.get("x-actor-type") as any) || "user";
+
 		// Basic validation (can improve with Zod schema for updates)
 		// For now trust the partial update but sanitized via storage function types
-		await updateTask(id, data, user.id);
+		await updateTask(id, data, user.id, actorType);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

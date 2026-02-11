@@ -102,7 +102,21 @@ export async function PUT(request: NextRequest) {
 			);
 		}
 
-		await updateProject(id, result.data, user.id);
+		// Determine actor from headers or default to user
+		const actorType = (request.headers.get("x-actor-type") as any) || "user";
+
+		// result.data.parentType can be null, which is not compatible with string literal type in updateProject
+		// We need to cast it or ensure it matches.
+		// updateProject expects { parentType?: "goal" | "project" }
+		// result.data has { parentType?: "goal" | "project" | null }
+		// We need to strip null or convert to undefined if null
+		const cleanData = {
+			...result.data,
+			parentType:
+				result.data.parentType === null ? undefined : result.data.parentType,
+		};
+
+		await updateProject(id, cleanData, user.id, actorType);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
@@ -132,7 +146,10 @@ export async function DELETE(request: NextRequest) {
 			);
 		}
 
-		await deleteProject(id, user.id);
+		// Determine actor from headers or default to user
+		const actorType = (request.headers.get("x-actor-type") as any) || "user";
+
+		await deleteProject(id, user.id, actorType);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

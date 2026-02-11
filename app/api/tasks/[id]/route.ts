@@ -55,8 +55,11 @@ export async function PATCH(
 			);
 		}
 
+		// Determine actor from headers or default to user
+		const actorType = (request.headers.get("x-actor-type") as any) || "user";
+
 		// Perform Update
-		await updateTask(id, result.data, user.id);
+		await updateTask(id, result.data, user.id, actorType);
 
 		// Sync comments if provided
 		if (result.data.comments) {
@@ -93,7 +96,10 @@ export async function DELETE(
 
 		const { id } = await params;
 
-		await deleteTask(id, user.id);
+		// Determine actor from headers or default to user
+		const actorType = (request.headers.get("x-actor-type") as any) || "user";
+
+		await deleteTask(id, user.id, actorType);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
