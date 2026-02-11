@@ -15,11 +15,12 @@ const updateProjectSchema = projectSchema.partial().omit({ id: true });
 // GET /api/projects - Get all projects
 export async function GET(request: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(request);
+		const auth = await getAuthenticatedUser(request);
 
-		if (!user) {
+		if (!auth) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
+		const { user } = auth;
 
 		const projects = await readProjects(user.id);
 		return NextResponse.json({ projects });
@@ -35,11 +36,12 @@ export async function GET(request: NextRequest) {
 // POST /api/projects - Create new project
 export async function POST(request: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(request);
+		const auth = await getAuthenticatedUser(request);
 
-		if (!user) {
+		if (!auth) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
+		const { user, actorType } = auth;
 
 		const body = await request.json();
 
@@ -62,7 +64,7 @@ export async function POST(request: NextRequest) {
 			updatedAt: new Date(),
 		};
 
-		await createProject(newProject, user.id);
+		await createProject(newProject, user.id, actorType);
 
 		return NextResponse.json({ project: newProject }, { status: 201 });
 	} catch (error) {
@@ -77,11 +79,12 @@ export async function POST(request: NextRequest) {
 // PUT /api/projects - Update project
 export async function PUT(request: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(request);
+		const auth = await getAuthenticatedUser(request);
 
-		if (!user) {
+		if (!auth) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
+		const { user, actorType } = auth;
 
 		const body = await request.json();
 		const { id, ...data } = body;
@@ -101,9 +104,6 @@ export async function PUT(request: NextRequest) {
 				{ status: 400 },
 			);
 		}
-
-		// Determine actor from headers or default to user
-		const actorType = (request.headers.get("x-actor-type") as any) || "user";
 
 		// result.data.parentType can be null, which is not compatible with string literal type in updateProject
 		// We need to cast it or ensure it matches.
@@ -130,11 +130,12 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/projects - Delete project
 export async function DELETE(request: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(request);
+		const auth = await getAuthenticatedUser(request);
 
-		if (!user) {
+		if (!auth) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
+		const { user, actorType } = auth;
 
 		const { searchParams } = new URL(request.url);
 		const id = searchParams.get("id");
@@ -145,9 +146,6 @@ export async function DELETE(request: NextRequest) {
 				{ status: 400 },
 			);
 		}
-
-		// Determine actor from headers or default to user
-		const actorType = (request.headers.get("x-actor-type") as any) || "user";
 
 		await deleteProject(id, user.id, actorType);
 

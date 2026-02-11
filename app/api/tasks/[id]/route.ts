@@ -10,10 +10,11 @@ export async function PATCH(
 	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
-		const user = await getAuthenticatedUser(request);
-		if (!user) {
+		const auth = await getAuthenticatedUser(request);
+		if (!auth) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
+		const { user, actorType } = auth;
 
 		const { id } = await params;
 		const body = await request.json();
@@ -55,9 +56,6 @@ export async function PATCH(
 			);
 		}
 
-		// Determine actor from headers or default to user
-		const actorType = (request.headers.get("x-actor-type") as any) || "user";
-
 		// Perform Update
 		await updateTask(id, result.data, user.id, actorType);
 
@@ -89,15 +87,13 @@ export async function DELETE(
 	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
-		const user = await getAuthenticatedUser(request);
-		if (!user) {
+		const auth = await getAuthenticatedUser(request);
+		if (!auth) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
+		const { user, actorType } = auth;
 
 		const { id } = await params;
-
-		// Determine actor from headers or default to user
-		const actorType = (request.headers.get("x-actor-type") as any) || "user";
 
 		await deleteTask(id, user.id, actorType);
 

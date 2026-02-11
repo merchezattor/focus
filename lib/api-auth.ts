@@ -3,23 +3,24 @@ import { headers } from "next/headers";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { apiTokens, user } from "@/db/schema";
+import type { ActorType } from "@/lib/actions";
 import { auth } from "@/lib/auth";
 
 export async function getAuthenticatedUser(request: NextRequest) {
-	// 1. Try Session Auth (Cookies)
+	// 1. Try Session Auth (Cookies) -> Actor = user
 	try {
 		const session = await auth.api.getSession({
 			headers: await headers(),
 		});
 
 		if (session) {
-			return session.user;
+			return { user: session.user, actorType: "user" as ActorType };
 		}
 	} catch (_e) {
 		// ignore session error
 	}
 
-	// 2. Try Bearer Token (API)
+	// 2. Try Bearer Token (API) -> Actor = agent
 	const authHeader = request.headers.get("Authorization");
 	if (authHeader?.startsWith("Bearer ")) {
 		const token = authHeader.split(" ")[1];
@@ -34,7 +35,9 @@ export async function getAuthenticatedUser(request: NextRequest) {
 				where: eq(user.id, apiToken.userId),
 			});
 
-			if (dbUser) return dbUser;
+			if (dbUser) {
+				return { user: dbUser, actorType: "agent" as ActorType };
+			}
 		}
 	}
 

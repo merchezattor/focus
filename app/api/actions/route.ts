@@ -6,10 +6,11 @@ import { getAuthenticatedUser } from "@/lib/api-auth";
 // GET /api/actions
 export async function GET(request: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(request);
-		if (!user) {
+		const auth = await getAuthenticatedUser(request);
+		if (!auth) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
+		const { user } = auth;
 
 		const { searchParams } = new URL(request.url);
 		const limit = searchParams.get("limit")
@@ -47,8 +48,8 @@ const markReadSchema = z.object({
 
 export async function POST(request: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(request);
-		if (!user) {
+		const auth = await getAuthenticatedUser(request);
+		if (!auth) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 

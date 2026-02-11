@@ -37,11 +37,12 @@ const createTaskSchema = taskSchema
 // GET /api/tasks - Get all tasks (optionally filtered by project)
 export async function GET(request: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(request);
+		const auth = await getAuthenticatedUser(request);
 
-		if (!user) {
+		if (!auth) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
+		const { user } = auth;
 
 		const { searchParams } = new URL(request.url);
 		const projectId = searchParams.get("projectId");
@@ -66,11 +67,12 @@ export async function GET(request: NextRequest) {
 // POST /api/tasks - Create new task
 export async function POST(request: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(request);
+		const auth = await getAuthenticatedUser(request);
 
-		if (!user) {
+		if (!auth) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
+		const { user, actorType } = auth;
 
 		const body = await request.json();
 
@@ -92,7 +94,7 @@ export async function POST(request: NextRequest) {
 			comments: [],
 		};
 
-		await createTask(newTask, user.id);
+		await createTask(newTask, user.id, actorType);
 
 		return NextResponse.json({ task: newTask }, { status: 201 });
 	} catch (error) {
@@ -106,11 +108,12 @@ export async function POST(request: NextRequest) {
 // PUT /api/tasks - Update task
 export async function PUT(request: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(request);
+		const auth = await getAuthenticatedUser(request);
 
-		if (!user) {
+		if (!auth) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
+		const { user, actorType } = auth;
 
 		const body = await request.json();
 		const { id, ...data } = body;
@@ -121,9 +124,6 @@ export async function PUT(request: NextRequest) {
 				{ status: 400 },
 			);
 		}
-
-		// Determine actor from headers or default to user
-		const actorType = (request.headers.get("x-actor-type") as any) || "user";
 
 		// Basic validation (can improve with Zod schema for updates)
 		// For now trust the partial update but sanitized via storage function types

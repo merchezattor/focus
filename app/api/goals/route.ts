@@ -8,11 +8,15 @@ const updateGoalSchema = goalSchema.partial().omit({ id: true });
 
 export async function GET(req: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(req);
+		const auth = await getAuthenticatedUser(req);
 
-		if (!user) {
-			return new NextResponse("Unauthorized", { status: 401 });
+		if (!auth) {
+			return NextResponse.json(
+				{ Unauthorized: "Unauthorized" },
+				{ status: 401 },
+			);
 		}
+		const { user } = auth;
 
 		const goals = await readGoals(user.id);
 		return NextResponse.json({ goals });
@@ -24,11 +28,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(req);
+		const auth = await getAuthenticatedUser(req);
 
-		if (!user) {
-			return new NextResponse("Unauthorized", { status: 401 });
+		if (!auth) {
+			return NextResponse.json(
+				{ Unauthorized: "Unauthorized" },
+				{ status: 401 },
+			);
 		}
+		const { user, actorType } = auth;
 
 		const json = await req.json();
 
@@ -48,9 +56,6 @@ export async function POST(req: NextRequest) {
 			return new NextResponse(JSON.stringify(result.error), { status: 400 });
 		}
 
-		// Determine actor from headers or default to user
-		const actorType = (req.headers.get("x-actor-type") as any) || "user";
-
 		await createGoal(result.data, user.id, actorType);
 
 		return NextResponse.json({ goal: result.data }, { status: 201 });
@@ -62,11 +67,15 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(req);
+		const auth = await getAuthenticatedUser(req);
 
-		if (!user) {
-			return new NextResponse("Unauthorized", { status: 401 });
+		if (!auth) {
+			return NextResponse.json(
+				{ Unauthorized: "Unauthorized" },
+				{ status: 401 },
+			);
 		}
+		const { user, actorType } = auth;
 
 		const json = await req.json();
 		const { id, ...data } = json;
@@ -78,9 +87,6 @@ export async function PUT(req: NextRequest) {
 			return new NextResponse(JSON.stringify(result.error), { status: 400 });
 		}
 
-		// Determine actor from headers or default to user
-		const actorType = (req.headers.get("x-actor-type") as any) || "user";
-
 		await updateGoal(id, result.data, user.id, actorType);
 		return NextResponse.json({ success: true });
 	} catch (error) {
@@ -91,19 +97,20 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
 	try {
-		const user = await getAuthenticatedUser(req);
+		const auth = await getAuthenticatedUser(req);
 
-		if (!user) {
-			return new NextResponse("Unauthorized", { status: 401 });
+		if (!auth) {
+			return NextResponse.json(
+				{ Unauthorized: "Unauthorized" },
+				{ status: 401 },
+			);
 		}
+		const { user, actorType } = auth;
 
 		const { searchParams } = new URL(req.url);
 		const id = searchParams.get("id");
 
 		if (!id) return new NextResponse("Goal ID required", { status: 400 });
-
-		// Determine actor from headers or default to user
-		const actorType = (req.headers.get("x-actor-type") as any) || "user";
 
 		await deleteGoal(id, user.id, actorType);
 		return NextResponse.json({ success: true });
