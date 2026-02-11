@@ -46,6 +46,13 @@ The project structure follows standard Next.js App Router conventions:
 - **UI:** Use **Shadcn UI** components from `@/components/ui` whenever possible. Do not invent new UI primitives unless necessary.
 - **State:** Use **Jotai** atoms for global UI state (Sidebar toggles, Dialog open states).
 
+### Linting & Formatting (CRITICAL)
+
+- **Linter/Formatter:** Biome.
+- **Rule:** After making ANY changes, you **MUST** run the linter and fixer to ensure code quality and consistency.
+  - Run `bun run check` to verify and auto-fix issues.
+  - If issues persist, fix them manually. **DO NOT** leave linting errors unresolved.
+
 ### Database & Migrations
 
 - **ORM:** Drizzle ORM.
@@ -64,7 +71,8 @@ The project structure follows standard Next.js App Router conventions:
 | :--- | :--- |
 | **Start Dev Server** | `bun dev` |
 | **Database Push** | `bun run db:migrate` |
-| **Linting** | `bun run lint` |
+| **Lint & Format (Check)** | `bun run check` |
+| **Lint (Verify only)** | `bun run lint` |
 | **Build** | `bun run build` |
 
 ## 5. Agent Directives (Do's & Don'ts)
@@ -83,4 +91,5 @@ The project structure follows standard Next.js App Router conventions:
 - **Dialogs:** We use "Global" dialogs (`GlobalAddTaskDialog`) mounted in the layout to allow triggering from anywhere via Jotai atoms.
 
 ---
-*Last Updated: Feb 2026*
+
+### Last Updated: Feb 2026

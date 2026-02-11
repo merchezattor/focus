@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import type { Task, Project } from "@/types";
+import type { Project, Task } from "@/types";
 
 export const isAddTaskOpenAtom = atom(false);
 export const isAddProjectOpenAtom = atom(false);
