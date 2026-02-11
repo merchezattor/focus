@@ -7,8 +7,8 @@ import { createTask, deleteTask, updateTask } from "@/lib/storage";
 async function verify() {
 	console.log("Starting Actions Verification...");
 
-	const userId = "verify-user-" + Date.now();
-	const taskId = "verify-task-" + Date.now();
+	const userId = `verify-user-${Date.now()}`;
+	const taskId = `verify-task-${Date.now()}`;
 	// 0. Create User
 	console.log("0. Creating User...");
 	await db.insert(user).values({

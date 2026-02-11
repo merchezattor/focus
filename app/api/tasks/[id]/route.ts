@@ -1,8 +1,38 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/api-auth";
-import { deleteTask, syncComments, updateTask } from "@/lib/storage";
+import { deleteTask, readTasks, syncComments, updateTask } from "@/lib/storage";
 import { taskSchema } from "@/types";
+
+// GET /api/tasks/[id] - Get single task
+export async function GET(
+	request: NextRequest,
+	{ params }: { params: Promise<{ id: string }> },
+) {
+	try {
+		const auth = await getAuthenticatedUser(request);
+		if (!auth) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+		const { user } = auth;
+		const { id } = await params;
+
+		// Reusing readTasks (inefficient but safe for MVP) or implement readTask
+		// Let's implement finding it in the user's tasks
+		// Ideally storage.ts should have readTask(id, userId)
+		const tasks = await readTasks(user.id);
+		const task = tasks.find((t) => t.id === id);
+
+		if (!task) {
+			return NextResponse.json({ error: "Task not found" }, { status: 404 });
+		}
+
+		return NextResponse.json({ task });
+	} catch (error) {
+		console.error("Failed to get task:", error);
+		return NextResponse.json({ error: "Failed to get task" }, { status: 500 });
+	}
+}
 
 // PATCH /api/tasks/[id] - Update task
 export async function PATCH(

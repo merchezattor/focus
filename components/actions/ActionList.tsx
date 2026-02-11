@@ -18,6 +18,7 @@ interface Action {
 	actorType: ActorType;
 	actionType: ActionType;
 	changes: any;
+	metadata: any;
 	createdAt: Date;
 	isRead: boolean;
 }

@@ -91,6 +91,7 @@ export async function createProject(
 		actorType: actorType,
 		actionType: "create",
 		changes: { name: project.name },
+		metadata: { name: project.name },
 	});
 }
 
@@ -117,7 +118,11 @@ export async function updateProject(
 	if (updates.updatedAt !== undefined) dbUpdates.updatedAt = updates.updatedAt;
 
 	if (Object.keys(dbUpdates).length > 0) {
-		await db.update(projects).set(dbUpdates).where(eq(projects.id, id));
+		const result = await db
+			.update(projects)
+			.set(dbUpdates)
+			.where(eq(projects.id, id))
+			.returning({ name: projects.name });
 
 		// Log action
 		// For updates, we log the *changes* requested
@@ -128,6 +133,7 @@ export async function updateProject(
 			actorType: actorType,
 			actionType: "update",
 			changes: updates,
+			metadata: { name: result[0]?.name },
 		});
 	}
 }
@@ -176,6 +182,7 @@ export async function createGoal(
 		actorType: actorType,
 		actionType: "create",
 		changes: { name: goal.name },
+		metadata: { name: goal.name },
 	});
 }
 
@@ -195,7 +202,11 @@ export async function updateGoal(
 	if (updates.updatedAt !== undefined) dbUpdates.updatedAt = updates.updatedAt;
 
 	if (Object.keys(dbUpdates).length > 0) {
-		await db.update(goals).set(dbUpdates).where(eq(goals.id, id));
+		const result = await db
+			.update(goals)
+			.set(dbUpdates)
+			.where(eq(goals.id, id))
+			.returning({ name: goals.name });
 
 		logAction({
 			entityId: id,
@@ -204,6 +215,7 @@ export async function updateGoal(
 			actorType: actorType,
 			actionType: "update",
 			changes: updates,
+			metadata: { name: result[0]?.name },
 		});
 	}
 }
@@ -213,7 +225,10 @@ export async function deleteGoal(
 	actorId: string,
 	actorType: ActorType = "user",
 ): Promise<void> {
-	await db.delete(goals).where(eq(goals.id, id));
+	const result = await db
+		.delete(goals)
+		.where(eq(goals.id, id))
+		.returning({ name: goals.name });
 
 	logAction({
 		entityId: id,
@@ -221,6 +236,7 @@ export async function deleteGoal(
 		actorId: actorId,
 		actorType: actorType,
 		actionType: "delete",
+		metadata: { name: result[0]?.name },
 	});
 }
 
@@ -305,6 +321,7 @@ export async function createTask(
 		actorType: actorType,
 		actionType: "create",
 		changes: { content: task.title },
+		metadata: { title: task.title },
 	});
 }
 
@@ -328,7 +345,11 @@ export async function updateTask(
 	if (updates.updatedAt !== undefined) dbUpdates.updated_at = updates.updatedAt;
 
 	if (Object.keys(dbUpdates).length > 0) {
-		await db.update(tasks).set(dbUpdates).where(eq(tasks.id, id));
+		const result = await db
+			.update(tasks)
+			.set(dbUpdates)
+			.where(eq(tasks.id, id))
+			.returning({ content: tasks.content });
 
 		const actionType: ActionType =
 			updates.completed === true
@@ -344,6 +365,7 @@ export async function updateTask(
 			actorType: actorType,
 			actionType: actionType,
 			changes: updates,
+			metadata: { title: result[0]?.content },
 		});
 	}
 }
@@ -353,7 +375,10 @@ export async function deleteTask(
 	actorId: string,
 	actorType: ActorType = "user",
 ): Promise<void> {
-	await db.delete(tasks).where(eq(tasks.id, id));
+	const result = await db
+		.delete(tasks)
+		.where(eq(tasks.id, id))
+		.returning({ content: tasks.content });
 
 	logAction({
 		entityId: id,
@@ -361,6 +386,7 @@ export async function deleteTask(
 		actorId: actorId,
 		actorType: actorType,
 		actionType: "delete",
+		metadata: { title: result[0]?.content },
 	});
 }
 
@@ -429,7 +455,10 @@ export async function deleteProject(
 	actorType: ActorType = "user",
 ): Promise<void> {
 	await db.delete(tasks).where(eq(tasks.project_id, id));
-	await db.delete(projects).where(eq(projects.id, id));
+	const result = await db
+		.delete(projects)
+		.where(eq(projects.id, id))
+		.returning({ name: projects.name });
 
 	logAction({
 		entityId: id,
@@ -437,5 +466,6 @@ export async function deleteProject(
 		actorId: actorId,
 		actorType: actorType,
 		actionType: "delete",
+		metadata: { name: result[0]?.name },
 	});
 }

@@ -13,6 +13,7 @@
  *   node api-client.js tasks list
  *   node api-client.js tasks create '{"title": "Buy milk", "priority": "p1"}'
  *   node api-client.js projects list
+ *   node api-client.js actions list '{"actorType": "user"}'
  */
 
 const API_URL = process.env.FOCUS_API_URL;
@@ -182,6 +183,38 @@ async function main() {
 				result = data.task;
 			} else {
 				throw new Error(`Unknown task action: ${action}`);
+			}
+		}
+		
+		// --- ACTIONS (Activity Log) ---
+		else if (resource === "actions") {
+			if (action === "list") {
+				// Usage: node api-client.js actions list '{"actorType": "user"}'
+				let query = "";
+				if (payload) {
+					try {
+						const filters = JSON.parse(payload);
+						const params = new URLSearchParams();
+						if (filters.actorType) params.append("actorType", filters.actorType);
+						if (filters.limit) params.append("limit", filters.limit);
+						query = `?${params.toString()}`;
+					} catch (e) {
+						console.warn("Invalid JSON payload for filters, ignoring.");
+					}
+				}
+				const data = await request(`/actions${query}`);
+				result = data.actions;
+			} else if (action === "mark_read") {
+				// Usage: node api-client.js actions mark_read '{"ids": ["..."]}'
+				if (!payload) throw new Error("Missing JSON payload for marking read");
+				const body = JSON.parse(payload);
+				if (!body.ids || !Array.isArray(body.ids)) {
+					throw new Error("Payload must contain 'ids' array");
+				}
+				await request("/actions/read", "POST", body);
+				result = { success: true };
+			} else {
+				throw new Error(`Unknown action action: ${action}`);
 			}
 		} else {
 			throw new Error(`Unknown resource: ${resource}`);

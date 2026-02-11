@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, not } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "@/db";
 import { actions } from "@/db/schema";
@@ -73,6 +73,7 @@ export async function getActions(params: {
 	entityId?: string;
 	limit?: number;
 	includeOwn?: boolean;
+	actorType?: ActorType; // New filter
 }) {
 	const {
 		userId,
@@ -81,13 +82,31 @@ export async function getActions(params: {
 		entityId,
 		limit = 50,
 		includeOwn = false,
+		actorType,
 	} = params;
 
 	// Conditions
 	const filters = [];
 
+	// Filter logic:
+	// 1. If actorType is specified, filter by it explicitly.
+	if (actorType) {
+		filters.push(eq(actions.actorType, actorType));
+	}
+
+	// 2. Exclusion logic (includeOwn defaults to false)
+	// If !includeOwn, we want to hide "User's own manual actions".
+	// But we DO want to see "Agent actions" done on behalf of the user.
+	// So we filter out: actorId == userId AND actorType == 'user'.
+	// In SQL: NOT (actor_id = userId AND actor_type = 'user')
 	if (!includeOwn) {
-		filters.push(ne(actions.actorId, userId));
+		const ownUserAction = and(
+			eq(actions.actorId, userId),
+			eq(actions.actorType, "user"),
+		);
+		if (ownUserAction) {
+			filters.push(not(ownUserAction));
+		}
 	}
 
 	if (isRead !== undefined) {

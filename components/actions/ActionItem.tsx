@@ -8,8 +8,8 @@ import {
 	Edit,
 	FilePlus,
 	Trash2,
-	User,
 } from "lucide-react";
+import Link from "next/link";
 import type { ActionType, ActorType, EntityType } from "@/lib/actions";
 
 interface ActionItemProps {
@@ -21,6 +21,7 @@ interface ActionItemProps {
 		actorType: ActorType;
 		actionType: ActionType;
 		changes: any;
+		metadata: any;
 		createdAt: Date;
 		isRead: boolean;
 	};
@@ -50,26 +51,61 @@ export function ActionItem({ action }: ActionItemProps) {
 	};
 
 	const getDescription = () => {
-		const entity =
+		const typeLabel =
 			action.entityType.charAt(0).toUpperCase() + action.entityType.slice(1);
-		switch (action.actionType) {
-			case "create":
-				return `Created ${entity}`;
-			case "update": {
-				const keys = action.changes
-					? Object.keys(action.changes).join(", ")
-					: "properties";
-				return `Updated ${entity} (${keys})`;
-			}
-			case "delete":
-				return `Deleted ${entity}`;
-			case "complete":
-				return `Completed ${entity}`;
-			case "uncomplete":
-				return `Uncompleted ${entity}`;
-			default:
-				return `Acted on ${entity}`;
+
+		const name = action.metadata?.name || action.metadata?.title;
+		const entityLabel = name ? `${typeLabel} "${name}"` : typeLabel;
+
+		// Generate Link URL
+		let href = "";
+		if (action.entityType === "project") {
+			href = `/project/${action.entityId}`;
+		} else if (action.entityType === "goal") {
+			href = "/goals";
+		} else if (action.entityType === "task") {
+			href = `/?taskId=${action.entityId}`;
 		}
+
+		// Helper to wrap content in Link if href exists
+		const wrapLink = (content: React.ReactNode) => {
+			if (!href) return content;
+			return (
+				<Link
+					href={href}
+					className="font-medium hover:underline hover:text-primary transition-colors"
+				>
+					{content}
+				</Link>
+			);
+		};
+
+		const content = (() => {
+			switch (action.actionType) {
+				case "create":
+					return <>Created {wrapLink(entityLabel)}</>;
+				case "update": {
+					const keys = action.changes
+						? Object.keys(action.changes).join(", ")
+						: "properties";
+					return (
+						<>
+							Updated {wrapLink(entityLabel)} ({keys})
+						</>
+					);
+				}
+				case "delete":
+					return `Deleted ${entityLabel}`; // Cannot link to deleted item
+				case "complete":
+					return <>Completed {wrapLink(entityLabel)}</>;
+				case "uncomplete":
+					return <>Uncompleted {wrapLink(entityLabel)}</>;
+				default:
+					return <>Acted on {wrapLink(entityLabel)}</>;
+			}
+		})();
+
+		return content;
 	};
 
 	return (

@@ -92,6 +92,37 @@ node scripts/api-client.js goals update <id> '{"name": "Updated Goal"}'
 node scripts/api-client.js goals delete <id>
 ```
 
+### 4. Activity Log (Actions)
+
+**List Actions:**
+
+- Default (all actions, excluding your own):
+
+  ```bash
+  node scripts/api-client.js actions list
+  ```
+
+- Filter by Actor Type (e.g., 'user' to see only user actions):
+
+  ```bash
+  node scripts/api-client.js actions list '{"actorType": "user"}'
+  ```
+
+- Filter by Actor Type (e.g., 'agent' to see other agents' actions):
+
+  ```bash
+  node scripts/api-client.js actions list '{"actorType": "agent"}'
+  ```
+
+**Mark Actions as Read:**
+
+- Mark specific actions as read:
+
+  ```bash
+  # payload is { "ids": ["action-id-1", "action-id-2"] }
+  node scripts/api-client.js actions mark_read '{"ids": ["<action_id>"]}'
+  ```
+
 ## Updating the Skill (Important!)
 
 When the Focus app API changes, you need to update the skill files in your working directory. Follow this workflow:

@@ -89,6 +89,9 @@ The project structure follows standard Next.js App Router conventions:
 - **Hydration Mismatches:** If you use random values (IDs, colors) in render, ensure they are stable (use `useEffect`) or suppress hydration warnings on specific elements if using Radix primitives.
 - **Sidebar Context:** The sidebar relies on `SidebarProvider`. Ensure any usage of sidebar hooks is within this context.
 - **Dialogs:** We use "Global" dialogs (`GlobalAddTaskDialog`) mounted in the layout to allow triggering from anywhere via Jotai atoms.
+- **Activity Log:** Actions (Create/Update/Delete) on Tasks, Projects, and Goals are **automatically logged**.
+  - **Agents:** If acting via API with a Bearer token, you are logged as `actorType: "agent"`.
+  - **Storage:** If using `lib/storage.ts` directly, ensure you pass the correct `actorType` ("user" or "agent") if not using the default.
 
 ---
 

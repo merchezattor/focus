@@ -43,6 +43,33 @@ export function DashboardClient({
 		setProjects(initialProjects);
 	}, [initialProjects]);
 
+	// Handle deep linking to task via ?taskId=...
+	useEffect(() => {
+		const taskId = searchParams.get("taskId");
+		if (taskId) {
+			const task = tasks.find((t) => t.id === taskId);
+			if (task) {
+				setEditingTask(task);
+			} else {
+				// Task not in current list (maybe in another project or inbox), fetch it
+				fetch(`/api/tasks/${taskId}`)
+					.then((res) => {
+						if (res.ok) return res.json();
+						throw new Error("Task not found");
+					})
+					.then((data) => {
+						if (data.task) {
+							setEditingTask(data.task);
+						}
+					})
+					.catch((err) => {
+						console.error("Failed to load deep-linked task:", err);
+						toast.error("Task not found");
+					});
+			}
+		}
+	}, [searchParams, tasks]);
+
 	const fetchData = useCallback(async () => {
 		try {
 			const [tasksRes, projectsRes] = await Promise.all([
