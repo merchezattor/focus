@@ -92,6 +92,42 @@ node scripts/api-client.js goals update <id> '{"name": "Updated Goal"}'
 node scripts/api-client.js goals delete <id>
 ```
 
+## Updating the Skill (Important!)
+
+When the Focus app API changes, you need to update the skill files in your working directory. Follow this workflow:
+
+### Workflow to Update the Skill
+
+```bash
+# 1. Pull latest changes from the repository
+cd ~/repos/focus
+git pull origin main
+
+# 2. Copy updated skill files to your working directory
+cp ~/repos/focus/skills/focus-skill/scripts/api-client.js ~/clawd/skills/focus/scripts/
+cp ~/repos/focus/skills/focus-skill/SKILL.md ~/clawd/skills/focus/ 2>/dev/null || true
+
+# 3. Test that the skill works
+cd ~/clawd/skills/focus
+FOCUS_API_URL="https://todo.merchezatter.xyz/api" \
+FOCUS_API_TOKEN="focus_b9ab46503834ee78d2356a72cbcfed49bf2514a1b9fcaf4f" \
+node scripts/api-client.js tasks list
+
+# 4. If you made improvements to the skill files, commit and push back
+cd ~/repos/focus
+git add skills/focus-skill/
+git commit -m "Update focus skill: describe your changes"
+git push origin main
+```
+
+### Key Points
+
+- The skill is located in `skills/focus-skill/` within the Focus repository
+- Your working copy for Fernando is at `~/clawd/skills/focus/`
+- Always pull before copying to get the latest API client
+- Test after copying to verify the skill works
+- Commit improvements back to keep the repository in sync
+
 ## Important Rules
 
 - **ALWAYS** check that `FOCUS_API_TOKEN` is set before running commands.
