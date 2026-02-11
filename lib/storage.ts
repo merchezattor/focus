@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { comments, goals, projects, tasks } from "@/db/schema";
 import type { Comment, Goal, Project, Task } from "@/types";
 
-import { type ActionType, ActorType, logAction } from "./actions";
+import { type ActionType, logAction } from "./actions";
 
 // ... existing code ...
 
