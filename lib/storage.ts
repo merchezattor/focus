@@ -250,6 +250,7 @@ export interface TaskFilters {
 	completed?: boolean;
 	projectId?: string;
 	dueDateStr?: string; // "today", "overdue", "upcoming", or ISO date
+	planDateStr?: string; // "today", "overdue", "upcoming", or ISO date
 	search?: string; // title/description search
 }
 
@@ -317,6 +318,38 @@ export async function searchTasks(
 				end.setHours(23, 59, 59, 999);
 				conditions.push(
 					and(gte(tasks.due_date, start), lte(tasks.due_date, end))!,
+				);
+			}
+		}
+	}
+
+	// 7. Plan Date Logic
+	if (filters.planDateStr) {
+		const todayStart = new Date();
+		todayStart.setHours(0, 0, 0, 0);
+		const todayEnd = new Date();
+		todayEnd.setHours(23, 59, 59, 999);
+
+		if (filters.planDateStr === "today") {
+			conditions.push(
+				and(gte(tasks.plan_date, todayStart), lte(tasks.plan_date, todayEnd))!,
+			);
+		} else if (filters.planDateStr === "overdue") {
+			conditions.push(
+				and(lt(tasks.plan_date, todayStart), eq(tasks.completed, false))!,
+			);
+		} else if (filters.planDateStr === "upcoming") {
+			conditions.push(gt(tasks.plan_date, todayEnd));
+		} else {
+			// Try specific ISO date match (exact day)
+			const specificDate = new Date(filters.planDateStr);
+			if (!isNaN(specificDate.getTime())) {
+				const start = new Date(specificDate);
+				start.setHours(0, 0, 0, 0);
+				const end = new Date(specificDate);
+				end.setHours(23, 59, 59, 999);
+				conditions.push(
+					and(gte(tasks.plan_date, start), lte(tasks.plan_date, end))!,
 				);
 			}
 		}

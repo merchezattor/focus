@@ -32,13 +32,7 @@ The skill uses a NodeJS script `scripts/api-client.js` as a bridge to the API.
 
 **Tasks:**
 
-The `tasks list` command uses an efficient search endpoint. You can list all tasks or filter them.
-
-- **List All Tasks:**
-
-    ```bash
-    node scripts/api-client.js tasks list
-    ```
+The `tasks list` command uses an efficient search endpoint. You can list all tasks or filter them. Always use filters, and refraint to fetch all tasks to do in-memory filtering (it's very expensive).
 
 - **Filter Tasks:**
 
@@ -59,6 +53,7 @@ The `tasks list` command uses an efficient search endpoint. You can list all tas
     - `completed`: true/false
     - `projectId`: <uuid>
     - `dueDate`: "today", "overdue", "upcoming", or "YYYY-MM-DD"
+    - `planDate`: "today", "overdue", "upcoming", or "YYYY-MM-DD"
     - `search`: text string
 
 **Projects:**

@@ -46,6 +46,12 @@ export async function GET(request: NextRequest) {
 			filters.dueDateStr = dueDateParam;
 		}
 
+		// Plan Date (today, overdue, upcoming, YYYY-MM-DD)
+		const planDateParam = searchParams.get("planDate");
+		if (planDateParam) {
+			filters.planDateStr = planDateParam;
+		}
+
 		// Search (text)
 		const searchParam = searchParams.get("search");
 		if (searchParam) {

@@ -147,6 +147,7 @@ async function main() {
 							params.append("completed", filters.completed);
 						if (filters.projectId) params.append("projectId", filters.projectId);
 						if (filters.dueDate) params.append("dueDate", filters.dueDate);
+						if (filters.planDate) params.append("planDate", filters.planDate);
 						if (filters.search) params.append("search", filters.search);
 						query = `?${params.toString()}`;
 					} catch (e) {
