@@ -179,3 +179,18 @@ node scripts/api-client.js tasks list
 - **ALWAYS** validate JSON payloads before passing them to the creation commands.
 - **Priority Levels**: p1 (High), p2, p3, p4 (Low).
 - **Colors**: Use hex codes for colors (e.g., `#ff0000`).
+
+## Date Handling (Important!)
+
+**All dates in the API are stored in UTC (ISO 8601 format with `Z` suffix).**
+
+Example:
+```
+2026-02-09T17:00:00.000Z = Feb 9, 2026 at 17:00 UTC
+```
+
+When filtering or displaying dates, remember to convert to your local timezone (Bangkok is UTC+7).
+
+**Common conversions for Bangkok time (UTC+7):**
+- `2026-02-09T17:00:00.000Z` → `2026-02-10T00:00:00` (midnight)
+- `2026-02-10T02:24:43.166Z` → `2026-02-10T09:24:43`
