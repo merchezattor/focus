@@ -134,7 +134,27 @@ async function main() {
 		// --- TASKS ---
 		else if (resource === "tasks") {
 			if (action === "list") {
-				const data = await request("/tasks");
+				// Usage: node api-client.js tasks list '[filters_json]'
+				// Example: node api-client.js tasks list '{"priority": "p1"}'
+				let query = "";
+				if (payload) {
+					try {
+						const filters = JSON.parse(payload);
+						const params = new URLSearchParams();
+						if (filters.priority) params.append("priority", filters.priority);
+						if (filters.status) params.append("status", filters.status);
+						if (filters.completed !== undefined)
+							params.append("completed", filters.completed);
+						if (filters.projectId) params.append("projectId", filters.projectId);
+						if (filters.dueDate) params.append("dueDate", filters.dueDate);
+						if (filters.search) params.append("search", filters.search);
+						query = `?${params.toString()}`;
+					} catch (e) {
+						console.warn("Invalid JSON payload for filters, ignoring.");
+					}
+				}
+				// Use the efficient search endpoint for listing
+				const data = await request(`/tasks/search${query}`);
 				result = data.tasks;
 			} else if (action === "create") {
 				if (!payload) throw new Error("Missing JSON payload for task creation");
@@ -163,8 +183,20 @@ async function main() {
 
 				// 1. Fetch existing task to preserve comments
 
-				const listData = await request("/tasks");
-				const task = listData.tasks.find((t) => t.id === id);
+				const listData = await request("/tasks/search"); // Use search here too for consistency, or just /tasks/id if implemented
+				// Actually we don't have GET /tasks/:id implemented in client, let's just stick to what was there or improve
+				// The previous code fetched /tasks (all) and found it.
+				// Optimized: We should probably just use the search endpoint to find it by ID if supported, or just fetch the single task if the API supports it.
+				// API GET /tasks/:id IS NOT in the file views I've seen?
+				// Wait, I saw app/api/tasks/[id]/route.ts in context "Other open documents".
+				// Let's assume GET /tasks/:id exists.
+				// But previously it was doing list and find.
+				// Let's keep existing logic but use the new list endpoint which is /tasks/search
+				// Actually, `request("/tasks")` was the old one. New one is `request("/tasks/search")`.
+				// Effectively, `request("/tasks/search")` returns { tasks: ... } so it fits.
+				
+				const listDataForComment = await request("/tasks/search");
+				const task = listDataForComment.tasks.find((t) => t.id === id);
 
 				if (!task) throw new Error(`Task ${id} not found`);
 

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, lte } from "drizzle-orm";
+import { and, count, desc, eq, gt, gte, ilike, inArray, lt, lte, or } from "drizzle-orm";
 import { db } from "@/db";
 import { comments, goals, projects, tasks } from "@/db/schema";
 import type { Comment, Goal, Project, Task } from "@/types";
@@ -241,6 +241,124 @@ export async function deleteGoal(
 }
 
 // --- Tasks ---
+
+// --- Advanced Search ---
+
+export interface TaskFilters {
+	priority?: ("p1" | "p2" | "p3" | "p4")[];
+	status?: ("todo" | "in_progress" | "done")[];
+	completed?: boolean;
+	projectId?: string;
+	dueDateStr?: string; // "today", "overdue", "upcoming", or ISO date
+	search?: string; // title/description search
+}
+
+export async function searchTasks(
+	userId: string,
+	filters: TaskFilters,
+): Promise<Task[]> {
+	const conditions = [eq(tasks.userId, userId)];
+
+	// 1. Priority (Array)
+	if (filters.priority && filters.priority.length > 0) {
+		conditions.push(inArray(tasks.priority, filters.priority));
+	}
+
+	// 2. Status (Array)
+	if (filters.status && filters.status.length > 0) {
+		conditions.push(inArray(tasks.status, filters.status));
+	}
+
+	// 3. Completed (Boolean) - overrides status if present, or works alongside
+	if (filters.completed !== undefined) {
+		conditions.push(eq(tasks.completed, filters.completed));
+	}
+
+	// 4. Project
+	if (filters.projectId) {
+		conditions.push(eq(tasks.project_id, filters.projectId));
+	}
+
+	// 5. Text Search (title or description)
+	if (filters.search) {
+		const searchLower = `%${filters.search.toLowerCase()}%`;
+		conditions.push(
+			or(
+				ilike(tasks.content, searchLower),
+				ilike(tasks.description, searchLower),
+			)!,
+		);
+	}
+
+	// 6. Due Date Logic
+	if (filters.dueDateStr) {
+		const todayStart = new Date();
+		todayStart.setHours(0, 0, 0, 0);
+		const todayEnd = new Date();
+		todayEnd.setHours(23, 59, 59, 999);
+
+		if (filters.dueDateStr === "today") {
+			conditions.push(
+				and(gte(tasks.due_date, todayStart), lte(tasks.due_date, todayEnd))!,
+			);
+		} else if (filters.dueDateStr === "overdue") {
+			conditions.push(
+				and(lt(tasks.due_date, todayStart), eq(tasks.completed, false))!,
+			);
+		} else if (filters.dueDateStr === "upcoming") {
+			conditions.push(gt(tasks.due_date, todayEnd));
+		} else {
+			// Try specific ISO date match (exact day)
+			const specificDate = new Date(filters.dueDateStr);
+			if (!isNaN(specificDate.getTime())) {
+				const start = new Date(specificDate);
+				start.setHours(0, 0, 0, 0);
+				const end = new Date(specificDate);
+				end.setHours(23, 59, 59, 999);
+				conditions.push(
+					and(gte(tasks.due_date, start), lte(tasks.due_date, end))!,
+				);
+			}
+		}
+	}
+
+	// Execute Query
+	const dbTasks = await db
+		.select()
+		.from(tasks)
+		.where(and(...conditions))
+		.orderBy(tasks.priority, desc(tasks.created_at)); // Default sort
+
+	// Fetch comments (simplified for now, same as readTasks)
+	const dbComments = await db.select().from(comments);
+	const commentsByTaskId: Record<string, Comment[]> = {};
+	for (const c of dbComments) {
+		if (!commentsByTaskId[c.task_id]) {
+			commentsByTaskId[c.task_id] = [];
+		}
+		commentsByTaskId[c.task_id].push({
+			id: c.id,
+			content: c.content,
+			postedAt: c.posted_at,
+		});
+	}
+
+	return dbTasks.map((t) => ({
+		id: t.id,
+		title: t.content,
+		description: t.description || undefined,
+		completed: t.completed,
+		status: (t.status as "todo" | "in_progress" | "done") || "todo",
+		projectId: t.project_id,
+		priority: t.priority as "p1" | "p2" | "p3" | "p4",
+		dueDate: t.due_date,
+		planDate: t.plan_date,
+		createdAt: t.created_at,
+		updatedAt: t.updated_at,
+		comments: commentsByTaskId[t.id] || [],
+	}));
+}
+
 
 export async function readTasks(userId: string): Promise<Task[]> {
 	// Fetch tasks belonging to the user

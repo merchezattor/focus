@@ -28,13 +28,38 @@ Capable of listing and creating tasks and projects.
 
 The skill uses a NodeJS script `scripts/api-client.js` as a bridge to the API.
 
-### 1. Listing Resources
+### 1. Listing & Searching Resources
 
 **Tasks:**
 
-```bash
-node scripts/api-client.js tasks list
-```
+The `tasks list` command uses an efficient search endpoint. You can list all tasks or filter them.
+
+- **List All Tasks:**
+
+    ```bash
+    node scripts/api-client.js tasks list
+    ```
+
+- **Filter Tasks:**
+
+    ```bash
+    # Filter by priority
+    node scripts/api-client.js tasks list '{"priority": "p1"}'
+
+    # Filter by multiple criteria (p1 tasks due today)
+    node scripts/api-client.js tasks list '{"priority": "p1", "dueDate": "today"}'
+
+    # Full text search
+    node scripts/api-client.js tasks list '{"search": "buy milk"}'
+    ```
+
+    **Supported Filters:**
+    - `priority`: "p1", "p2", "p3", "p4" (comma-separated for multiple)
+    - `status`: "todo", "in_progress", "done"
+    - `completed`: true/false
+    - `projectId`: <uuid>
+    - `dueDate`: "today", "overdue", "upcoming", or "YYYY-MM-DD"
+    - `search`: text string
 
 **Projects:**
 
