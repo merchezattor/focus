@@ -13,7 +13,7 @@ Capable of listing and creating tasks and projects.
 1. **Configuration of Environment**:
 
     ```bash
-    export FOCUS_API_URL="https://todo.michaelukhin.xyz/api"
+    export FOCUS_API_URL="https://todo.merchezatter.xyz/api"
     export FOCUS_API_TOKEN="<your_api_token>"
     ```
 
