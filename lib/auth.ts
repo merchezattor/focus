@@ -14,6 +14,11 @@ export const auth = betterAuth({
 			verification: schema.verification,
 		},
 	}),
+	trustedOrigins: [
+		"https://todo.merchezatter.xyz",
+		"http://localhost:3000",
+		"http://localhost:3001",
+	],
 	emailAndPassword: {
 		enabled: true,
 	},
