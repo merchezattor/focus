@@ -145,12 +145,13 @@ async function main() {
 						if (filters.status) params.append("status", filters.status);
 						if (filters.completed !== undefined)
 							params.append("completed", filters.completed);
-						if (filters.projectId) params.append("projectId", filters.projectId);
+						if (filters.projectId)
+							params.append("projectId", filters.projectId);
 						if (filters.dueDate) params.append("dueDate", filters.dueDate);
 						if (filters.planDate) params.append("planDate", filters.planDate);
 						if (filters.search) params.append("search", filters.search);
 						query = `?${params.toString()}`;
-					} catch (e) {
+					} catch (_e) {
 						console.warn("Invalid JSON payload for filters, ignoring.");
 					}
 				}
@@ -184,7 +185,7 @@ async function main() {
 
 				// 1. Fetch existing task to preserve comments
 
-				const listData = await request("/tasks/search"); // Use search here too for consistency, or just /tasks/id if implemented
+				const _listData = await request("/tasks/search"); // Use search here too for consistency, or just /tasks/id if implemented
 				// Actually we don't have GET /tasks/:id implemented in client, let's just stick to what was there or improve
 				// The previous code fetched /tasks (all) and found it.
 				// Optimized: We should probably just use the search endpoint to find it by ID if supported, or just fetch the single task if the API supports it.
@@ -195,7 +196,7 @@ async function main() {
 				// Let's keep existing logic but use the new list endpoint which is /tasks/search
 				// Actually, `request("/tasks")` was the old one. New one is `request("/tasks/search")`.
 				// Effectively, `request("/tasks/search")` returns { tasks: ... } so it fits.
-				
+
 				const listDataForComment = await request("/tasks/search");
 				const task = listDataForComment.tasks.find((t) => t.id === id);
 
@@ -218,7 +219,7 @@ async function main() {
 				throw new Error(`Unknown task action: ${action}`);
 			}
 		}
-		
+
 		// --- ACTIONS (Activity Log) ---
 		else if (resource === "actions") {
 			if (action === "list") {
@@ -228,10 +229,11 @@ async function main() {
 					try {
 						const filters = JSON.parse(payload);
 						const params = new URLSearchParams();
-						if (filters.actorType) params.append("actorType", filters.actorType);
+						if (filters.actorType)
+							params.append("actorType", filters.actorType);
 						if (filters.limit) params.append("limit", filters.limit);
 						query = `?${params.toString()}`;
-					} catch (e) {
+					} catch (_e) {
 						console.warn("Invalid JSON payload for filters, ignoring.");
 					}
 				}

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/api-auth";
-import { type TaskFilters, searchTasks } from "@/lib/storage";
+import { searchTasks, type TaskFilters } from "@/lib/storage";
 
 export async function GET(request: NextRequest) {
 	try {

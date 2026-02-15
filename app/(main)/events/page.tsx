@@ -22,7 +22,9 @@ export default async function EventsPage(props: PageProps) {
 	// 2. Parse Params
 	const searchParams = await props.searchParams;
 	const limit =
-		typeof searchParams.limit === "string" ? parseInt(searchParams.limit) : 50;
+		typeof searchParams.limit === "string"
+			? parseInt(searchParams.limit, 10)
+			: 50;
 	const entityType =
 		typeof searchParams.entityType === "string"
 			? (searchParams.entityType as EntityType)

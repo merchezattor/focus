@@ -125,47 +125,60 @@ export function EditTaskDialog({
 		} = {},
 	) => {
 		try {
-            // Filter out unchanged values
-            const payload: any = {};
-            let hasChanges = false;
+			// Filter out unchanged values
+			const payload: any = {};
+			let hasChanges = false;
 
-            if (updates.title !== undefined && updates.title !== task.title) {
-                payload.title = updates.title;
-                hasChanges = true;
-            }
-            if (updates.description !== undefined && updates.description !== task.description) {
-                payload.description = updates.description;
-                hasChanges = true;
-            }
-            if (updates.projectId !== undefined && updates.projectId !== task.projectId) {
-                payload.projectId = updates.projectId;
-                hasChanges = true;
-            }
-             if (updates.priority !== undefined && updates.priority !== task.priority) {
-                payload.priority = updates.priority;
-                hasChanges = true;
-            }
-            
-            // Date handling - compare ISO strings or nulls
-            if (updates.dueDate !== undefined) {
-                 const newDue = updates.dueDate;
-                 const oldDue = task.dueDate ? new Date(task.dueDate).toISOString() : null;
-                 if (newDue !== oldDue) {
-                    payload.dueDate = newDue;
-                    hasChanges = true;
-                 }
-            }
+			if (updates.title !== undefined && updates.title !== task.title) {
+				payload.title = updates.title;
+				hasChanges = true;
+			}
+			if (
+				updates.description !== undefined &&
+				updates.description !== task.description
+			) {
+				payload.description = updates.description;
+				hasChanges = true;
+			}
+			if (
+				updates.projectId !== undefined &&
+				updates.projectId !== task.projectId
+			) {
+				payload.projectId = updates.projectId;
+				hasChanges = true;
+			}
+			if (
+				updates.priority !== undefined &&
+				updates.priority !== task.priority
+			) {
+				payload.priority = updates.priority;
+				hasChanges = true;
+			}
 
-             if (updates.planDate !== undefined) {
-                 const newPlan = updates.planDate;
-                 const oldPlan = task.planDate ? new Date(task.planDate).toISOString() : null;
-                 if (newPlan !== oldPlan) {
-                    payload.planDate = newPlan;
-                    hasChanges = true;
-                 }
-            }
+			// Date handling - compare ISO strings or nulls
+			if (updates.dueDate !== undefined) {
+				const newDue = updates.dueDate;
+				const oldDue = task.dueDate
+					? new Date(task.dueDate).toISOString()
+					: null;
+				if (newDue !== oldDue) {
+					payload.dueDate = newDue;
+					hasChanges = true;
+				}
+			}
 
-            if (!hasChanges) return;
+			if (updates.planDate !== undefined) {
+				const newPlan = updates.planDate;
+				const oldPlan = task.planDate
+					? new Date(task.planDate).toISOString()
+					: null;
+				if (newPlan !== oldPlan) {
+					payload.planDate = newPlan;
+					hasChanges = true;
+				}
+			}
+
+			if (!hasChanges) return;
 
 			const res = await fetch(`/api/tasks/${task.id}`, {
 				method: "PATCH",

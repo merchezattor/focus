@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { type ActorType, type EntityType, getActions, markActionsRead } from "@/lib/actions";
+import { type EntityType, getActions, markActionsRead } from "@/lib/actions";
 import { getAuthenticatedUser } from "@/lib/api-auth";
 
 // GET /api/actions
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
 		const { searchParams } = new URL(request.url);
 		const limit = searchParams.get("limit")
-			? parseInt(searchParams.get("limit")!)
+			? parseInt(searchParams.get("limit")!, 10)
 			: 50;
 		const isRead = searchParams.has("isRead")
 			? searchParams.get("isRead") === "true"
@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
 		// Allow filtering by actorType (e.g. "user", "agent")
 		const actorType = (searchParams.get("actorType") as any) || undefined;
 		// If requesting own actions (actorType=user), we must set includeOwn=true
-		const includeOwn = actorType === "user" || searchParams.get("includeOwn") === "true";
+		const includeOwn =
+			actorType === "user" || searchParams.get("includeOwn") === "true";
 
 		const actions = await getActions({
 			userId: user.id,

@@ -7,6 +7,7 @@ import {
 	gte,
 	ilike,
 	inArray,
+	isNull,
 	lt,
 	lte,
 	or,
@@ -22,11 +23,16 @@ import { type ActionType, type ActorType, logAction } from "./actions";
 export async function getTaskCounts(
 	userId: string,
 ): Promise<{ inboxCount: number; todayCount: number }> {
-	// Inbox: ALL tasks for the user (as per user request)
 	const inboxResult = await db
 		.select({ value: count() })
 		.from(tasks)
-		.where(and(eq(tasks.userId, userId), eq(tasks.completed, false)));
+		.where(
+			and(
+				eq(tasks.userId, userId),
+				eq(tasks.completed, false),
+				isNull(tasks.project_id),
+			),
+		);
 
 	// Today: dueDate is today
 	// We need to handle timestamps carefully.
@@ -323,7 +329,7 @@ export async function searchTasks(
 		} else {
 			// Try specific ISO date match (exact day)
 			const specificDate = new Date(filters.dueDateStr);
-			if (!isNaN(specificDate.getTime())) {
+			if (!Number.isNaN(specificDate.getTime())) {
 				const start = new Date(specificDate);
 				start.setHours(0, 0, 0, 0);
 				const end = new Date(specificDate);
@@ -355,7 +361,7 @@ export async function searchTasks(
 		} else {
 			// Try specific ISO date match (exact day)
 			const specificDate = new Date(filters.planDateStr);
-			if (!isNaN(specificDate.getTime())) {
+			if (!Number.isNaN(specificDate.getTime())) {
 				const start = new Date(specificDate);
 				start.setHours(0, 0, 0, 0);
 				const end = new Date(specificDate);

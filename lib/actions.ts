@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, ne, not } from "drizzle-orm";
+import { and, desc, eq, inArray, not } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "@/db";
 import { actions } from "@/db/schema";
