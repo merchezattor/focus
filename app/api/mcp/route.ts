@@ -1,4 +1,3 @@
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { InferSelectModel } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import type { user } from "@/db/schema";
@@ -6,83 +5,143 @@ import { getAuthenticatedUser } from "@/lib/api-auth";
 import { createMCPServer } from "@/lib/mcp/server";
 import type { MCPServerContext } from "@/lib/mcp/types";
 
-// NOTE: In production (Vercel), this Map is per-isolate, not global.
-// For multi-region deployments, use Redis or Vercel KV instead.
-// @ts-expect-error - global across requests in Edge Runtime
-const transports =
-	globalThis.mcpTransports ||
-	new Map<string, WebStandardStreamableHTTPServerTransport>();
-// @ts-expect-error
-globalThis.mcpTransports = transports;
+interface Session {
+	id: string;
+	controller: ReadableStreamDefaultController;
+	server: Awaited<ReturnType<typeof createMCPServer>>;
+}
 
-// Edge Runtime config - keeps connections alive
-export const runtime = "edge";
-export const dynamic = "force-dynamic";
-export const maxDuration = 300; // 5 minutes for long-running SSE
+const sessions = new Map<string, Session>();
 
 export async function GET(request: NextRequest) {
-	// Authenticate
 	const auth = await getAuthenticatedUser(request);
 	if (!auth) {
 		return new Response("Unauthorized", { status: 401 });
 	}
 
-	// Create transport with session management
-	const transport = new WebStandardStreamableHTTPServerTransport({
-		sessionIdGenerator: () => crypto.randomUUID(),
-		onsessionclosed: (sessionId) => {
-			console.log(`[MCP] Session closed: ${sessionId}`);
-			transports.delete(sessionId);
+	const sessionId = crypto.randomUUID();
+
+	const stream = new ReadableStream({
+		start(controller) {
+			const dbUser: InferSelectModel<typeof user> = {
+				id: auth.user.id,
+				name: auth.user.name ?? "",
+				email: auth.user.email,
+				emailVerified: auth.user.emailVerified,
+				image: auth.user.image ?? null,
+				createdAt: auth.user.createdAt,
+				updatedAt: auth.user.updatedAt,
+			};
+
+			const context: MCPServerContext = {
+				user: dbUser,
+				actorType: auth.actorType,
+			};
+
+			createMCPServer(context).then((server) => {
+				sessions.set(sessionId, { id: sessionId, controller, server });
+				console.log(`[MCP] Session created: ${sessionId}`);
+
+				// Send endpoint event
+				const endpoint = `/api/mcp?sessionId=${sessionId}`;
+				controller.enqueue(
+					new TextEncoder().encode(`event: endpoint\ndata: ${endpoint}\n\n`),
+				);
+			});
+		},
+		cancel() {
+			sessions.delete(sessionId);
+			console.log(`[MCP] Session cancelled: ${sessionId}`);
 		},
 	});
 
-	const sessionId = transport.sessionId!;
-	transports.set(sessionId, transport);
-	console.log(`[MCP] New session: ${sessionId}, total: ${transports.size}`);
-
-	// Create user object with required fields
-	const dbUser: InferSelectModel<typeof user> = {
-		id: auth.user.id,
-		name: auth.user.name ?? "",
-		email: auth.user.email,
-		emailVerified: auth.user.emailVerified,
-		image: auth.user.image ?? null,
-		createdAt: auth.user.createdAt,
-		updatedAt: auth.user.updatedAt,
-	};
-
-	// Create server with auth context
-	const context: MCPServerContext = {
-		user: dbUser,
-		actorType: auth.actorType,
-	};
-	const server = createMCPServer(context);
-
-	// Connect
-	await server.connect(transport);
-
-	// Handle the request and return the response
-	return transport.handleRequest(request);
+	return new Response(stream, {
+		headers: {
+			"Content-Type": "text/event-stream",
+			"Cache-Control": "no-cache",
+			Connection: "keep-alive",
+		},
+	});
 }
 
 export async function POST(request: NextRequest) {
-	const sessionId = request.headers.get("mcp-session-id");
+	const url = new URL(request.url);
+	const sessionId =
+		url.searchParams.get("sessionId") || request.headers.get("mcp-session-id");
 
 	if (!sessionId) {
-		return new Response("Missing mcp-session-id header", { status: 400 });
-	}
-
-	const transport = transports.get(sessionId);
-
-	if (!transport) {
-		console.error(
-			`[MCP] Session not found: ${sessionId}, available: ${Array.from(transports.keys()).join(", ")}`,
+		return Response.json(
+			{
+				jsonrpc: "2.0",
+				error: { code: -32000, message: "Missing sessionId" },
+				id: null,
+			},
+			{ status: 400 },
 		);
-		return new Response("Session not found - connection may have expired", {
-			status: 404,
-		});
 	}
 
-	// Handle the POST request with the transport
-	return transport.handleRequest(request);
+	const session = sessions.get(sessionId);
+	if (!session) {
+		return Response.json(
+			{
+				jsonrpc: "2.0",
+				error: { code: -32000, message: "Session not found" },
+				id: null,
+			},
+			{ status: 404 },
+		);
+	}
+
+	const message = await request.json();
+	console.log(`[MCP] Message:`, message.method || message);
+
+	// Handle MCP protocol
+	if (message.method === "initialize") {
+		const response = {
+			jsonrpc: "2.0",
+			id: message.id,
+			result: {
+				protocolVersion: "2024-11-05",
+				capabilities: {},
+				serverInfo: { name: "focus-mcp", version: "1.0.0" },
+			},
+		};
+		session.controller.enqueue(
+			new TextEncoder().encode(
+				`event: message\ndata: ${JSON.stringify(response)}\n\n`,
+			),
+		);
+		return new Response("OK");
+	}
+
+	if (message.method === "tools/list") {
+		const tools = [
+			{
+				name: "focus_list_tasks",
+				description: "List tasks",
+				inputSchema: { type: "object" },
+			},
+			{
+				name: "focus_create_task",
+				description: "Create task",
+				inputSchema: { type: "object" },
+			},
+		];
+		const response = {
+			jsonrpc: "2.0",
+			id: message.id,
+			result: { tools },
+		};
+		session.controller.enqueue(
+			new TextEncoder().encode(
+				`event: message\ndata: ${JSON.stringify(response)}\n\n`,
+			),
+		);
+		return new Response("OK");
+	}
+
+	return Response.json(
+		{ jsonrpc: "2.0", id: message.id, result: {} },
+		{ status: 200 },
+	);
 }
