@@ -14,13 +14,12 @@ export const auth = betterAuth({
 			verification: schema.verification,
 		},
 	}),
-	trustedOrigins: [
-		"https://todo.merchezatter.xyz",
-		"http://localhost:3000",
-		"http://localhost:3001",
-	],
+	trustedOrigins: [process.env.BETTER_AUTH_BASE_URL!],
 	emailAndPassword: {
 		enabled: true,
+	},
+	advanced: {
+		useSecureCookies: true,
 	},
 	socialProviders: {
 		google: {
