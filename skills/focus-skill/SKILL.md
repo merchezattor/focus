@@ -189,8 +189,4 @@ Example:
 2026-02-09T17:00:00.000Z = Feb 9, 2026 at 17:00 UTC
 ```
 
-When filtering or displaying dates, remember to convert to your local timezone (Bangkok is UTC+7).
-
-**Common conversions for Bangkok time (UTC+7):**
-- `2026-02-09T17:00:00.000Z` → `2026-02-10T00:00:00` (midnight)
-- `2026-02-10T02:24:43.166Z` → `2026-02-10T09:24:43`
+When filtering or displaying dates, always convert to the user's local timezone.

@@ -1,4 +1,16 @@
-import { and, count, desc, eq, gt, gte, ilike, inArray, lt, lte, or } from "drizzle-orm";
+import {
+	and,
+	count,
+	desc,
+	eq,
+	gt,
+	gte,
+	ilike,
+	inArray,
+	lt,
+	lte,
+	or,
+} from "drizzle-orm";
 import { db } from "@/db";
 import { comments, goals, projects, tasks } from "@/db/schema";
 import type { Comment, Goal, Project, Task } from "@/types";
@@ -391,7 +403,6 @@ export async function searchTasks(
 		comments: commentsByTaskId[t.id] || [],
 	}));
 }
-
 
 export async function readTasks(userId: string): Promise<Task[]> {
 	// Fetch tasks belonging to the user

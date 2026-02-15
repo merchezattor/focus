@@ -65,6 +65,7 @@ export async function PATCH(
 					if (typeof val === "string") return new Date(val);
 					return val;
 				}),
+			status: z.enum(["todo", "in_progress", "review", "done"]).optional(),
 			comments: z
 				.array(
 					z.object({
