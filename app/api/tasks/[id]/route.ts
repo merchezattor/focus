@@ -92,7 +92,7 @@ export async function PATCH(
 
 		// Sync comments if provided
 		if (result.data.comments) {
-			await syncComments(id, result.data.comments);
+			await syncComments(id, result.data.comments, user.id, actorType);
 		}
 
 		// Creating a mock response

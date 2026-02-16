@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, not } from "drizzle-orm";
+import { and, count, desc, eq, inArray, not } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "@/db";
 import { actions } from "@/db/schema";
@@ -136,4 +136,20 @@ export async function markActionsRead(ids: string[]) {
 		.update(actions)
 		.set({ isRead: true })
 		.where(inArray(actions.id, ids));
+}
+
+export async function markAllActionsRead(userId: string) {
+	await db
+		.update(actions)
+		.set({ isRead: true })
+		.where(eq(actions.isRead, false));
+}
+
+export async function getUnreadActionsCount(userId: string): Promise<number> {
+	const result = await db
+		.select({ value: count() })
+		.from(actions)
+		.where(eq(actions.isRead, false));
+
+	return result[0]?.value || 0;
 }

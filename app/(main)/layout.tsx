@@ -8,6 +8,7 @@ import { GlobalEditProjectDialog } from "@/components/projects/GlobalEditProject
 import { AddTaskFab } from "@/components/tasks/AddTaskFab";
 import { GlobalAddTaskDialog } from "@/components/tasks/GlobalAddTaskDialog";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { getUnreadActionsCount } from "@/lib/actions";
 import { auth } from "@/lib/auth";
 import { getTaskCounts, readGoals, readProjects } from "@/lib/storage";
 
@@ -24,10 +25,11 @@ export default async function MainLayout({
 		redirect("/login");
 	}
 
-	const [projects, counts, goals] = await Promise.all([
+	const [projects, counts, goals, unreadActionsCount] = await Promise.all([
 		readProjects(session.user.id),
 		getTaskCounts(session.user.id),
 		readGoals(session.user.id),
+		getUnreadActionsCount(session.user.id),
 	]);
 
 	return (
@@ -43,7 +45,7 @@ export default async function MainLayout({
 			<AppSidebar
 				projects={projects}
 				user={session.user}
-				counts={counts}
+				counts={{ ...counts, eventsCount: unreadActionsCount }}
 				goals={goals}
 			/>
 			<GlobalAddTaskDialog projects={projects} />

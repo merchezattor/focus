@@ -2,12 +2,18 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ActionList } from "@/components/actions/ActionList";
-import { type EntityType, getActions } from "@/lib/actions";
+import {
+	type EntityType,
+	getActions,
+	getUnreadActionsCount,
+} from "@/lib/actions";
 import { auth } from "@/lib/auth";
 
 interface PageProps {
 	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function EventsPage(props: PageProps) {
 	// 1. Auth Check
@@ -44,10 +50,13 @@ export default async function EventsPage(props: PageProps) {
 		includeOwn: true,
 	});
 
+	// 4. Fetch Unread Count
+	const unreadCount = await getUnreadActionsCount(session.user.id);
+
 	return (
 		<div className="flex-1 overflow-auto p-6">
 			<Suspense fallback={<div>Loading activity...</div>}>
-				<ActionList actions={actions} />
+				<ActionList actions={actions} unreadCount={unreadCount} />
 			</Suspense>
 		</div>
 	);

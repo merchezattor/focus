@@ -1,13 +1,19 @@
 "use client";
-
 import { format } from "date-fns";
 import {
 	Activity,
+	AlignLeft,
+	Bot,
+	Calendar,
 	CheckCircle2,
 	Circle,
 	Edit,
 	FilePlus,
+	Flag,
+	MessageSquare,
 	Trash2,
+	Type,
+	User,
 } from "lucide-react";
 import Link from "next/link";
 import type { ActionType, ActorType, EntityType } from "@/lib/actions";
@@ -27,8 +33,39 @@ interface ActionItemProps {
 	};
 }
 
+const PRIORITIES = {
+	p1: { label: "Priority 1", color: "#ef4444" },
+	p2: { label: "Priority 2", color: "#f97316" },
+	p3: { label: "Priority 3", color: "#3b82f6" },
+	p4: { label: "Priority 4", color: "#6b7280" },
+};
+
 export function ActionItem({ action }: ActionItemProps) {
 	const getIcon = () => {
+		if (action.actionType === "update" && action.changes) {
+			if (action.changes.priority) {
+				const priority = action.changes.priority as keyof typeof PRIORITIES;
+				const color = PRIORITIES[priority]?.color || "#6b7280";
+				return <Flag className="h-4 w-4" style={{ color, fill: "none" }} />;
+			}
+			if (action.changes.comments) {
+				return <MessageSquare className="h-4 w-4 text-purple-500" />;
+			}
+			if (action.changes.description) {
+				return <AlignLeft className="h-4 w-4 text-gray-500" />;
+			}
+			if (action.changes.dueDate) {
+				return <Calendar className="h-4 w-4 text-orange-500" />;
+			}
+			if (action.changes.planDate) {
+				return <Calendar className="h-4 w-4 text-yellow-500" />;
+			}
+			if (action.changes.title) {
+				return <Type className="h-4 w-4 text-blue-500" />;
+			}
+		}
+
+		// Fallback to default action icons
 		switch (action.actionType) {
 			case "create":
 				return <FilePlus className="h-4 w-4 text-green-500" />;
@@ -45,9 +82,12 @@ export function ActionItem({ action }: ActionItemProps) {
 		}
 	};
 
-	const getActorLabel = () => {
-		return action.actorType === "agent" ? "AI Agent" : "User";
-		// Ideally fetch user name if possible, but for mvp actorType is enough distinction
+	const getActorIcon = () => {
+		return action.actorType === "agent" ? (
+			<Bot className="h-4 w-4 text-muted-foreground" />
+		) : (
+			<User className="h-4 w-4 text-muted-foreground" />
+		);
 	};
 
 	const getDescription = () => {
@@ -81,6 +121,29 @@ export function ActionItem({ action }: ActionItemProps) {
 		};
 
 		const content = (() => {
+			if (action.actionType === "update" && action.changes) {
+				if (action.changes.priority) {
+					return <>Changed priority of {wrapLink(entityLabel)}</>;
+				}
+				if (action.changes.comments) {
+					// Check if added or removed by comparing lengths or checking metadata?
+					// For MVP assume added if present in changes
+					return <>Commented on {wrapLink(entityLabel)}</>;
+				}
+				if (action.changes.description) {
+					return <>Updated description of {wrapLink(entityLabel)}</>;
+				}
+				if (action.changes.dueDate) {
+					return <>Changed due date of {wrapLink(entityLabel)}</>;
+				}
+				if (action.changes.planDate) {
+					return <>Changed planned date of {wrapLink(entityLabel)}</>;
+				}
+				if (action.changes.title) {
+					return <>Renamed {wrapLink(entityLabel)}</>;
+				}
+			}
+
 			switch (action.actionType) {
 				case "create":
 					return <>Created {wrapLink(entityLabel)}</>;
@@ -110,13 +173,20 @@ export function ActionItem({ action }: ActionItemProps) {
 
 	return (
 		<div
-			className={`group flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-accent/50 transition-colors ${!action.isRead ? "bg-accent/10" : ""}`}
+			className={`group flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-accent/50 transition-colors ${
+				action.isRead === false
+					? "bg-accent/10"
+					: "opacity-60 hover:opacity-100"
+			}`}
 		>
 			<div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
 			<div className="flex-1 min-w-0">
 				<div className="flex items-center gap-2">
-					<span className="font-medium text-sm">{getActorLabel()}</span>
+					<span title={action.actorType === "agent" ? "AI Agent" : "User"}>
+						{getActorIcon()}
+					</span>
 					<span className="text-muted-foreground text-xs">•</span>
+
 					<span className="text-sm text-foreground/90">{getDescription()}</span>
 				</div>
 				{action.actionType === "update" && action.changes && (

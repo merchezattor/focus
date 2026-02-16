@@ -74,7 +74,6 @@ async function main() {
 
 		// --- PROJECTS ---
 		if (resource === "projects") {
-			if (action === "list") {
 				const data = await request("/projects");
 				result = data.projects;
 			} else if (action === "create") {

@@ -56,6 +56,14 @@ The `tasks list` command uses an efficient search endpoint. You can list all tas
     - `planDate`: "today", "overdue", "upcoming", or "YYYY-MM-DD"
     - `search`: text string
 
+    **Inbox Tasks:**
+
+    To fetch tasks from the Inbox (tasks without a project):
+
+    ```bash
+    node scripts/api-client.js tasks inbox
+    ```
+
 **Projects:**
 
 ```bash

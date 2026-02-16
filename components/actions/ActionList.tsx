@@ -25,9 +25,10 @@ interface Action {
 
 interface ActionListProps {
 	actions: Action[];
+	unreadCount?: number;
 }
 
-export function ActionList({ actions }: ActionListProps) {
+export function ActionList({ actions, unreadCount = 0 }: ActionListProps) {
 	const router = useRouter();
 	const [isMarking, setIsMarking] = useState(false);
 
@@ -48,18 +49,12 @@ export function ActionList({ actions }: ActionListProps) {
 	}, [actions]);
 
 	const handleMarkAllRead = async () => {
-		const unreadIds = actions.filter((a) => !a.isRead).map((a) => a.id);
-		if (unreadIds.length === 0) {
-			toast.info("No unread actions");
-			return;
-		}
-
 		setIsMarking(true);
 		try {
-			const res = await fetch("/api/actions/read", {
+			const res = await fetch("/api/actions", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ ids: unreadIds }),
+				body: JSON.stringify({ markAll: true }),
 			});
 
 			if (!res.ok) throw new Error("Failed to mark as read");
@@ -82,13 +77,17 @@ export function ActionList({ actions }: ActionListProps) {
 		);
 	}
 
-	const unreadCount = actions.filter((a) => !a.isRead).length;
+	// Explicit check for false to avoid any truthy/falsy confusion
+	const localUnreadCount = actions.filter((a) => a.isRead === false).length;
+	// Ensure we handle potentially undefined unreadCount
+	const showMarkAll =
+		(unreadCount !== undefined && unreadCount > 0) || localUnreadCount > 0;
 
 	return (
 		<div className="space-y-8 max-w-3xl mx-auto py-6">
 			<div className="flex items-center justify-between px-1">
 				<h1 className="text-2xl font-bold">Activity Log</h1>
-				{unreadCount > 0 && (
+				{showMarkAll && (
 					<Button
 						variant="outline"
 						size="sm"

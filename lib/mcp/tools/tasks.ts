@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
+import { logAction } from "@/lib/actions";
 import type { MCPServerContext } from "@/lib/mcp/types";
 import {
 	createComment,
 	createTask,
 	deleteTask,
+	getTaskById,
 	searchTasks,
 	updateTask,
 } from "@/lib/storage";
@@ -238,6 +240,18 @@ async function addCommentTool(
 		});
 
 		await createComment(parsed.taskId, comment);
+
+		const task = await getTaskById(parsed.taskId);
+
+		logAction({
+			entityId: parsed.taskId,
+			entityType: "task",
+			actorId: context.user.id,
+			actorType: "agent",
+			actionType: "update",
+			changes: { comments: "added" },
+			metadata: { commentId: comment.id, title: task?.title },
+		});
 
 		return {
 			content: [{ type: "text", text: JSON.stringify(comment, null, 2) }],

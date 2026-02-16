@@ -47,11 +47,16 @@ export async function GET(request: NextRequest) {
 	}
 }
 
-// POST /api/actions/read
-// Body: { ids: string[] }
-const markReadSchema = z.object({
-	ids: z.array(z.string()),
-});
+// POST /api/actions
+// Body: { ids: string[] } OR { markAll: boolean }
+const markReadSchema = z.union([
+	z.object({
+		ids: z.array(z.string()),
+	}),
+	z.object({
+		markAll: z.literal(true),
+	}),
+]);
 
 export async function POST(request: NextRequest) {
 	try {
@@ -70,7 +75,13 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		await markActionsRead(result.data.ids);
+		if ("markAll" in result.data && result.data.markAll) {
+			// Import dynamically or ensure export exists
+			const { markAllActionsRead } = await import("@/lib/actions");
+			await markAllActionsRead(auth.user.id);
+		} else if ("ids" in result.data) {
+			await markActionsRead(result.data.ids);
+		}
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

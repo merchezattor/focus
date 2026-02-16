@@ -93,6 +93,7 @@ interface AppSidebarProps {
 	counts: {
 		inboxCount: number;
 		todayCount: number;
+		eventsCount?: number;
 	};
 }
 
@@ -115,6 +116,8 @@ export function AppSidebar({
 			return { ...item, count: counts?.inboxCount ?? 0 };
 		if (item.title === "Today")
 			return { ...item, count: counts?.todayCount ?? 0 };
+		if (item.title === "Events")
+			return { ...item, count: counts?.eventsCount ?? 0 };
 		return item;
 	});
 

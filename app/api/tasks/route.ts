@@ -13,7 +13,12 @@ const createTaskSchema = taskSchema
 	})
 	.extend({
 		// Accept string or null for projectId (client sends string, we convert)
-		projectId: z.string().uuid().nullable().or(z.literal("")),
+		projectId: z
+			.string()
+			.uuid()
+			.or(z.literal("inbox"))
+			.nullable()
+			.or(z.literal("")),
 		// Accept string or null for dueDate (client sends ISO string)
 		dueDate: z
 			.string()

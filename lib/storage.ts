@@ -260,6 +260,28 @@ export async function deleteGoal(
 
 // --- Tasks ---
 
+export async function getTaskById(id: string): Promise<Task | undefined> {
+	// Simple fetch by ID without filters
+	const result = await db.select().from(tasks).where(eq(tasks.id, id));
+
+	if (!result[0]) return undefined;
+
+	return {
+		id: result[0].id,
+		title: result[0].content,
+		description: result[0].description || undefined,
+		completed: result[0].completed,
+		status: (result[0].status as "todo" | "in_progress" | "done") || "todo",
+		priority: result[0].priority as "p1" | "p2" | "p3" | "p4",
+		projectId: result[0].project_id,
+		dueDate: result[0].due_date,
+		planDate: result[0].plan_date,
+		createdAt: result[0].created_at,
+		updatedAt: result[0].updated_at,
+		comments: [], // Fetched separately if needed
+	};
+}
+
 // --- Advanced Search ---
 
 export interface TaskFilters {
@@ -295,7 +317,11 @@ export async function searchTasks(
 
 	// 4. Project
 	if (filters.projectId) {
-		conditions.push(eq(tasks.project_id, filters.projectId));
+		if (filters.projectId === "inbox") {
+			conditions.push(isNull(tasks.project_id));
+		} else {
+			conditions.push(eq(tasks.project_id, filters.projectId));
+		}
 	}
 
 	// 5. Text Search (title or description)
@@ -579,6 +605,8 @@ export async function deleteComment(commentId: string): Promise<void> {
 export async function syncComments(
 	taskId: string,
 	newComments: Comment[],
+	actorId: string,
+	actorType: ActorType = "user",
 ): Promise<void> {
 	// 1. Get existing comments
 	// (We could optimize by fetching IDs only, but for now select * is fine for MVP)
@@ -597,8 +625,25 @@ export async function syncComments(
 
 	// 3. Identify additions
 	const toAdd = newComments.filter((c) => !existingIds.has(c.id));
-	for (const c of toAdd) {
-		await createComment(taskId, c);
+
+	if (toAdd.length > 0) {
+		const task = await getTaskById(taskId);
+		const taskTitle = task?.title;
+
+		for (const c of toAdd) {
+			await createComment(taskId, c);
+
+			// Log the added comment action
+			logAction({
+				entityId: taskId,
+				entityType: "task",
+				actorId: actorId,
+				actorType: actorType,
+				actionType: "update",
+				changes: { comments: "added" },
+				metadata: { commentId: c.id, title: taskTitle },
+			});
+		}
 	}
 
 	// (Optional) Identify updates (not implemented for MVP as UI doesn't allow editing comments)
