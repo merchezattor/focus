@@ -78,6 +78,31 @@ node scripts/test-mcp.js
 }
 ```
 
+**Get Inbox Tasks:**
+
+Inbox tasks are tasks without a project (tasks where `projectId` is null or undefined):
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "focus_list_tasks",
+    "arguments": {
+      "status": ["todo"]
+    }
+  }
+}
+```
+
+Then filter the results client-side to exclude tasks that have a `projectId`. Or if your storage supports it, pass:
+```json
+{
+  "arguments": {
+    "projectId": null
+  }
+}
+```
+
 ### Projects (4 tools)
 
 | Tool | Description |
