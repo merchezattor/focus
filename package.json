@@ -9,6 +9,7 @@
 		"lint": "biome check",
 		"format": "biome format --write .",
 		"check": "biome check --write .",
+		"typecheck": "tsc --noEmit",
 		"db:migrate": "drizzle-kit push"
 	},
 	"dependencies": {
