@@ -35,13 +35,14 @@ node scripts/test-mcp.js
 
 ---
 
-## Available Tools (15 Total)
+## Available Tools (16 Total)
 
-### Tasks (5 tools)
+### Tasks (6 tools)
 
 | Tool | Description |
 |------|-------------|
 | `focus_list_tasks` | List and search tasks with filters (priority, status, due date, etc.) |
+| `focus_list_inbox` | List tasks from inbox (tasks without a project) |
 | `focus_create_task` | Create a new task with title, priority, and optional fields |
 | `focus_update_task` | Update an existing task by ID |
 | `focus_delete_task` | Delete a task by ID |
@@ -80,28 +81,22 @@ node scripts/test-mcp.js
 
 **Get Inbox Tasks:**
 
-Inbox tasks are tasks without a project (tasks where `projectId` is null or undefined):
+Use the dedicated `focus_list_inbox` tool to fetch tasks without a project:
 
 ```json
 {
   "method": "tools/call",
   "params": {
-    "name": "focus_list_tasks",
+    "name": "focus_list_inbox",
     "arguments": {
-      "status": ["todo"]
+      "status": ["todo"],
+      "priority": ["p1", "p2"]
     }
   }
 }
 ```
 
-Then filter the results client-side to exclude tasks that have a `projectId`. Or if your storage supports it, pass:
-```json
-{
-  "arguments": {
-    "projectId": null
-  }
-}
-```
+This tool supports the same filters as `focus_list_tasks` but automatically filters for tasks where `projectId` is null (inbox tasks).
 
 ### Projects (4 tools)
 

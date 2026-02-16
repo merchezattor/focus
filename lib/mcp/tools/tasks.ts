@@ -60,6 +60,19 @@ const addCommentSchema = z.object({
 	content: z.string().min(1),
 });
 
+const listInboxSchema = z.object({
+	priority: z.array(z.enum(["p1", "p2", "p3", "p4"])).optional(),
+	status: z.array(z.enum(["todo", "in_progress", "done"])).optional(),
+	completed: z.boolean().optional(),
+	dueDate: z
+		.union([z.enum(["today", "overdue", "upcoming"]), z.string()])
+		.optional(),
+	planDate: z
+		.union([z.enum(["today", "overdue", "upcoming"]), z.string()])
+		.optional(),
+	search: z.string().optional(),
+});
+
 // --- Tool Implementations ---
 
 async function listTasks(
@@ -84,6 +97,42 @@ async function listTasks(
 
 		return {
 			content: [{ type: "text", text: JSON.stringify(tasks, null, 2) }],
+		};
+	} catch (error) {
+		return {
+			content: [
+				{
+					type: "text",
+					text: error instanceof Error ? error.message : "Unknown error",
+				},
+			],
+			isError: true,
+		};
+	}
+}
+
+async function listInbox(
+	args: unknown,
+	context: MCPServerContext,
+): Promise<{
+	content: Array<{ type: string; text: string }>;
+	isError?: boolean;
+}> {
+	try {
+		const parsed = listInboxSchema.parse(args);
+
+		const inboxTasks = await searchTasks(context.user.id, {
+			priority: parsed.priority,
+			status: parsed.status,
+			completed: parsed.completed,
+			projectId: "inbox",
+			dueDateStr: parsed.dueDate,
+			planDateStr: parsed.planDate,
+			search: parsed.search,
+		});
+
+		return {
+			content: [{ type: "text", text: JSON.stringify(inboxTasks, null, 2) }],
 		};
 	} catch (error) {
 		return {
@@ -278,6 +327,13 @@ export const taskTools = [
 			"List and search tasks. Supports filters for priority, status, due date, plan date, and text search.",
 		schema: listTasksSchema,
 		handler: listTasks,
+	},
+	{
+		name: "focus_list_inbox",
+		description:
+			"List tasks from the inbox (tasks without a project). Supports the same filters as focus_list_tasks.",
+		schema: listInboxSchema,
+		handler: listInbox,
 	},
 	{
 		name: "focus_create_task",
