@@ -1,6 +1,6 @@
 ---
 name: focus-skill 
-description: MCP-enabled skill for Focus task management. Provides 15 tools for tasks, projects, goals, and activity tracking via Model Context Protocol.
+description: MCP-enabled skill for Focus task management. Provides 16 tools for tasks, projects, goals, and activity tracking via Model Context Protocol.
 ---
 
 # Focus MCP Skill
@@ -9,29 +9,11 @@ AI-native task management through Model Context Protocol (MCP).
 
 ## Overview
 
-This skill provides **15 MCP tools** for managing tasks, projects, goals, and tracking activity in the Focus application. It uses the modern **Streamable HTTP** transport for reliable, stateful connections.
+This skill provides **16 MCP tools** for managing tasks, projects, goals, and tracking activity in the Focus application. It uses the modern **Streamable HTTP** transport for reliable, stateful connections.
 
 **Protocol**: MCP 2024-11-05  
 **Transport**: Streamable HTTP  
-**Authentication**: Bearer Token  
 **Endpoint**: `POST /api/mcp`
-
----
-
-## Quick Start
-
-### 1. Configure Environment
-
-```bash
-export FOCUS_MCP_URL="https://focus.merchezatter.xyz/api/mcp"
-export FOCUS_MCP_TOKEN="focus_your_api_token_here"
-```
-
-### 2. Test Connection
-
-```bash
-node scripts/test-mcp.js
-```
 
 ---
 
@@ -170,120 +152,72 @@ This tool supports the same filters as `focus_list_tasks` but automatically filt
 
 ---
 
-## MCP Protocol Details
+## MCP Protocol Usage
 
-### Connection Flow
+### Tool Discovery
 
-1. **Initialize** (required first call):
+First, list available tools to see all capabilities:
+
 ```json
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "initialize",
-  "params": {
-    "protocolVersion": "2024-11-05",
-    "capabilities": {},
-    "clientInfo": {
-      "name": "your-client",
-      "version": "1.0.0"
-    }
-  }
-}
-```
-
-2. **List Tools** (discover available tools):
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 2,
   "method": "tools/list"
 }
 ```
 
-3. **Call Tool** (execute operations):
+### Calling Tools
+
+Use the `tools/call` method to execute any of the 16 tools listed above:
+
 ```json
 {
   "jsonrpc": "2.0",
-  "id": 3,
+  "id": 2,
   "method": "tools/call",
   "params": {
     "name": "focus_list_tasks",
-    "arguments": {}
+    "arguments": {
+      "priority": ["p1"]
+    }
   }
 }
-```
-
-### Headers Required
-
-```
-Content-Type: application/json
-Accept: application/json, text/event-stream
-Authorization: Bearer <your_token>
-mcp-session-id: <session_id_from_initialize_response>
 ```
 
 ### Response Format
 
-Responses may be JSON or SSE format:
+All tools return responses in this format:
 
-**JSON Response:**
 ```json
 {
   "jsonrpc": "2.0",
-  "id": 3,
+  "id": 2,
   "result": {
-    "content": [{"type": "text", "text": "[{...tasks...}]"}]
+    "content": [
+      {
+        "type": "text",
+        "text": "[JSON stringified data]"
+      }
+    ],
+    "isError": false
   }
 }
 ```
 
-**SSE Response:**
-```
-event: message
-data: {"jsonrpc":"2.0","id":3,"result":{"content":[...]}}
-```
-
----
-
-## Client Configuration Examples
-
-### OpenCode
+If an error occurs:
 
 ```json
 {
-  "mcpServers": {
-    "focus": {
-      "url": "https://focus.merchezatter.xyz/api/mcp",
-      "headers": {
-        "Authorization": "Bearer focus_your_token"
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Error message"
       }
-    }
-  }
-}
-```
-
-### Cursor
-
-Settings → Features → MCP Servers:
-- **Name**: `focus`
-- **URL**: `https://focus.merchezatter.xyz/api/mcp`
-- **Headers**: 
-  - `Authorization: Bearer focus_your_token`
-  - `Accept: application/json, text/event-stream`
-
-### Claude Desktop
-
-```json
-{
-  "mcpServers": {
-    "focus": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-focus"],
-      "env": {
-        "FOCUS_API_URL": "https://focus.merchezatter.xyz/api/mcp",
-        "FOCUS_API_TOKEN": "focus_your_token"
-      }
-    }
+    ],
+    "isError": true
   }
 }
 ```
@@ -312,28 +246,24 @@ Always convert to user's local timezone for display.
 
 Use hex codes: `#E44332`, `#4F46E5`, `#10B981`, etc.
 
----
+### Task Status Values
 
-## Troubleshooting
+- `todo` - Not started
+- `in_progress` - Currently working on it
+- `review` - Pending review
+- `done` - Completed
 
-### Connection Failed
+### Actor Types (for actions)
 
-1. Verify token is valid
-2. Check URL ends with `/api/mcp`
-3. Ensure `Accept` header includes both JSON and SSE
-
-### Session Errors
-
-Always include `mcp-session-id` header after initialization:
-```bash
-curl -X POST $FOCUS_MCP_URL \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "mcp-session-id: <session_from_init>" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
-```
+- `user` - Actions performed by the human user
+- `agent` - Actions performed by AI agents (like you)
 
 ---
 
-## Legacy Notice
+## Best Practices
 
-Previous versions used REST API with `api-client.js`. This has been **deprecated** in favor of MCP. All functionality is now available through the 15 MCP tools listed above.
+1. **Always use filters** when listing tasks - avoid fetching all tasks
+2. **Use `focus_list_inbox`** for unorganized tasks (no project)
+3. **Check action logs** to see what other agents have done
+4. **Validate dates** are in ISO 8601 UTC format before creating
+5. **Provide context** in descriptions when creating tasks
