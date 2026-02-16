@@ -38,16 +38,15 @@ export async function GET(request: NextRequest) {
 				actorType: auth.actorType,
 			};
 
-			createMCPServer(context).then((server) => {
-				sessions.set(sessionId, { id: sessionId, controller, server });
-				console.log(`[MCP] Session created: ${sessionId}`);
+			const server = createMCPServer(context);
+			sessions.set(sessionId, { id: sessionId, controller, server });
+			console.log(`[MCP] Session created: ${sessionId}`);
 
-				// Send endpoint event
-				const endpoint = `/api/mcp?sessionId=${sessionId}`;
-				controller.enqueue(
-					new TextEncoder().encode(`event: endpoint\ndata: ${endpoint}\n\n`),
-				);
-			});
+			// Send endpoint event
+			const endpoint = `/api/mcp?sessionId=${sessionId}`;
+			controller.enqueue(
+				new TextEncoder().encode(`event: endpoint\ndata: ${endpoint}\n\n`),
+			);
 		},
 		cancel() {
 			sessions.delete(sessionId);
