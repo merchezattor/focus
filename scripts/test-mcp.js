@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
-const API_URL = process.env.FOCUS_API_URL || "http://localhost:3000/api/mcp";
-const API_TOKEN = process.env.FOCUS_API_TOKEN;
+const API_URL =
+	process.env.FOCUS_MCP_URL ||
+	process.env.FOCUS_API_URL ||
+	"http://localhost:3000/api/mcp";
+const API_TOKEN = process.env.FOCUS_MCP_TOKEN || process.env.FOCUS_API_TOKEN;
 
 async function parseSseResponse(response) {
 	const text = await response.text();

@@ -1,255 +1,319 @@
 ---
 name: focus-skill 
-description: Interacts with the Focus application to manage tasks and projects. Use when the user wants to list, create, or manage their todo list.
+description: MCP-enabled skill for Focus task management. Provides 15 tools for tasks, projects, goals, and activity tracking via Model Context Protocol.
 ---
 
-# Focus App Skill
+# Focus MCP Skill
 
-Allows agents to interact with the Focus application via its API.
-Capable of listing and creating tasks and projects.
+AI-native task management through Model Context Protocol (MCP).
+
+## Overview
+
+This skill provides **15 MCP tools** for managing tasks, projects, goals, and tracking activity in the Focus application. It uses the modern **Streamable HTTP** transport for reliable, stateful connections.
+
+**Protocol**: MCP 2024-11-05  
+**Transport**: Streamable HTTP  
+**Authentication**: Bearer Token  
+**Endpoint**: `POST /api/mcp`
+
+---
 
 ## Quick Start
 
-1. **Configuration of Environment**:
-
-    ```bash
-    export FOCUS_API_URL="https://focus.merchezatter.xyz/api"
-    export FOCUS_API_TOKEN="<your_api_token>"
-    ```
-
-2. **Run Client**:
-
-    ```bash
-    # List Tasks
-    node scripts/api-client.js tasks list
-    ```
-
-## Core Workflow
-
-The skill uses a NodeJS script `scripts/api-client.js` as a bridge to the API.
-
-### 1. Listing & Searching Resources
-
-**Tasks:**
-
-The `tasks list` command uses an efficient search endpoint. You can list all tasks or filter them. Always use filters, and refraint to fetch all tasks to do in-memory filtering (it's very expensive).
-
-- **Filter Tasks:**
-
-    ```bash
-    # Filter by priority
-    node scripts/api-client.js tasks list '{"priority": "p1"}'
-
-    # Filter by multiple criteria (p1 tasks due today)
-    node scripts/api-client.js tasks list '{"priority": "p1", "dueDate": "today"}'
-
-    # Full text search
-    node scripts/api-client.js tasks list '{"search": "buy milk"}'
-    ```
-
-    **Supported Filters:**
-    - `priority`: "p1", "p2", "p3", "p4" (comma-separated for multiple)
-    - `status`: "todo", "in_progress", "done"
-    - `completed`: true/false
-    - `projectId`: <uuid>
-    - `dueDate`: "today", "overdue", "upcoming", or "YYYY-MM-DD"
-    - `planDate`: "today", "overdue", "upcoming", or "YYYY-MM-DD"
-    - `search`: text string
-
-    **Inbox Tasks:**
-
-    To fetch tasks from the Inbox (tasks without a project):
-
-    ```bash
-    node scripts/api-client.js tasks inbox
-    ```
-
-**Projects:**
+### 1. Configure Environment
 
 ```bash
-node scripts/api-client.js projects list
+export FOCUS_MCP_URL="https://focus.merchezatter.xyz/api/mcp"
+export FOCUS_MCP_TOKEN="focus_your_api_token_here"
 ```
 
-**Goals:**
+### 2. Test Connection
 
 ```bash
-node scripts/api-client.js goals list
+node scripts/test-mcp.js
 ```
 
-### 2. Creating Resources
+---
 
-**Create Task:**
+## Available Tools (15 Total)
 
-```bash
-node scripts/api-client.js tasks create '{"title": "New Task", "priority": "p1", "projectId": "optional_id"}'
+### Tasks (5 tools)
+
+| Tool | Description |
+|------|-------------|
+| `focus_list_tasks` | List and search tasks with filters (priority, status, due date, etc.) |
+| `focus_create_task` | Create a new task with title, priority, and optional fields |
+| `focus_update_task` | Update an existing task by ID |
+| `focus_delete_task` | Delete a task by ID |
+| `focus_add_task_comment` | Add a comment to a task |
+
+**List Tasks Example:**
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "focus_list_tasks",
+    "arguments": {
+      "priority": ["p1", "p2"],
+      "status": ["todo"],
+      "dueDate": "today"
+    }
+  }
+}
 ```
 
-**Create Project:**
-
-```bash
-node scripts/api-client.js projects create '{"name": "New Project", "color": "#ff0000", "isFavorite": true}'
+**Create Task Example:**
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "focus_create_task",
+    "arguments": {
+      "title": "Review quarterly report",
+      "priority": "p1",
+      "description": "Detailed review needed",
+      "dueDate": "2026-02-20T17:00:00Z"
+    }
+  }
+}
 ```
 
-**Create Goal:**
+### Projects (4 tools)
 
-```bash
-node scripts/api-client.js goals create '{"name": "New Goal", "color": "#00ff00", "priority": "p1"}'
+| Tool | Description |
+|------|-------------|
+| `focus_list_projects` | List all projects |
+| `focus_create_project` | Create a new project |
+| `focus_update_project` | Update a project |
+| `focus_delete_project` | Delete a project |
+
+**Create Project Example:**
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "focus_create_project",
+    "arguments": {
+      "name": "Q1 Goals",
+      "color": "#E44332",
+      "isFavorite": true
+    }
+  }
+}
 ```
 
-### 3. Modifying Resources
+### Goals (4 tools)
 
-**Update/Delete Tasks:**
+| Tool | Description |
+|------|-------------|
+| `focus_list_goals` | List all goals |
+| `focus_create_goal` | Create a new goal |
+| `focus_update_goal` | Update a goal |
+| `focus_delete_goal` | Delete a goal |
 
-```bash
-node scripts/api-client.js tasks update <id> '{"title": "Updated", "priority": "p2"}'
-node scripts/api-client.js tasks delete <id>
-node scripts/api-client.js tasks add_comment <id> "This is a comment"
+**Create Goal Example:**
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "focus_create_goal",
+    "arguments": {
+      "name": "Launch Product",
+      "priority": "p1",
+      "color": "#4F46E5",
+      "dueDate": "2026-03-31T23:59:59Z"
+    }
+  }
+}
 ```
 
-**Update/Delete Projects:**
+### Activity Log (2 tools)
 
-```bash
-node scripts/api-client.js projects update <id> '{"name": "Updated Project"}'
-node scripts/api-client.js projects delete <id>
+| Tool | Description |
+|------|-------------|
+| `focus_list_actions` | List activity log entries |
+| `focus_mark_actions_read` | Mark actions as read |
+
+**List Actions Example:**
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "focus_list_actions",
+    "arguments": {
+      "actorType": "agent",
+      "limit": 10
+    }
+  }
+}
 ```
 
-**Update/Delete Goals:**
+---
 
-```bash
-node scripts/api-client.js goals update <id> '{"name": "Updated Goal"}'
-node scripts/api-client.js goals delete <id>
+## MCP Protocol Details
+
+### Connection Flow
+
+1. **Initialize** (required first call):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {},
+    "clientInfo": {
+      "name": "your-client",
+      "version": "1.0.0"
+    }
+  }
+}
 ```
 
-### 4. Activity Log (Actions)
-
-**List Actions:**
-
-- Default (all actions, excluding your own):
-
-  ```bash
-  node scripts/api-client.js actions list
-  ```
-
-- Filter by Actor Type (e.g., 'user' to see only user actions):
-
-  ```bash
-  node scripts/api-client.js actions list '{"actorType": "user"}'
-  ```
-
-- Filter by Actor Type (e.g., 'agent' to see other agents' actions):
-
-  ```bash
-  node scripts/api-client.js actions list '{"actorType": "agent"}'
-  ```
-
-**Mark Actions as Read:**
-
-- Mark specific actions as read:
-
-  ```bash
-  # payload is { "ids": ["action-id-1", "action-id-2"] }
-  node scripts/api-client.js actions mark_read '{"ids": ["<action_id>"]}'
-  ```
-
-## Updating the Skill (Important!)
-
-When the Focus app API changes, you need to update the skill files in your working directory. Follow this workflow:
-
-### Workflow
-
-```bash
-# 1. Pull latest changes from the repository
-cd ~/repos/focus
-git pull origin main
-
-# 2. Copy updated skill files to your working directory
-cp ~/repos/focus/skills/focus-skill/scripts/api-client.js ~/clawd/skills/focus/scripts/
-cp ~/repos/focus/skills/focus-skill/SKILL.md ~/clawd/skills/focus/ 2>/dev/null || true
-
-# 3. Test that the skill works
-cd ~/clawd/skills/focus
-FOCUS_API_URL="https://todo.merchezatter.xyz/api" \
-FOCUS_API_TOKEN="focus_b9ab46503834ee78d2356a72cbcfed49bf2514a1b9fcaf4f" \
-node scripts/api-client.js tasks list
+2. **List Tools** (discover available tools):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/list"
+}
 ```
 
-### Key Points
-
-- Repository: [github.com/merchezattor/focus](https://github.com/merchezattor/focus)
-- Skill location in repo: `skills/focus-skill/`
-- Your working copy: `~/clawd/skills/focus/`
-- Always pull before copying to get the latest API client
-- Test after copying to verify the skill works
-
-## Important Rules
-
-- **ALWAYS** check that `FOCUS_API_TOKEN` is set before running commands.
-- **ALWAYS** validate JSON payloads before passing them to the creation commands.
-- **Priority Levels**: p1 (High), p2, p3, p4 (Low).
-- **Colors**: Use hex codes for colors (e.g., `#ff0000`).
-
-## MCP (Model Context Protocol) Support
-
-Focus now supports MCP via **Streamable HTTP** transport (modern replacement for HTTP+SSE).
-
-### MCP Endpoint
-
-```
-POST /api/mcp
+3. **Call Tool** (execute operations):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "focus_list_tasks",
+    "arguments": {}
+  }
+}
 ```
 
-**Transport**: Streamable HTTP (spec 2025-03-26)  
-**Protocol**: MCP 2024-11-05  
-**Authentication**: Bearer token or session cookie
+### Headers Required
 
-### Available MCP Tools (15 total)
-
-**Tasks (5):**
-- `focus_list_tasks` - List/search tasks with filters
-- `focus_create_task` - Create new task
-- `focus_update_task` - Update existing task
-- `focus_delete_task` - Delete task
-- `focus_add_task_comment` - Add comment to task
-
-**Projects (4):**
-- `focus_list_projects` - List all projects
-- `focus_create_project` - Create new project
-- `focus_update_project` - Update project
-- `focus_delete_project` - Delete project
-
-**Goals (4):**
-- `focus_list_goals` - List all goals
-- `focus_create_goal` - Create new goal
-- `focus_update_goal` - Update goal
-- `focus_delete_goal` - Delete goal
-
-**Actions (2):**
-- `focus_list_actions` - List activity log
-- `focus_mark_actions_read` - Mark actions as read
-
-### Testing MCP Connection
-
-```bash
-# Set environment variables
-export FOCUS_API_URL="https://focus.merchezatter.xyz/api/mcp"
-export FOCUS_API_TOKEN="<your_api_token>"
-
-# Run test script
-node scripts/test-mcp-streamable.js
+```
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: Bearer <your_token>
+mcp-session-id: <session_id_from_initialize_response>
 ```
 
-### MCP vs REST API
+### Response Format
 
-- **REST API**: Use for simple CRUD operations via `api-client.js`
-- **MCP**: Use for AI agent integrations with tool discovery and structured interactions
+Responses may be JSON or SSE format:
 
-## Date Handling (Important!)
+**JSON Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "content": [{"type": "text", "text": "[{...tasks...}]"}]
+  }
+}
+```
 
-**All dates in the API are stored in UTC (ISO 8601 format with `Z` suffix).**
+**SSE Response:**
+```
+event: message
+data: {"jsonrpc":"2.0","id":3,"result":{"content":[...]}}
+```
 
-Example:
+---
+
+## Client Configuration Examples
+
+### OpenCode
+
+```json
+{
+  "mcpServers": {
+    "focus": {
+      "url": "https://focus.merchezatter.xyz/api/mcp",
+      "headers": {
+        "Authorization": "Bearer focus_your_token"
+      }
+    }
+  }
+}
+```
+
+### Cursor
+
+Settings → Features → MCP Servers:
+- **Name**: `focus`
+- **URL**: `https://focus.merchezatter.xyz/api/mcp`
+- **Headers**: 
+  - `Authorization: Bearer focus_your_token`
+  - `Accept: application/json, text/event-stream`
+
+### Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "focus": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-focus"],
+      "env": {
+        "FOCUS_API_URL": "https://focus.merchezatter.xyz/api/mcp",
+        "FOCUS_API_TOKEN": "focus_your_token"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Important Notes
+
+### Date Handling
+
+All dates are stored in **UTC** (ISO 8601 format with `Z` suffix):
 ```
 2026-02-09T17:00:00.000Z = Feb 9, 2026 at 17:00 UTC
 ```
 
-When filtering or displaying dates, always convert to the user's local timezone.
+Always convert to user's local timezone for display.
+
+### Priority Levels
+
+- `p1` - High (red)
+- `p2` - Medium (orange)
+- `p3` - Low (blue)
+- `p4` - None (gray)
+
+### Colors
+
+Use hex codes: `#E44332`, `#4F46E5`, `#10B981`, etc.
+
+---
+
+## Troubleshooting
+
+### Connection Failed
+
+1. Verify token is valid
+2. Check URL ends with `/api/mcp`
+3. Ensure `Accept` header includes both JSON and SSE
+
+### Session Errors
+
+Always include `mcp-session-id` header after initialization:
+```bash
+curl -X POST $FOCUS_MCP_URL \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "mcp-session-id: <session_from_init>" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+```
+
+---
+
+## Legacy Notice
+
+Previous versions used REST API with `api-client.js`. This has been **deprecated** in favor of MCP. All functionality is now available through the 15 MCP tools listed above.
