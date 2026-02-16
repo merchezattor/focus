@@ -22,6 +22,7 @@ async function testMcpConnection() {
 
 	const headers = {
 		"Content-Type": "application/json",
+		Accept: "application/json, text/event-stream",
 	};
 
 	if (API_TOKEN) {
