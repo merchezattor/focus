@@ -41,25 +41,25 @@ const deleteGoalSchema = z.object({
 export const focus_list_goals = {
 	name: "focus_list_goals",
 	description: "List all goals",
-	inputSchema: listGoalsSchema,
+	schema: listGoalsSchema,
 } as const;
 
 export const focus_create_goal = {
 	name: "focus_create_goal",
 	description: "Create a new goal",
-	inputSchema: createGoalSchema,
+	schema: createGoalSchema,
 } as const;
 
 export const focus_update_goal = {
 	name: "focus_update_goal",
 	description: "Update a goal",
-	inputSchema: updateGoalSchema,
+	schema: updateGoalSchema,
 } as const;
 
 export const focus_delete_goal = {
 	name: "focus_delete_goal",
 	description: "Delete a goal",
-	inputSchema: deleteGoalSchema,
+	schema: deleteGoalSchema,
 } as const;
 
 // Handler implementations
@@ -195,19 +195,27 @@ const handleDeleteGoal: MCPToolHandler<
 // Export tools array
 export const goalTools = [
 	{
-		tool: focus_list_goals,
+		name: "focus_list_goals",
+		description: "List all goals",
+		schema: listGoalsSchema,
 		handler: handleListGoals,
 	},
 	{
-		tool: focus_create_goal,
+		name: "focus_create_goal",
+		description: "Create a new goal",
+		schema: createGoalSchema,
 		handler: handleCreateGoal,
 	},
 	{
-		tool: focus_update_goal,
+		name: "focus_update_goal",
+		description: "Update a goal",
+		schema: updateGoalSchema,
 		handler: handleUpdateGoal,
 	},
 	{
-		tool: focus_delete_goal,
+		name: "focus_delete_goal",
+		description: "Delete a goal",
+		schema: deleteGoalSchema,
 		handler: handleDeleteGoal,
 	},
 ];

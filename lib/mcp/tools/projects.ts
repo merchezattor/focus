@@ -195,102 +195,25 @@ export const projectTools = [
 	{
 		name: "focus_list_projects",
 		description: "List all projects",
-		inputSchema: {
-			type: "object" as const,
-			properties: {},
-		},
+		schema: _emptyInputSchema,
 		handler: focusListProjects,
 	},
 	{
 		name: "focus_create_project",
 		description: "Create a new project",
-		inputSchema: {
-			type: "object" as const,
-			properties: {
-				name: {
-					type: "string" as const,
-					description: "Project name (1-100 characters)",
-				},
-				color: {
-					type: "string" as const,
-					description: "Project color in hex format (e.g., #FF5733)",
-				},
-				description: {
-					type: "string" as const,
-					description: "Optional project description",
-				},
-				isFavorite: {
-					type: "boolean" as const,
-					description: "Whether the project is a favorite",
-				},
-				parentId: {
-					type: "string" as const,
-					description: "Optional parent ID (goal or project)",
-				},
-				parentType: {
-					type: "string" as const,
-					enum: ["goal", "project"] as const,
-					description: "Type of parent entity",
-				},
-				viewType: {
-					type: "string" as const,
-					enum: ["list", "board"] as const,
-					description: "View type for the project",
-				},
-			},
-			required: ["name", "color"],
-		},
+		schema: createProjectInputSchema,
 		handler: focusCreateProject,
 	},
 	{
 		name: "focus_update_project",
 		description: "Update a project",
-		inputSchema: {
-			type: "object" as const,
-			properties: {
-				id: {
-					type: "string" as const,
-					description: "Project ID (UUID)",
-				},
-				name: {
-					type: "string" as const,
-					description: "Project name (1-100 characters)",
-				},
-				color: {
-					type: "string" as const,
-					description: "Project color in hex format (e.g., #FF5733)",
-				},
-				description: {
-					type: "string" as const,
-					description: "Optional project description",
-				},
-				isFavorite: {
-					type: "boolean" as const,
-					description: "Whether the project is a favorite",
-				},
-				viewType: {
-					type: "string" as const,
-					enum: ["list", "board"] as const,
-					description: "View type for the project",
-				},
-			},
-			required: ["id"],
-		},
+		schema: updateProjectInputSchema,
 		handler: focusUpdateProject,
 	},
 	{
 		name: "focus_delete_project",
 		description: "Delete a project",
-		inputSchema: {
-			type: "object" as const,
-			properties: {
-				id: {
-					type: "string" as const,
-					description: "Project ID (UUID)",
-				},
-			},
-			required: ["id"],
-		},
+		schema: deleteProjectInputSchema,
 		handler: focusDeleteProject,
 	},
 ];

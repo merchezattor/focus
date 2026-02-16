@@ -2,13 +2,13 @@ import type { InferSelectModel } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import type { user } from "@/db/schema";
 import { getAuthenticatedUser } from "@/lib/api-auth";
-import { createMCPServer } from "@/lib/mcp/server";
+import { createMcpServer } from "@/lib/mcp/server";
 import type { MCPServerContext } from "@/lib/mcp/types";
 
 interface Session {
 	id: string;
 	controller: ReadableStreamDefaultController;
-	server: Awaited<ReturnType<typeof createMCPServer>>;
+	server: ReturnType<typeof createMcpServer>;
 }
 
 const sessions = new Map<string, Session>();
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 				actorType: auth.actorType,
 			};
 
-			const server = createMCPServer(context);
+			const server = createMcpServer(context);
 			sessions.set(sessionId, { id: sessionId, controller, server });
 			console.log(`[MCP] Session created: ${sessionId}`);
 

@@ -122,41 +122,13 @@ export const actionTools = [
 		name: "focus_list_actions",
 		description:
 			"List activity log (actions). Filter by actor type to see user or agent actions.",
-		inputSchema: {
-			type: "object" as const,
-			properties: {
-				actorType: {
-					type: "string" as const,
-					enum: ["user", "agent"],
-					description: "Filter by actor type",
-				},
-				limit: {
-					type: "number" as const,
-					description: "Maximum number of actions to return (1-100)",
-					minimum: 1,
-					maximum: 100,
-				},
-			},
-		},
+		schema: listActionsSchema,
 		handler: focus_list_actions,
 	},
 	{
 		name: "focus_mark_actions_read",
 		description: "Mark activity log items as read",
-		inputSchema: {
-			type: "object" as const,
-			properties: {
-				ids: {
-					type: "array" as const,
-					items: {
-						type: "string" as const,
-						format: "uuid",
-					},
-					description: "Array of action IDs to mark as read",
-				},
-			},
-			required: ["ids"],
-		},
+		schema: markReadSchema,
 		handler: focus_mark_actions_read,
 	},
 ];
