@@ -3,7 +3,13 @@ import { actionTools } from "./tools/actions";
 import { goalTools } from "./tools/goals";
 import { projectTools } from "./tools/projects";
 import { taskTools } from "./tools/tasks";
-import type { MCPServerContext } from "./types";
+import type { MCPResponse, MCPServerContext } from "./types";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ToolHandler = (
+	args: any,
+	context: MCPServerContext,
+) => Promise<MCPResponse>;
 
 export function createMcpServer(context: MCPServerContext): McpServer {
 	const server = new McpServer({
@@ -16,8 +22,10 @@ export function createMcpServer(context: MCPServerContext): McpServer {
 			tool.name,
 			tool.description,
 			tool.schema.shape,
-			async (args: unknown) => {
-				const result = await tool.handler(args, context);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			async (args: any) => {
+				const handler = tool.handler as ToolHandler;
+				const result = await handler(args, context);
 				return {
 					content: result.content.map((item) => ({
 						type: "text" as const,
@@ -34,8 +42,10 @@ export function createMcpServer(context: MCPServerContext): McpServer {
 			tool.name,
 			tool.description,
 			tool.schema.shape,
-			async (args: unknown) => {
-				const result = await tool.handler(args, context);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			async (args: any) => {
+				const handler = tool.handler as ToolHandler;
+				const result = await handler(args, context);
 				return {
 					content: result.content.map((item) => ({
 						type: "text" as const,
@@ -52,8 +62,10 @@ export function createMcpServer(context: MCPServerContext): McpServer {
 			tool.name,
 			tool.description,
 			tool.schema.shape,
-			async (args: unknown) => {
-				const result = await tool.handler(args, context);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			async (args: any) => {
+				const handler = tool.handler as ToolHandler;
+				const result = await handler(args, context);
 				return {
 					content: result.content.map((item) => ({
 						type: "text" as const,
@@ -70,8 +82,10 @@ export function createMcpServer(context: MCPServerContext): McpServer {
 			tool.name,
 			tool.description,
 			tool.schema.shape,
-			async (args: unknown) => {
-				const result = await tool.handler(args, context);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			async (args: any) => {
+				const handler = tool.handler as ToolHandler;
+				const result = await handler(args, context);
 				return {
 					content: result.content.map((item) => ({
 						type: "text" as const,
