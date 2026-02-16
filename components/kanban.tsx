@@ -790,12 +790,12 @@ export function KanbanBoardCardTextarea({
 	 * Adjusts the height of the textarea to handle cases where the text exceeds
 	 * the width of the Textarea and wraps around to the next line.
 	 */
-	const adjustTextareaHeight = () => {
+	const adjustTextareaHeight = useCallback(() => {
 		if (internalReference.current) {
 			internalReference.current.style.height = "auto"; // Reset height to recalculate.
 			internalReference.current.style.height = `${internalReference.current.scrollHeight}px`;
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		// When the component mounts, adjust the height of the textarea. This
