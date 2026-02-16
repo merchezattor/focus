@@ -188,6 +188,61 @@ node scripts/api-client.js tasks list
 - **Priority Levels**: p1 (High), p2, p3, p4 (Low).
 - **Colors**: Use hex codes for colors (e.g., `#ff0000`).
 
+## MCP (Model Context Protocol) Support
+
+Focus now supports MCP via **Streamable HTTP** transport (modern replacement for HTTP+SSE).
+
+### MCP Endpoint
+
+```
+POST /api/mcp
+```
+
+**Transport**: Streamable HTTP (spec 2025-03-26)  
+**Protocol**: MCP 2024-11-05  
+**Authentication**: Bearer token or session cookie
+
+### Available MCP Tools (15 total)
+
+**Tasks (5):**
+- `focus_list_tasks` - List/search tasks with filters
+- `focus_create_task` - Create new task
+- `focus_update_task` - Update existing task
+- `focus_delete_task` - Delete task
+- `focus_add_task_comment` - Add comment to task
+
+**Projects (4):**
+- `focus_list_projects` - List all projects
+- `focus_create_project` - Create new project
+- `focus_update_project` - Update project
+- `focus_delete_project` - Delete project
+
+**Goals (4):**
+- `focus_list_goals` - List all goals
+- `focus_create_goal` - Create new goal
+- `focus_update_goal` - Update goal
+- `focus_delete_goal` - Delete goal
+
+**Actions (2):**
+- `focus_list_actions` - List activity log
+- `focus_mark_actions_read` - Mark actions as read
+
+### Testing MCP Connection
+
+```bash
+# Set environment variables
+export FOCUS_API_URL="https://focus.merchezatter.xyz/api/mcp"
+export FOCUS_API_TOKEN="<your_api_token>"
+
+# Run test script
+node scripts/test-mcp-streamable.js
+```
+
+### MCP vs REST API
+
+- **REST API**: Use for simple CRUD operations via `api-client.js`
+- **MCP**: Use for AI agent integrations with tool discovery and structured interactions
+
 ## Date Handling (Important!)
 
 **All dates in the API are stored in UTC (ISO 8601 format with `Z` suffix).**
