@@ -1,72 +1,81 @@
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { InferSelectModel } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import type { user } from "@/db/schema";
 import { getAuthenticatedUser } from "@/lib/api-auth";
-import {
-	createMockIncomingMessage,
-	createResponseHandler,
-} from "@/lib/mcp/nextjs-adapter";
 import { createMcpServer } from "@/lib/mcp/server";
 import type { MCPServerContext } from "@/lib/mcp/types";
 
-const transports = new Map<string, StreamableHTTPServerTransport>();
+const transports = new Map<string, WebStandardStreamableHTTPServerTransport>();
 
 export async function POST(request: NextRequest) {
-	const auth = await getAuthenticatedUser(request);
-	if (!auth) {
+	try {
+		const auth = await getAuthenticatedUser(request);
+		if (!auth) {
+			return new Response(
+				JSON.stringify({
+					jsonrpc: "2.0",
+					error: { code: -32001, message: "Unauthorized" },
+					id: null,
+				}),
+				{ status: 401, headers: { "Content-Type": "application/json" } },
+			);
+		}
+
+		const sessionId = request.headers.get("mcp-session-id");
+
+		// Reuse existing transport for session
+		if (sessionId && transports.has(sessionId)) {
+			const transport = transports.get(sessionId)!;
+			const response = await transport.handleRequest(request);
+			return response;
+		}
+
+		// Create new transport
+		const transport = new WebStandardStreamableHTTPServerTransport({
+			sessionIdGenerator: () => crypto.randomUUID(),
+			onsessioninitialized: (sid) => {
+				transports.set(sid, transport);
+				console.log(`[MCP] Session initialized: ${sid}`);
+			},
+		});
+
+		const dbUser: InferSelectModel<typeof user> = {
+			id: auth.user.id,
+			name: auth.user.name ?? "",
+			email: auth.user.email,
+			emailVerified: auth.user.emailVerified,
+			image: auth.user.image ?? null,
+			createdAt: auth.user.createdAt,
+			updatedAt: auth.user.updatedAt,
+		};
+
+		const context: MCPServerContext = {
+			user: dbUser,
+			actorType: auth.actorType,
+		};
+
+		const server = createMcpServer(context);
+		await server.connect(transport);
+
+		// Handle the request
+		const response = await transport.handleRequest(request);
+		return response;
+	} catch (error) {
+		console.error("[MCP] Error handling request:", error);
 		return new Response(
 			JSON.stringify({
 				jsonrpc: "2.0",
-				error: { code: -32001, message: "Unauthorized" },
+				error: {
+					code: -32603,
+					message: "Internal error",
+					data: error instanceof Error ? error.message : String(error),
+				},
 				id: null,
 			}),
-			{ status: 401, headers: { "Content-Type": "application/json" } },
+			{ status: 500, headers: { "Content-Type": "application/json" } },
 		);
 	}
-
-	const sessionId = request.headers.get("mcp-session-id");
-
-	if (sessionId && transports.has(sessionId)) {
-		const transport = transports.get(sessionId)!;
-		const body = await request.json();
-		const mockReq = createMockIncomingMessage(request);
-		const { res, getResponse } = createResponseHandler();
-		await transport.handleRequest(mockReq, res, body);
-		return getResponse();
-	}
-
-	const transport = new StreamableHTTPServerTransport({
-		sessionIdGenerator: () => crypto.randomUUID(),
-		onsessioninitialized: (sid) => {
-			transports.set(sid, transport);
-			console.log(`[MCP] Session initialized: ${sid}`);
-		},
-	});
-
-	const dbUser: InferSelectModel<typeof user> = {
-		id: auth.user.id,
-		name: auth.user.name ?? "",
-		email: auth.user.email,
-		emailVerified: auth.user.emailVerified,
-		image: auth.user.image ?? null,
-		createdAt: auth.user.createdAt,
-		updatedAt: auth.user.updatedAt,
-	};
-
-	const context: MCPServerContext = {
-		user: dbUser,
-		actorType: auth.actorType,
-	};
-
-	const server = createMcpServer(context);
-	await server.connect(transport);
-
-	const body = await request.json();
-	const mockReq = createMockIncomingMessage(request);
-	const { res, getResponse } = createResponseHandler();
-	await transport.handleRequest(mockReq, res, body);
-	return getResponse();
 }
 
 export async function GET() {
