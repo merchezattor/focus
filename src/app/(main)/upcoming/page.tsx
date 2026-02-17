@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { SiteHeader } from "@/components/layout/site-header";
 import { UpcomingClient } from "@/components/features/upcoming/upcoming-client";
+import { SiteHeader } from "@/components/layout/site-header";
 import { auth } from "@/lib/auth";
 import { readProjects, readTasks } from "@/lib/storage";
 

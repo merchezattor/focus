@@ -6,10 +6,10 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LinkKanban } from "@/components/features/projects/LinkKanban";
-import { SiteHeader } from "@/components/layout/site-header";
 import { AddTaskDialog } from "@/components/features/tasks/AddTaskDialog";
 import { EditTaskDialog } from "@/components/features/tasks/EditTaskDialog";
 import { TaskList } from "@/components/features/tasks/TaskList";
+import { SiteHeader } from "@/components/layout/site-header";
 import { tasksAtom } from "@/lib/atoms";
 import type { Project, Task } from "@/types";
 
