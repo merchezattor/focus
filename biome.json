@@ -70,7 +70,7 @@
 	},
 	"overrides": [
 		{
-			"includes": ["app/globals.css"],
+			"includes": ["src/app/globals.css"],
 			"formatter": {
 				"enabled": false
 			},

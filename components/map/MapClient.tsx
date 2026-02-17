@@ -1,5 +1,6 @@
 "use client";
 
+import dagre from "@dagrejs/dagre";
 import {
 	Background,
 	Controls,
@@ -11,9 +12,6 @@ import {
 	useNodesState,
 } from "@xyflow/react";
 import { useMemo } from "react";
-
-// import dagre from '@dagrejs/dagre';
-const dagre = require("@dagrejs/dagre");
 import "@xyflow/react/dist/style.css";
 import type { Goal, Project, Task } from "@/types";
 
