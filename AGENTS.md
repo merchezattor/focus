@@ -82,7 +82,7 @@ The project structure follows standard Next.js App Router conventions:
 - **DO NOT** modify `.git` or strictly internal configuration files unless asked.
 - **DO NOT** use `fs` or direct file system calls in client components ("use client").
 - **DO NOT** hallucinate routes; verify current route structure in `/app`.
-- **DO NOT** do somethink that you were not asked to do. Always prefer to confirm with user before starting implementation.
+- **DO NOT** do somethink that you were not asked to do. Always prefer to confirm with user before starting implementation. (VERY IMPORTANT!)
 
 ## 6. Known "Gotchas"
 
