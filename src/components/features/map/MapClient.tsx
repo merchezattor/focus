@@ -10,7 +10,13 @@ import {
 	useEdgesState,
 	useNodesState,
 } from "@xyflow/react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+
+// Using require() instead of import because @dagrejs/dagre's ESM bundle
+// contains a dynamic require shim that Turbopack rejects.
+// require() resolves to the CJS build which works correctly.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const dagre = require("@dagrejs/dagre");
 import "@xyflow/react/dist/style.css";
 import type { Goal, Project, Task } from "@/types";
 
@@ -109,13 +115,8 @@ const nodeTypes = {
 	"task-summary": TaskSummaryNode,
 };
 
-function getLayoutedElements(
-	dagreMod: typeof import("@dagrejs/dagre"),
-	nodes: any[],
-	edges: any[],
-	direction = "TB",
-) {
-	const dagreGraph = new dagreMod.graphlib.Graph();
+function getLayoutedElements(nodes: any[], edges: any[], direction = "TB") {
+	const dagreGraph = new dagre.graphlib.Graph();
 	dagreGraph.setDefaultEdgeLabel(() => ({}));
 
 	const isHorizontal = direction === "LR";
@@ -132,7 +133,7 @@ function getLayoutedElements(
 		dagreGraph.setEdge(edge.source, edge.target);
 	});
 
-	dagreMod.layout(dagreGraph);
+	dagre.layout(dagreGraph);
 
 	const newNodes = nodes.map((node) => {
 		const nodeWithPosition = dagreGraph.node(node.id);
@@ -159,18 +160,8 @@ export function MapClient({
 	initialTasks,
 	initialGoals,
 }: MapClientProps) {
-	const [dagreMod, setDagreMod] = useState<
-		typeof import("@dagrejs/dagre") | null
-	>(null);
-
-	useEffect(() => {
-		import("@dagrejs/dagre").then((mod) => setDagreMod(mod));
-	}, []);
-
 	const { nodes: initialLayoutNodes, edges: initialLayoutEdges } =
 		useMemo(() => {
-			if (!dagreMod) return { nodes: [], edges: [] };
-
 			const nodes = [];
 			const edges = [];
 
@@ -265,27 +256,11 @@ export function MapClient({
 				});
 			}
 
-			return getLayoutedElements(dagreMod, nodes, edges, "TB");
-		}, [initialProjects, initialTasks, initialGoals, dagreMod]);
+			return getLayoutedElements(nodes, edges, "TB");
+		}, [initialProjects, initialTasks, initialGoals]);
 
 	const [nodes, _setNodes, onNodesChange] = useNodesState(initialLayoutNodes);
 	const [edges, _setEdges, onEdgesChange] = useEdgesState(initialLayoutEdges);
-
-	if (!dagreMod) {
-		return (
-			<div
-				style={{
-					width: "100%",
-					height: "calc(100vh - 100px)",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-				}}
-			>
-				Loading map...
-			</div>
-		);
-	}
 
 	return (
 		<div style={{ width: "100%", height: "calc(100vh - 100px)" }}>
