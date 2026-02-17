@@ -26,7 +26,7 @@ export async function generateApiToken() {
 	});
 	if (!session) throw new Error("Unauthorized");
 
-	// Generate simple token: "todoist_" prefix + 24 random bytes (48 hex chars)
+	// Generate simple token: "focus_" prefix + 24 random bytes (48 hex chars)
 	const newToken = `focus_${randomBytes(24).toString("hex")}`;
 
 	const existing = await db.query.apiTokens.findFirst({
@@ -39,9 +39,6 @@ export async function generateApiToken() {
 			.set({ token: newToken, createdAt: new Date() })
 			.where(eq(apiTokens.id, existing.id));
 	} else {
-		// We need a UUID for the ID. Assuming Node environment has crypto.randomUUID
-		// or we can just import it. Native Node 19+ has global crypto.
-		// Drizzle might expect a string.
 		await db.insert(apiTokens).values({
 			id: crypto.randomUUID(),
 			token: newToken,

@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff, Puzzle, Settings, User } from "lucide-react";
 import * as React from "react";
-import { generateApiToken, getApiToken } from "@/app/actions";
+import { generateApiToken, getApiToken } from "@/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
