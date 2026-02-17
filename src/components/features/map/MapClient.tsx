@@ -1,5 +1,6 @@
 "use client";
 
+import dagre from "@dagrejs/dagre";
 import {
 	Background,
 	Controls,
@@ -10,7 +11,7 @@ import {
 	useEdgesState,
 	useNodesState,
 } from "@xyflow/react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import "@xyflow/react/dist/style.css";
 import type { Goal, Project, Task } from "@/types";
 
@@ -110,12 +111,7 @@ const nodeTypes = {
 	"task-summary": TaskSummaryNode,
 };
 
-const getLayoutedElements = (
-	dagre: typeof import("@dagrejs/dagre"),
-	nodes: any[],
-	edges: any[],
-	direction = "TB",
-) => {
+const getLayoutedElements = (nodes: any[], edges: any[], direction = "TB") => {
 	const dagreGraph = new dagre.graphlib.Graph();
 	dagreGraph.setDefaultEdgeLabel(() => ({}));
 
@@ -123,6 +119,7 @@ const getLayoutedElements = (
 	dagreGraph.setGraph({ rankdir: direction });
 
 	nodes.forEach((node) => {
+		// Dynamic size based on node type
 		const width = node.type === "task-summary" ? summaryNodeWidth : nodeWidth;
 		const height =
 			node.type === "task-summary" ? summaryNodeHeight : nodeHeight;
@@ -145,6 +142,8 @@ const getLayoutedElements = (
 			...node,
 			targetPosition: isHorizontal ? Position.Left : Position.Top,
 			sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
+			// We are shifting the dagre node position (anchor=center center) to the top left
+			// so it matches the React Flow node anchor point (top left).
 			position: {
 				x: nodeWithPosition.x - width / 2,
 				y: nodeWithPosition.y - height / 2,
@@ -160,21 +159,12 @@ export function MapClient({
 	initialTasks,
 	initialGoals,
 }: MapClientProps) {
-	const [dagre, setDagre] = useState<typeof import("@dagrejs/dagre") | null>(
-		null,
-	);
-
-	useEffect(() => {
-		import("@dagrejs/dagre").then((mod) => setDagre(mod));
-	}, []);
-
 	const { nodes: initialLayoutNodes, edges: initialLayoutEdges } =
 		useMemo(() => {
-			if (!dagre) return { nodes: [], edges: [] };
-
 			const nodes = [];
 			const edges = [];
 
+			// 1. Create Nodes for Goals
 			for (const goal of initialGoals) {
 				nodes.push({
 					id: `goal-${goal.id}`,
@@ -194,6 +184,7 @@ export function MapClient({
 				});
 			}
 
+			// 2. Create Nodes for Projects and Edges from Goals
 			const allProjects = [...initialProjects];
 
 			for (const project of allProjects) {
@@ -227,27 +218,32 @@ export function MapClient({
 				}
 			}
 
+			// 3. Aggregate Tasks by Project and Create Summary Nodes
 			const tasksByProject: Record<string, Record<string, number>> = {};
 
 			for (const task of initialTasks) {
-				if (!task.projectId) continue;
+				if (!task.projectId) continue; // Skip inbox tasks
 
 				if (!tasksByProject[task.projectId]) {
 					tasksByProject[task.projectId] = { p1: 0, p2: 0, p3: 0, p4: 0 };
 				}
 
-				const p = task.priority || "p4";
+				const p = task.priority || "p4"; // Default to p4 if undefined
 				if (tasksByProject[task.projectId][p] !== undefined) {
 					tasksByProject[task.projectId][p]++;
 				} else {
+					// handle unexpected priority values just in case
 					tasksByProject[task.projectId].p4++;
 				}
 			}
 
 			for (const [projectId, counts] of Object.entries(tasksByProject)) {
+				// Only create if associated project exists (it should, but safety check)
 				if (!allProjects.find((p) => p.id === projectId)) continue;
 
 				const nodeId = `summary-${projectId}`;
+
+				// Check if there are any tasks at all
 				const totalTasks = Object.values(counts).reduce((a, b) => a + b, 0);
 				if (totalTasks === 0) continue;
 
@@ -255,6 +251,7 @@ export function MapClient({
 					id: nodeId,
 					type: "task-summary",
 					data: { counts },
+					// style handled in component
 				});
 
 				edges.push({
@@ -262,31 +259,15 @@ export function MapClient({
 					source: `proj-${projectId}`,
 					target: nodeId,
 					animated: true,
-					style: { stroke: "#e5e7eb", strokeWidth: 1, strokeDasharray: "5,5" },
+					style: { stroke: "#e5e7eb", strokeWidth: 1, strokeDasharray: "5,5" }, // Dashed line for summary
 				});
 			}
 
-			return getLayoutedElements(dagre, nodes, edges, "TB");
-		}, [initialProjects, initialTasks, initialGoals, dagre]);
+			return getLayoutedElements(nodes, edges, "TB"); // Top to Bottom layout
+		}, [initialProjects, initialTasks, initialGoals]);
 
 	const [nodes, _setNodes, onNodesChange] = useNodesState(initialLayoutNodes);
 	const [edges, _setEdges, onEdgesChange] = useEdgesState(initialLayoutEdges);
-
-	if (!dagre) {
-		return (
-			<div
-				style={{
-					width: "100%",
-					height: "calc(100vh - 100px)",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-				}}
-			>
-				Loading map...
-			</div>
-		);
-	}
 
 	return (
 		<div style={{ width: "100%", height: "calc(100vh - 100px)" }}>
