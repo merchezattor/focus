@@ -150,6 +150,29 @@ This tool supports the same filters as `focus_list_tasks` but automatically filt
 }
 ```
 
+**Get Task Change Log:**
+
+To see all actions/changes for a specific task:
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "focus_list_actions",
+    "arguments": {
+      "entityType": "task",
+      "entityId": "task-uuid-here"
+    }
+  }
+}
+```
+
+**Available Filters:**
+- `actorType`: "user" or "agent" - who performed the action
+- `entityType`: "task", "project", or "goal" - type of entity
+- `entityId`: specific UUID of the entity (use with entityType)
+- `limit`: number of results (1-100, default 50)
+
 ---
 
 ## MCP Protocol Usage

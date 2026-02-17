@@ -8,6 +8,8 @@ import type {
 
 const listActionsSchema = z.object({
 	actorType: z.enum(["user", "agent"]).optional(),
+	entityType: z.enum(["task", "project", "goal"]).optional(),
+	entityId: z.string().uuid().optional(),
 	limit: z.number().int().min(1).max(100).optional(),
 });
 
@@ -35,11 +37,13 @@ export const focus_list_actions: MCPToolHandler<
 			};
 		}
 
-		const { actorType, limit } = parsed.data;
+		const { actorType, entityType, entityId, limit } = parsed.data;
 
 		const actions = await getActions({
 			userId: context.user.id,
 			actorType,
+			entityType,
+			entityId,
 			limit: limit ?? 50,
 		});
 
@@ -121,7 +125,7 @@ export const actionTools = [
 	{
 		name: "focus_list_actions",
 		description:
-			"List activity log (actions). Filter by actor type to see user or agent actions.",
+			"List activity log (actions). Filter by actor type, entity type (task/project/goal), or specific entity ID to see changes.",
 		schema: listActionsSchema,
 		handler: focus_list_actions,
 	},
