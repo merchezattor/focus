@@ -1,32 +1,29 @@
-/**
- * Migration script: Convert goal_id → parent_id + parent_type
- *
- * Run BEFORE updating the schema (before `bun run db:migrate`).
- * Usage: bun run scripts/migrate-parent.ts
- */
-import { neon } from "@neondatabase/serverless";
 import { config } from "dotenv";
+import postgres from "postgres";
 
 config({ path: ".env.local" });
 
-const sql = neon(
-	process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL!,
-);
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+	console.error("DATABASE_URL is not set");
+	process.exit(1);
+}
+
+const sql = postgres(connectionString);
 
 async function migrate() {
 	console.log("Starting migration: goal_id → parent_id + parent_type");
 
-	// 1. Add new columns if they don't exist
 	await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS parent_id TEXT`;
 	await sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS parent_type TEXT`;
 
-	// 2. Copy goal_id data to parent_id/parent_type
 	const result = await sql`
-        UPDATE projects 
-        SET parent_id = goal_id, parent_type = 'goal'
-        WHERE goal_id IS NOT NULL AND parent_id IS NULL
-        RETURNING id, goal_id, parent_id, parent_type
-    `;
+    UPDATE projects 
+    SET parent_id = goal_id, parent_type = 'goal'
+    WHERE goal_id IS NOT NULL AND parent_id IS NULL
+    RETURNING id, goal_id, parent_id, parent_type
+  `;
 
 	console.log(`Migrated ${result.length} projects with goal references:`);
 	for (const row of result) {
@@ -35,12 +32,13 @@ async function migrate() {
 		);
 	}
 
-	// 3. Drop the old goal_id column
 	await sql`ALTER TABLE projects DROP COLUMN IF EXISTS goal_id`;
 
 	console.log(
 		"Migration complete! You can now update the schema and run `bun run db:migrate`.",
 	);
+
+	await sql.end();
 }
 
 migrate().catch((err) => {
