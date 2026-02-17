@@ -10,7 +10,8 @@
 		"format": "biome format --write .",
 		"check": "biome check --write .",
 		"typecheck": "tsc --noEmit",
-		"db:migrate": "drizzle-kit push"
+		"db:migrate": "drizzle-kit push",
+		"db:migrate-neon": "bun run scripts/migrate-neon-to-postgres.ts"
 	},
 	"dependencies": {
 		"@dagrejs/dagre": "^2.0.3",
