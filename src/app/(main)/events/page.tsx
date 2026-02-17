@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { ActionList } from "@/components/actions/ActionList";
+import { ActionList } from "@/components/features/actions/ActionList";
 import {
 	type EntityType,
 	getActions,

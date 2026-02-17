@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtom } from "jotai";
-import { AddProjectDialog } from "@/components/projects/AddProjectDialog";
+import { AddProjectDialog } from "@/components/features/projects/AddProjectDialog";
 import { isAddProjectOpenAtom } from "@/lib/atoms";
 import type { Goal, Project } from "@/types";
 

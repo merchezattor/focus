@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { MapClient } from "@/components/map/MapClient";
+import { MapClient } from "@/components/features/map/MapClient";
 import { auth } from "@/lib/auth";
 import { readGoals, readProjects, readTasks } from "@/lib/storage";
 

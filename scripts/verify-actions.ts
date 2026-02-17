@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { actions, user } from "@/db/schema";
-import { getActions, markActionsRead } from "@/lib/actions";
-import { createTask, deleteTask, updateTask } from "@/lib/storage";
+import { db } from "../src/db";
+import { actions, user } from "../src/db/schema";
+import { getActions, markActionsRead } from "../src/lib/actions";
+import { createTask, deleteTask, updateTask } from "../src/lib/storage";
 
 async function verify() {
 	console.log("Starting Actions Verification...");

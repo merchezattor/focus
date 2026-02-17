@@ -13,9 +13,9 @@ import { useSetAtom } from "jotai";
 import { Activity, Flag, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { isAddGoalOpenAtom } from "@/components/goals/GlobalAddGoalDialog";
-import { ModeToggle } from "@/components/mode-toggle";
-import { NavUser } from "@/components/nav-user";
+import { isAddGoalOpenAtom } from "@/components/features/goals/GlobalAddGoalDialog";
+import { ModeToggle } from "@/components/layout/mode-toggle";
+import { NavUser } from "@/components/layout/nav-user";
 import { Badge } from "@/components/ui/badge";
 import {
 	DropdownMenu,

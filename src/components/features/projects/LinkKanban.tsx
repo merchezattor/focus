@@ -17,7 +17,7 @@ import {
 	KanbanBoardExtraMargin,
 	KanbanBoardProvider,
 	KanbanColorCircle,
-} from "@/components/kanban";
+} from "@/components/features/kanban";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/types";
 

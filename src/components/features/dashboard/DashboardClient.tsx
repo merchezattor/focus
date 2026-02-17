@@ -5,11 +5,11 @@ import { useAtom } from "jotai";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LinkKanban } from "@/components/projects/LinkKanban";
-import { SiteHeader } from "@/components/site-header";
-import { AddTaskDialog } from "@/components/tasks/AddTaskDialog";
-import { EditTaskDialog } from "@/components/tasks/EditTaskDialog";
-import { TaskList } from "@/components/tasks/TaskList";
+import { LinkKanban } from "@/components/features/projects/LinkKanban";
+import { SiteHeader } from "@/components/layout/site-header";
+import { AddTaskDialog } from "@/components/features/tasks/AddTaskDialog";
+import { EditTaskDialog } from "@/components/features/tasks/EditTaskDialog";
+import { TaskList } from "@/components/features/tasks/TaskList";
 import { tasksAtom } from "@/lib/atoms";
 import type { Project, Task } from "@/types";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { atom, useAtom } from "jotai";
-import { AddGoalDialog } from "@/components/goals/AddGoalDialog";
+import { AddGoalDialog } from "@/components/features/goals/AddGoalDialog";
 
 // We need a new atom for Goal Dialog state.
 // Ideally this should be in lib/atoms.ts but for now I can define it here or import if I add it to atoms.

@@ -2,7 +2,7 @@
 
 import { useAtom, useSetAtom } from "jotai";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AddTaskDialog } from "@/components/tasks/AddTaskDialog";
+import { AddTaskDialog } from "@/components/features/tasks/AddTaskDialog";
 import { isAddTaskOpenAtom, tasksAtom } from "@/lib/atoms";
 import type { Project } from "@/types";
 

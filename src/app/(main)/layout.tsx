@@ -1,12 +1,12 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
-import { GlobalAddGoalDialog } from "@/components/goals/GlobalAddGoalDialog";
-import { GlobalAddProjectDialog } from "@/components/projects/GlobalAddProjectDialog";
-import { GlobalEditProjectDialog } from "@/components/projects/GlobalEditProjectDialog";
-import { AddTaskFab } from "@/components/tasks/AddTaskFab";
-import { GlobalAddTaskDialog } from "@/components/tasks/GlobalAddTaskDialog";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { GlobalAddGoalDialog } from "@/components/features/goals/GlobalAddGoalDialog";
+import { GlobalAddProjectDialog } from "@/components/features/projects/GlobalAddProjectDialog";
+import { GlobalEditProjectDialog } from "@/components/features/projects/GlobalEditProjectDialog";
+import { AddTaskFab } from "@/components/features/tasks/AddTaskFab";
+import { GlobalAddTaskDialog } from "@/components/features/tasks/GlobalAddTaskDialog";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getUnreadActionsCount } from "@/lib/actions";
 import { auth } from "@/lib/auth";

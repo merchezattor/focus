@@ -3,7 +3,7 @@
 import { Check, Flag, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { EditTaskDialog } from "@/components/tasks/EditTaskDialog";
+import { EditTaskDialog } from "@/components/features/tasks/EditTaskDialog";
 import {
 	CalendarBody,
 	CalendarDate,

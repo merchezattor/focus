@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { DashboardClient } from "@/components/dashboard/DashboardClient";
+import { DashboardClient } from "@/components/features/dashboard/DashboardClient";
 import { auth } from "@/lib/auth";
 import { readProjects, readTasks } from "@/lib/storage";
 
