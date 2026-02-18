@@ -6,7 +6,11 @@ import { headers } from "next/headers";
 import { db } from "@/db";
 import { apiTokens } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { createApiToken, deleteApiToken, listApiTokens } from "@/lib/storage";
 
+/**
+ * @deprecated Use listUserTokens() instead for multi-token support
+ */
 export async function getApiToken() {
 	const session = await auth.api.getSession({
 		headers: await headers(),
@@ -36,15 +40,54 @@ export async function generateApiToken() {
 	if (existing) {
 		await db
 			.update(apiTokens)
-			.set({ token: newToken, createdAt: new Date() })
+			.set({
+				token: newToken,
+				createdAt: new Date(),
+				name: existing.name || "Default Token",
+			})
 			.where(eq(apiTokens.id, existing.id));
 	} else {
 		await db.insert(apiTokens).values({
 			id: crypto.randomUUID(),
 			token: newToken,
 			userId: session.user.id,
+			name: "Default Token",
 		});
 	}
 
 	return newToken;
+}
+
+export async function listUserTokens(): Promise<
+	Array<{ id: string; name: string; createdAt: Date }>
+> {
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
+	if (!session) throw new Error("Unauthorized");
+
+	return listApiTokens(session.user.id);
+}
+
+export async function createUserToken(name: string): Promise<{
+	id: string;
+	name: string;
+	token: string;
+	createdAt: Date;
+}> {
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
+	if (!session) throw new Error("Unauthorized");
+
+	return createApiToken(session.user.id, name);
+}
+
+export async function deleteUserToken(id: string): Promise<void> {
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
+	if (!session) throw new Error("Unauthorized");
+
+	return deleteApiToken(id, session.user.id);
 }

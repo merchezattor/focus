@@ -88,11 +88,17 @@ export async function PATCH(
 		}
 
 		// Perform Update
-		await updateTask(id, result.data, user.id, actorType);
+		await updateTask(id, result.data, user.id, actorType, auth.tokenName);
 
 		// Sync comments if provided
 		if (result.data.comments) {
-			await syncComments(id, result.data.comments, user.id, actorType);
+			await syncComments(
+				id,
+				result.data.comments,
+				user.id,
+				actorType,
+				auth.tokenName,
+			);
 		}
 
 		// Creating a mock response
@@ -126,7 +132,7 @@ export async function DELETE(
 
 		const { id } = await params;
 
-		await deleteTask(id, user.id, actorType);
+		await deleteTask(id, user.id, actorType, auth.tokenName);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

@@ -1,16 +1,21 @@
 "use client";
 
-import { Eye, EyeOff, Puzzle, Settings, User } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { Copy, Plus, Puzzle, Settings, Trash2, User } from "lucide-react";
 import * as React from "react";
-import { generateApiToken, getApiToken } from "@/actions";
+import { createUserToken, deleteUserToken, listUserTokens } from "@/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -20,6 +25,14 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -140,80 +153,300 @@ function SettingsAccount({
 	);
 }
 
+interface ApiToken {
+	id: string;
+	name: string;
+	createdAt: Date;
+}
+
 function SettingsIntegrations() {
-	const [token, setToken] = React.useState<string | null>(null);
-	const [isVisible, setIsVisible] = React.useState(false);
-	const [loading, setLoading] = React.useState(false);
+	const [tokens, setTokens] = React.useState<ApiToken[]>([]);
+	const [loading, setLoading] = React.useState(true);
+	const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
+	const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+	const [selectedToken, setSelectedToken] = React.useState<ApiToken | null>(
+		null,
+	);
+	const [newTokenValue, setNewTokenValue] = React.useState<string | null>(null);
 
-	React.useEffect(() => {
-		getApiToken().then(setToken);
-	}, []);
-
-	const handleGenerate = async () => {
-		setLoading(true);
+	const reloadTokens = React.useCallback(async () => {
 		try {
-			const newToken = await generateApiToken();
-			setToken(newToken);
+			const data = await listUserTokens();
+			setTokens(data);
+		} catch (error) {
+			console.error("Failed to fetch tokens:", error);
 		} finally {
 			setLoading(false);
 		}
+	}, []);
+
+	React.useEffect(() => {
+		reloadTokens();
+	}, [reloadTokens]);
+
+	const handleCreate = async (name: string) => {
+		try {
+			const result = await createUserToken(name);
+			setNewTokenValue(result.token);
+			reloadTokens();
+		} catch (error) {
+			console.error("Failed to create token:", error);
+		}
 	};
 
-	const copyToClipboard = () => {
-		if (token) navigator.clipboard.writeText(token);
+	const handleDelete = async () => {
+		if (!selectedToken) return;
+		try {
+			await deleteUserToken(selectedToken.id);
+			reloadTokens();
+			setDeleteDialogOpen(false);
+			setSelectedToken(null);
+		} catch (error) {
+			console.error("Failed to delete token:", error);
+		}
+	};
+
+	const copyToClipboard = (token: string) => {
+		navigator.clipboard.writeText(token);
+	};
+
+	const maskToken = (token: string) => {
+		return `${token.slice(0, 12)}••••••••••••`;
 	};
 
 	return (
 		<div className="space-y-6 max-w-2xl">
 			<div>
-				<h2 className="text-lg font-medium mb-4">API token</h2>
+				<h2 className="text-lg font-medium mb-4">API Tokens</h2>
 				<div className="text-sm text-muted-foreground mb-4">
-					Your API token provides full access to view and modify your Focus
-					data. Please treat this like a password and take care when sharing it.
+					Your API tokens provide full access to view and modify your Focus
+					data. Please treat these like passwords and take care when sharing
+					them.
 				</div>
 
-				<div className="flex gap-2 mb-4">
-					<div className="relative flex-1">
-						<input
-							type={isVisible ? "text" : "password"}
-							value={token || ""}
-							readOnly
-							className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-10 font-mono"
-							placeholder="No token generated"
-						/>
-						<button
-							type="button"
-							onClick={() => setIsVisible(!isVisible)}
-							className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-						>
-							{isVisible ? (
-								<EyeOff className="h-4 w-4" />
-							) : (
-								<Eye className="h-4 w-4" />
-							)}
-						</button>
+				<div className="mb-4">
+					<Button onClick={() => setCreateDialogOpen(true)}>
+						<Plus className="h-4 w-4 mr-2" />
+						Create new API token
+					</Button>
+				</div>
+
+				{loading ? (
+					<div className="text-sm text-muted-foreground">Loading tokens...</div>
+				) : tokens.length === 0 ? (
+					<div className="text-sm text-muted-foreground">
+						No API tokens yet. Create one to get started.
 					</div>
-				</div>
-
-				<div className="flex gap-4">
-					<Button
-						variant="secondary"
-						onClick={copyToClipboard}
-						disabled={!token}
-					>
-						Copy API token
-					</Button>
-					<Button
-						variant="outline"
-						onClick={handleGenerate}
-						disabled={loading}
-						className="text-destructive hover:text-destructive border-destructive/50 hover:bg-destructive/10"
-					>
-						{token ? "Issue a new API token" : "Generate API token"}
-					</Button>
-				</div>
+				) : (
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Name</TableHead>
+								<TableHead>Token</TableHead>
+								<TableHead>Created</TableHead>
+								<TableHead className="w-[100px]">Actions</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{tokens.map((token) => (
+								<TableRow key={token.id}>
+									<TableCell className="font-medium">{token.name}</TableCell>
+									<TableCell className="font-mono text-xs">
+										{maskToken("focus_placeholder_token_value")}
+									</TableCell>
+									<TableCell className="text-sm text-muted-foreground">
+										{formatDistanceToNow(new Date(token.createdAt), {
+											addSuffix: true,
+										})}
+									</TableCell>
+									<TableCell>
+										<div className="flex gap-2">
+											<Button
+												variant="ghost"
+												size="icon"
+												onClick={() => copyToClipboard(token.id)}
+												title="Copy token ID"
+											>
+												<Copy className="h-4 w-4" />
+											</Button>
+											<Button
+												variant="ghost"
+												size="icon"
+												onClick={() => {
+													setSelectedToken(token);
+													setDeleteDialogOpen(true);
+												}}
+												title="Delete token"
+												className="text-destructive hover:text-destructive"
+											>
+												<Trash2 className="h-4 w-4" />
+											</Button>
+										</div>
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				)}
 			</div>
+
+			<CreateTokenDialog
+				open={createDialogOpen}
+				onOpenChange={(open) => {
+					setCreateDialogOpen(open);
+					if (!open) {
+						setNewTokenValue(null);
+					}
+				}}
+				onCreate={handleCreate}
+				newToken={newTokenValue}
+				onCopy={(token) => copyToClipboard(token)}
+			/>
+
+			<DeleteTokenDialog
+				open={deleteDialogOpen}
+				onOpenChange={setDeleteDialogOpen}
+				onDelete={handleDelete}
+				tokenName={selectedToken?.name}
+			/>
 		</div>
+	);
+}
+
+interface CreateTokenDialogProps {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	onCreate: (name: string) => void;
+	newToken: string | null;
+	onCopy: (token: string) => void;
+}
+
+function CreateTokenDialog({
+	open,
+	onOpenChange,
+	onCreate,
+	newToken,
+	onCopy,
+}: CreateTokenDialogProps) {
+	const [name, setName] = React.useState("");
+	const [error, setError] = React.useState("");
+
+	React.useEffect(() => {
+		if (!open) {
+			setName("");
+			setError("");
+		}
+	}, [open]);
+
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		const trimmedName = name.trim();
+
+		if (!trimmedName) {
+			setError("Name is required");
+			return;
+		}
+		if (trimmedName.length > 50) {
+			setError("Name must be 50 characters or less");
+			return;
+		}
+
+		onCreate(trimmedName);
+	};
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="sm:max-w-md">
+				<DialogHeader className="space-y-2">
+					<DialogTitle>
+						{newToken ? "API Token Created" : "Create API Token"}
+					</DialogTitle>
+					{!newToken && (
+						<DialogDescription>
+							Enter a name for your API token.
+						</DialogDescription>
+					)}
+				</DialogHeader>
+
+				{newToken ? (
+					<div className="space-y-4 pt-2">
+						<div className="text-sm text-muted-foreground">
+							Copy this token now. You won&apos;t be able to see it again.
+						</div>
+						<div className="flex gap-2">
+							<Input value={newToken} readOnly className="font-mono text-xs" />
+							<Button variant="secondary" onClick={() => onCopy(newToken)}>
+								<Copy className="h-4 w-4" />
+							</Button>
+						</div>
+						<DialogFooter className="pt-4">
+							<Button onClick={() => onOpenChange(false)}>Close</Button>
+						</DialogFooter>
+					</div>
+				) : (
+					<form onSubmit={handleSubmit} className="space-y-5 pt-2">
+						<div className="space-y-2">
+							<Label htmlFor="token-name">Token name</Label>
+							<Input
+								id="token-name"
+								value={name}
+								onChange={(e) => setName(e.target.value)}
+								placeholder="e.g., Production API"
+								maxLength={50}
+							/>
+							{error && <p className="text-sm text-destructive">{error}</p>}
+						</div>
+						<DialogFooter className="pt-2">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => onOpenChange(false)}
+							>
+								Cancel
+							</Button>
+							<Button type="submit">Create Token</Button>
+						</DialogFooter>
+					</form>
+				)}
+			</DialogContent>
+		</Dialog>
+	);
+}
+
+interface DeleteTokenDialogProps {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	onDelete: () => void;
+	tokenName: string | undefined;
+}
+
+function DeleteTokenDialog({
+	open,
+	onOpenChange,
+	onDelete,
+	tokenName,
+}: DeleteTokenDialogProps) {
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="sm:max-w-md">
+				<DialogHeader>
+					<DialogTitle>Delete API Token</DialogTitle>
+					<DialogDescription>
+						Are you sure you want to delete &quot;{tokenName}&quot;? This will
+						revoke access for any integrations using this token. This action
+						cannot be undone.
+					</DialogDescription>
+				</DialogHeader>
+				<DialogFooter>
+					<Button variant="outline" onClick={() => onOpenChange(false)}>
+						Cancel
+					</Button>
+					<Button variant="destructive" onClick={onDelete}>
+						Delete Token
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }
 

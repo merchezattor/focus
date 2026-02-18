@@ -13,7 +13,7 @@ import {
 	or,
 } from "drizzle-orm";
 import { db } from "@/db";
-import { comments, goals, projects, tasks } from "@/db/schema";
+import { apiTokens, comments, goals, projects, tasks } from "@/db/schema";
 import type { Comment, Goal, Project, Task } from "@/types";
 
 import { type ActionType, type ActorType, logAction } from "./actions";
@@ -87,6 +87,7 @@ export async function createProject(
 	project: Project,
 	userId: string,
 	actorType: ActorType = "user",
+	tokenName?: string,
 ): Promise<void> {
 	await db.insert(projects).values({
 		id: project.id,
@@ -109,7 +110,7 @@ export async function createProject(
 		actorType: actorType,
 		actionType: "create",
 		changes: { name: project.name },
-		metadata: { name: project.name },
+		metadata: { name: project.name, tokenName },
 	});
 }
 
@@ -118,6 +119,7 @@ export async function updateProject(
 	updates: Partial<Project> & { parentType?: "goal" | "project" },
 	actorId: string,
 	actorType: ActorType = "user",
+	tokenName?: string,
 ): Promise<void> {
 	const dbUpdates: any = {};
 	if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -151,7 +153,7 @@ export async function updateProject(
 			actorType: actorType,
 			actionType: "update",
 			changes: updates,
-			metadata: { name: result[0]?.name },
+			metadata: { name: result[0]?.name, tokenName },
 		});
 	}
 }
@@ -180,6 +182,7 @@ export async function createGoal(
 	goal: Goal,
 	userId: string,
 	actorType: ActorType = "user",
+	tokenName?: string,
 ): Promise<void> {
 	await db.insert(goals).values({
 		id: goal.id,
@@ -200,7 +203,7 @@ export async function createGoal(
 		actorType: actorType,
 		actionType: "create",
 		changes: { name: goal.name },
-		metadata: { name: goal.name },
+		metadata: { name: goal.name, tokenName },
 	});
 }
 
@@ -209,6 +212,7 @@ export async function updateGoal(
 	updates: Partial<Goal>,
 	actorId: string,
 	actorType: ActorType = "user",
+	tokenName?: string,
 ): Promise<void> {
 	const dbUpdates: any = {};
 	if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -233,7 +237,7 @@ export async function updateGoal(
 			actorType: actorType,
 			actionType: "update",
 			changes: updates,
-			metadata: { name: result[0]?.name },
+			metadata: { name: result[0]?.name, tokenName },
 		});
 	}
 }
@@ -242,6 +246,7 @@ export async function deleteGoal(
 	id: string,
 	actorId: string,
 	actorType: ActorType = "user",
+	tokenName?: string,
 ): Promise<void> {
 	const result = await db
 		.delete(goals)
@@ -254,7 +259,7 @@ export async function deleteGoal(
 		actorId: actorId,
 		actorType: actorType,
 		actionType: "delete",
-		metadata: { name: result[0]?.name },
+		metadata: { name: result[0]?.name, tokenName },
 	});
 }
 
@@ -486,6 +491,7 @@ export async function createTask(
 	task: Task,
 	userId: string,
 	actorType: ActorType = "user",
+	tokenName?: string,
 ): Promise<void> {
 	await db.insert(tasks).values({
 		id: task.id,
@@ -515,7 +521,7 @@ export async function createTask(
 		actorType: actorType,
 		actionType: "create",
 		changes: { content: task.title },
-		metadata: { title: task.title },
+		metadata: { title: task.title, tokenName },
 	});
 }
 
@@ -524,6 +530,7 @@ export async function updateTask(
 	updates: Partial<Task>,
 	actorId: string,
 	actorType: ActorType = "user",
+	tokenName?: string,
 ): Promise<void> {
 	// Map partial Task to partial DB Task
 	const dbUpdates: any = {};
@@ -559,7 +566,7 @@ export async function updateTask(
 			actorType: actorType,
 			actionType: actionType,
 			changes: updates,
-			metadata: { title: result[0]?.content },
+			metadata: { title: result[0]?.content, tokenName },
 		});
 	}
 }
@@ -568,6 +575,7 @@ export async function deleteTask(
 	id: string,
 	actorId: string,
 	actorType: ActorType = "user",
+	tokenName?: string,
 ): Promise<void> {
 	const result = await db
 		.delete(tasks)
@@ -580,8 +588,61 @@ export async function deleteTask(
 		actorId: actorId,
 		actorType: actorType,
 		actionType: "delete",
-		metadata: { title: result[0]?.content },
+		metadata: { title: result[0]?.content, tokenName },
 	});
+}
+
+// --- API Tokens ---
+
+export async function listApiTokens(
+	userId: string,
+): Promise<Array<{ id: string; name: string; createdAt: Date }>> {
+	const tokens = await db
+		.select({
+			id: apiTokens.id,
+			name: apiTokens.name,
+			createdAt: apiTokens.createdAt,
+		})
+		.from(apiTokens)
+		.where(eq(apiTokens.userId, userId))
+		.orderBy(desc(apiTokens.createdAt));
+
+	return tokens;
+}
+
+export async function createApiToken(
+	userId: string,
+	name: string,
+): Promise<{ id: string; name: string; token: string; createdAt: Date }> {
+	const { randomBytes } = await import("node:crypto");
+	const newToken = `focus_${randomBytes(24).toString("hex")}`;
+
+	const result = await db
+		.insert(apiTokens)
+		.values({
+			id: crypto.randomUUID(),
+			token: newToken,
+			userId: userId,
+			name: name,
+			createdAt: new Date(),
+		})
+		.returning({
+			id: apiTokens.id,
+			name: apiTokens.name,
+			token: apiTokens.token,
+			createdAt: apiTokens.createdAt,
+		});
+
+	return result[0];
+}
+
+export async function deleteApiToken(
+	id: string,
+	userId: string,
+): Promise<void> {
+	await db
+		.delete(apiTokens)
+		.where(and(eq(apiTokens.id, id), eq(apiTokens.userId, userId)));
 }
 
 // --- Comments ---
@@ -607,6 +668,7 @@ export async function syncComments(
 	newComments: Comment[],
 	actorId: string,
 	actorType: ActorType = "user",
+	tokenName?: string,
 ): Promise<void> {
 	// 1. Get existing comments
 	// (We could optimize by fetching IDs only, but for now select * is fine for MVP)
@@ -641,7 +703,7 @@ export async function syncComments(
 				actorType: actorType,
 				actionType: "update",
 				changes: { comments: "added" },
-				metadata: { commentId: c.id, title: taskTitle },
+				metadata: { commentId: c.id, title: taskTitle, tokenName },
 			});
 		}
 	}
@@ -666,6 +728,7 @@ export async function deleteProject(
 	id: string,
 	actorId: string,
 	actorType: ActorType = "user",
+	tokenName?: string,
 ): Promise<void> {
 	await db.delete(tasks).where(eq(tasks.project_id, id));
 	const result = await db
@@ -679,6 +742,6 @@ export async function deleteProject(
 		actorId: actorId,
 		actorType: actorType,
 		actionType: "delete",
-		metadata: { name: result[0]?.name },
+		metadata: { name: result[0]?.name, tokenName },
 	});
 }

@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
 			comments: [],
 		};
 
-		await createTask(newTask, user.id, actorType);
+		await createTask(newTask, user.id, actorType, auth.tokenName);
 
 		return NextResponse.json({ task: newTask }, { status: 201 });
 	} catch (error) {
@@ -132,7 +132,7 @@ export async function PUT(request: NextRequest) {
 
 		// Basic validation (can improve with Zod schema for updates)
 		// For now trust the partial update but sanitized via storage function types
-		await updateTask(id, data, user.id, actorType);
+		await updateTask(id, data, user.id, actorType, auth.tokenName);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

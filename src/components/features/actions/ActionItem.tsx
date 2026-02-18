@@ -82,12 +82,21 @@ export function ActionItem({ action }: ActionItemProps) {
 		}
 	};
 
-	const getActorIcon = () => {
-		return action.actorType === "agent" ? (
-			<Bot className="h-4 w-4 text-muted-foreground" />
-		) : (
-			<User className="h-4 w-4 text-muted-foreground" />
-		);
+	const getActorDisplay = () => {
+		if (action.actorType === "agent") {
+			const tokenName = action.metadata?.tokenName;
+			return (
+				<div className="flex items-center gap-1.5">
+					<Bot className="h-4 w-4 text-muted-foreground" />
+					{tokenName && (
+						<span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+							{tokenName}
+						</span>
+					)}
+				</div>
+			);
+		}
+		return <User className="h-4 w-4 text-muted-foreground" />;
 	};
 
 	const getDescription = () => {
@@ -183,7 +192,7 @@ export function ActionItem({ action }: ActionItemProps) {
 			<div className="flex-1 min-w-0">
 				<div className="flex items-center gap-2">
 					<span title={action.actorType === "agent" ? "AI Agent" : "User"}>
-						{getActorIcon()}
+						{getActorDisplay()}
 					</span>
 					<span className="text-muted-foreground text-xs">•</span>
 

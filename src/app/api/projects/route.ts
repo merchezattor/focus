@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 			updatedAt: new Date(),
 		};
 
-		await createProject(newProject, user.id, actorType);
+		await createProject(newProject, user.id, actorType, auth.tokenName);
 
 		return NextResponse.json({ project: newProject }, { status: 201 });
 	} catch (error) {
@@ -116,7 +116,7 @@ export async function PUT(request: NextRequest) {
 				result.data.parentType === null ? undefined : result.data.parentType,
 		};
 
-		await updateProject(id, cleanData, user.id, actorType);
+		await updateProject(id, cleanData, user.id, actorType, auth.tokenName);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
@@ -147,7 +147,7 @@ export async function DELETE(request: NextRequest) {
 			);
 		}
 
-		await deleteProject(id, user.id, actorType);
+		await deleteProject(id, user.id, actorType, auth.tokenName);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

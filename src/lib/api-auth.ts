@@ -36,7 +36,11 @@ export async function getAuthenticatedUser(request: NextRequest) {
 			});
 
 			if (dbUser) {
-				return { user: dbUser, actorType: "agent" as ActorType };
+				return {
+					user: dbUser,
+					actorType: "agent" as ActorType,
+					tokenName: apiToken.name,
+				};
 			}
 		}
 	}
