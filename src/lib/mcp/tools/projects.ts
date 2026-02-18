@@ -17,29 +17,58 @@ import type { Project } from "@/types/project";
 const _emptyInputSchema = z.object({});
 
 const createProjectInputSchema = z.object({
-	name: z.string().min(1).max(100),
-	color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
-	description: z.string().optional(),
-	isFavorite: z.boolean().optional(),
-	parentId: z.string().uuid().optional(),
-	parentType: z.enum(["goal", "project"]).optional(),
-	viewType: z.enum(["list", "board"]).optional(),
-});
-
-const updateProjectInputSchema = z.object({
-	id: z.string().uuid(),
-	name: z.string().min(1).max(100).optional(),
+	name: z.string().min(1).max(100).describe("Project name. 1–100 characters."),
 	color: z
 		.string()
 		.regex(/^#[0-9A-Fa-f]{6}$/)
-		.optional(),
-	description: z.string().optional(),
-	isFavorite: z.boolean().optional(),
-	viewType: z.enum(["list", "board"]).optional(),
+		.describe('Hex color code in #RRGGBB format, e.g. "#E44332".'),
+	description: z.string().optional().describe("Project description."),
+	isFavorite: z
+		.boolean()
+		.optional()
+		.describe("Pin as favorite. Defaults to false."),
+	parentId: z
+		.string()
+		.uuid()
+		.optional()
+		.describe(
+			"UUID of a parent goal or project. Must set parentType if provided.",
+		),
+	parentType: z
+		.enum(["goal", "project"])
+		.optional()
+		.describe(
+			'Type of the parent entity. Required when parentId is set. "goal" or "project".',
+		),
+	viewType: z
+		.enum(["list", "board"])
+		.optional()
+		.describe('Display mode for the project. Defaults to "list".'),
+});
+
+const updateProjectInputSchema = z.object({
+	id: z.string().uuid().describe("UUID of the project to update."),
+	name: z
+		.string()
+		.min(1)
+		.max(100)
+		.optional()
+		.describe("New project name. 1–100 characters."),
+	color: z
+		.string()
+		.regex(/^#[0-9A-Fa-f]{6}$/)
+		.optional()
+		.describe('New hex color code in #RRGGBB format, e.g. "#10B981".'),
+	description: z.string().optional().describe("New project description."),
+	isFavorite: z.boolean().optional().describe("Pin/unpin as favorite."),
+	viewType: z
+		.enum(["list", "board"])
+		.optional()
+		.describe('Change display mode. "list" or "board".'),
 });
 
 const deleteProjectInputSchema = z.object({
-	id: z.string().uuid(),
+	id: z.string().uuid().describe("UUID of the project to delete."),
 });
 
 // Tool definitions

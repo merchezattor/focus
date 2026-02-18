@@ -16,61 +16,177 @@ import { commentSchema } from "@/types/task";
 // --- Schema Definitions ---
 
 const listTasksSchema = z.object({
-	priority: z.array(z.enum(["p1", "p2", "p3", "p4"])).optional(),
-	status: z.array(z.enum(["todo", "in_progress", "done"])).optional(),
-	completed: z.boolean().optional(),
-	projectId: z.string().uuid().optional(),
+	priority: z
+		.array(z.enum(["p1", "p2", "p3", "p4"]))
+		.optional()
+		.describe(
+			"Filter by priority. p1=High, p2=Medium, p3=Low, p4=None. Multiple values are OR'd.",
+		),
+	status: z
+		.array(z.enum(["todo", "in_progress", "done"]))
+		.optional()
+		.describe(
+			'Filter by status. NOTE: "review" is NOT valid here (only in create/update). Multiple values are OR\'d.',
+		),
+	completed: z
+		.boolean()
+		.optional()
+		.describe("Filter by completion flag. true=completed, false=active."),
+	projectId: z
+		.string()
+		.uuid()
+		.optional()
+		.describe(
+			"Filter to a specific project by UUID. Use focus_list_inbox instead for tasks without a project.",
+		),
 	dueDate: z
 		.union([z.enum(["today", "overdue", "upcoming"]), z.string()])
-		.optional(),
+		.optional()
+		.describe(
+			'Filter by due date. "today"=due today, "overdue"=past due and not completed, "upcoming"=due after today, or an ISO date string for a specific day.',
+		),
 	planDate: z
 		.union([z.enum(["today", "overdue", "upcoming"]), z.string()])
-		.optional(),
-	search: z.string().optional(),
+		.optional()
+		.describe(
+			'Filter by plan date. Same keywords as dueDate: "today", "overdue", "upcoming", or an ISO date string.',
+		),
+	search: z
+		.string()
+		.optional()
+		.describe(
+			"Case-insensitive text search across task title and description.",
+		),
 });
 
 const createTaskSchema = z.object({
-	title: z.string().min(1).max(200),
-	priority: z.enum(["p1", "p2", "p3", "p4"]),
-	description: z.string().max(1000).optional(),
-	projectId: z.string().uuid().optional(),
-	dueDate: z.string().datetime().optional(),
-	planDate: z.string().datetime().optional(),
-	status: z.enum(["todo", "in_progress", "review", "done"]).optional(),
+	title: z.string().min(1).max(200).describe("Task title. 1–200 characters."),
+	priority: z
+		.enum(["p1", "p2", "p3", "p4"])
+		.describe("Priority level. p1=High, p2=Medium, p3=Low, p4=None."),
+	description: z
+		.string()
+		.max(1000)
+		.optional()
+		.describe("Task description. Max 1000 characters."),
+	projectId: z
+		.string()
+		.uuid()
+		.optional()
+		.describe("UUID of the project to assign to. Omit to create in inbox."),
+	dueDate: z
+		.string()
+		.datetime()
+		.optional()
+		.describe("Deadline in ISO 8601 UTC format, e.g. 2026-02-20T17:00:00Z."),
+	planDate: z
+		.string()
+		.datetime()
+		.optional()
+		.describe(
+			"When you plan to work on this task. ISO 8601 UTC format, e.g. 2026-02-19T09:00:00Z.",
+		),
+	status: z
+		.enum(["todo", "in_progress", "review", "done"])
+		.optional()
+		.describe('Task status. Defaults to "todo" if omitted.'),
 });
 
 const updateTaskSchema = z.object({
-	id: z.string().uuid(),
-	title: z.string().min(1).max(200).optional(),
-	priority: z.enum(["p1", "p2", "p3", "p4"]).optional(),
-	description: z.string().max(1000).optional(),
-	completed: z.boolean().optional(),
-	status: z.enum(["todo", "in_progress", "review", "done"]).optional(),
-	projectId: z.string().uuid().nullable().optional(),
-	dueDate: z.string().datetime().nullable().optional(),
-	planDate: z.string().datetime().nullable().optional(),
+	id: z.string().uuid().describe("UUID of the task to update."),
+	title: z
+		.string()
+		.min(1)
+		.max(200)
+		.optional()
+		.describe("New title. 1–200 characters."),
+	priority: z
+		.enum(["p1", "p2", "p3", "p4"])
+		.optional()
+		.describe("New priority. p1=High, p2=Medium, p3=Low, p4=None."),
+	description: z
+		.string()
+		.max(1000)
+		.optional()
+		.describe("New description. Max 1000 characters."),
+	completed: z
+		.boolean()
+		.optional()
+		.describe("Set to true to complete or false to uncomplete."),
+	status: z
+		.enum(["todo", "in_progress", "review", "done"])
+		.optional()
+		.describe("New status."),
+	projectId: z
+		.string()
+		.uuid()
+		.nullable()
+		.optional()
+		.describe(
+			"Move to a project by UUID, or pass null to move to inbox (remove from project).",
+		),
+	dueDate: z
+		.string()
+		.datetime()
+		.nullable()
+		.optional()
+		.describe(
+			"Set due date in ISO 8601 UTC, or pass null to clear the due date.",
+		),
+	planDate: z
+		.string()
+		.datetime()
+		.nullable()
+		.optional()
+		.describe(
+			"Set plan date in ISO 8601 UTC, or pass null to clear the plan date.",
+		),
 });
 
 const deleteTaskSchema = z.object({
-	id: z.string().uuid(),
+	id: z.string().uuid().describe("UUID of the task to delete."),
 });
 
 const addCommentSchema = z.object({
-	taskId: z.string().uuid(),
-	content: z.string().min(1),
+	taskId: z.string().uuid().describe("UUID of the task to add a comment to."),
+	content: z.string().min(1).describe("Comment text. Must not be empty."),
 });
 
 const listInboxSchema = z.object({
-	priority: z.array(z.enum(["p1", "p2", "p3", "p4"])).optional(),
-	status: z.array(z.enum(["todo", "in_progress", "done"])).optional(),
-	completed: z.boolean().optional(),
+	priority: z
+		.array(z.enum(["p1", "p2", "p3", "p4"]))
+		.optional()
+		.describe(
+			"Filter by priority. p1=High, p2=Medium, p3=Low, p4=None. Multiple values are OR'd.",
+		),
+	status: z
+		.array(z.enum(["todo", "in_progress", "done"]))
+		.optional()
+		.describe(
+			'Filter by status. NOTE: "review" is NOT valid here (only in create/update). Multiple values are OR\'d.',
+		),
+	completed: z
+		.boolean()
+		.optional()
+		.describe("Filter by completion flag. true=completed, false=active."),
 	dueDate: z
 		.union([z.enum(["today", "overdue", "upcoming"]), z.string()])
-		.optional(),
+		.optional()
+		.describe(
+			'Filter by due date. "today"=due today, "overdue"=past due and not completed, "upcoming"=due after today, or an ISO date string.',
+		),
 	planDate: z
 		.union([z.enum(["today", "overdue", "upcoming"]), z.string()])
-		.optional(),
-	search: z.string().optional(),
+		.optional()
+		.describe(
+			'Filter by plan date. Same keywords as dueDate: "today", "overdue", "upcoming", or an ISO date string.',
+		),
+	search: z
+		.string()
+		.optional()
+		.describe(
+			"Case-insensitive text search across task title and description.",
+		),
 });
 
 // --- Tool Implementations ---

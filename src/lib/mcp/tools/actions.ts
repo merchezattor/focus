@@ -7,14 +7,36 @@ import type {
 } from "@/lib/mcp/types";
 
 const listActionsSchema = z.object({
-	actorType: z.enum(["user", "agent"]).optional(),
-	entityType: z.enum(["task", "project", "goal"]).optional(),
-	entityId: z.string().uuid().optional(),
-	limit: z.number().int().min(1).max(100).optional(),
+	actorType: z
+		.enum(["user", "agent"])
+		.optional()
+		.describe(
+			'Filter by who performed the action. "user"=human user, "agent"=AI agent.',
+		),
+	entityType: z
+		.enum(["task", "project", "goal"])
+		.optional()
+		.describe("Filter by the type of entity the action was performed on."),
+	entityId: z
+		.string()
+		.uuid()
+		.optional()
+		.describe(
+			"Filter to a specific entity by UUID. Best used together with entityType.",
+		),
+	limit: z
+		.number()
+		.int()
+		.min(1)
+		.max(100)
+		.optional()
+		.describe("Max number of results to return. 1–100, defaults to 50."),
 });
 
 const markReadSchema = z.object({
-	ids: z.array(z.string().uuid()),
+	ids: z
+		.array(z.string().uuid())
+		.describe("Array of action UUIDs to mark as read."),
 });
 
 export const focus_list_actions: MCPToolHandler<

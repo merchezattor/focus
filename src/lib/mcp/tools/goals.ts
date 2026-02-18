@@ -14,27 +14,54 @@ function generateId(): string {
 const listGoalsSchema = z.object({});
 
 const createGoalSchema = z.object({
-	name: z.string().min(1).max(100),
-	priority: z.enum(["p1", "p2", "p3", "p4"]),
-	color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
-	description: z.string().optional(),
-	dueDate: z.string().datetime().optional(),
-});
-
-const updateGoalSchema = z.object({
-	id: z.string().uuid(),
-	name: z.string().min(1).max(100).optional(),
-	priority: z.enum(["p1", "p2", "p3", "p4"]).optional(),
+	name: z.string().min(1).max(100).describe("Goal name. 1–100 characters."),
+	priority: z
+		.enum(["p1", "p2", "p3", "p4"])
+		.describe("Priority level. p1=High, p2=Medium, p3=Low, p4=None."),
 	color: z
 		.string()
 		.regex(/^#[0-9A-Fa-f]{6}$/)
-		.optional(),
-	description: z.string().optional(),
-	dueDate: z.string().datetime().nullable().optional(),
+		.describe('Hex color code in #RRGGBB format, e.g. "#4F46E5".'),
+	description: z.string().optional().describe("Goal description."),
+	dueDate: z
+		.string()
+		.datetime()
+		.optional()
+		.describe(
+			"Goal deadline in ISO 8601 UTC format, e.g. 2026-03-31T23:59:59Z.",
+		),
+});
+
+const updateGoalSchema = z.object({
+	id: z.string().uuid().describe("UUID of the goal to update."),
+	name: z
+		.string()
+		.min(1)
+		.max(100)
+		.optional()
+		.describe("New goal name. 1–100 characters."),
+	priority: z
+		.enum(["p1", "p2", "p3", "p4"])
+		.optional()
+		.describe("New priority. p1=High, p2=Medium, p3=Low, p4=None."),
+	color: z
+		.string()
+		.regex(/^#[0-9A-Fa-f]{6}$/)
+		.optional()
+		.describe('New hex color code in #RRGGBB format, e.g. "#10B981".'),
+	description: z.string().optional().describe("New goal description."),
+	dueDate: z
+		.string()
+		.datetime()
+		.nullable()
+		.optional()
+		.describe(
+			"Set deadline in ISO 8601 UTC, or pass null to clear the deadline.",
+		),
 });
 
 const deleteGoalSchema = z.object({
-	id: z.string().uuid(),
+	id: z.string().uuid().describe("UUID of the goal to delete."),
 });
 
 // Tool definitions
