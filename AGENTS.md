@@ -11,7 +11,8 @@
 - **Framework:** Next.js 16 (App Router, Turbopack)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS v4, Shadcn UI, Class Variance Authority (CVA)
-- **Database:** PostgreSQL (Neon), Drizzle ORM
+- **Database:** PostgreSQL (Self-hosted via Dokploy), Drizzle ORM
+- **Deployment:** Dokploy (VPS with Docker)
 - **State Management:** Jotai (Global atoms)
 - **Auth:** Better-Auth
 - **Package Manager:** `bun`
@@ -55,10 +56,12 @@ The project structure follows standard Next.js App Router conventions:
 
 ### Database & Migrations
 
-- **ORM:** Drizzle ORM.
+- **ORM:** Drizzle ORM with `postgres` driver (TCP-based).
 - **Migration Workflow:**
-  - **Local/Vercel:** Use `bun run db:migrate` (mapped to `drizzle-kit push`).
+  - **Local:** Use `bun run db:migrate` (mapped to `drizzle-kit push`).
+  - **Production (Dokploy):** Migrations run automatically at **runtime** when the container starts (via `bun run start`). This is necessary because the database is not accessible during the isolated build phase.
   - **Note:** We are currently using `push` for rapid MVP iteration. Do not use `generate/migrate` unless explicitly instructed to migrate to a formal migration flow.
+- **Driver:** Uses standard `postgres` package (not `@neondatabase/serverless`).
 
 ### Icons
 
@@ -95,4 +98,4 @@ The project structure follows standard Next.js App Router conventions:
 
 ---
 
-### Last Updated: Feb 2026
+### Last Updated: Feb 18, 2026
