@@ -36,8 +36,8 @@ Go to **Settings → Secrets and variables → Actions → New repository secret
 | Secret | Description | How to get |
 |--------|-------------|------------|
 | `DOKPLOY_URL` | Your Dokploy instance URL | `https://dokploy.yourdomain.com` |
-| `DOKPLOY_AUTH_TOKEN` | API token for authentication | Dokploy UI → Profile → Generate API Key |
-| `DOKPLOY_APPLICATION_ID` | Application ID in Dokploy | Dokploy UI → Application → URL (last segment) |
+| `DOKPLOY_API_KEY` | API key for authentication | Dokploy UI → Settings → API Keys |
+| `DOKPLOY_APPLICATION_ID` | Application ID in Dokploy | Dokploy UI → Application → Settings |
 
 ### 3. Setting Up Dokploy
 
