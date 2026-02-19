@@ -5,11 +5,11 @@
 ### Local Build
 
 ```bash
-# Build the image
-docker build -t focus-app:latest .
+# Build the image (DATABASE_URL required for build-time static generation)
+docker build --build-arg DATABASE_URL="postgresql://..." -t focus-app:latest .
 
 # Build with specific tag
-docker build -t focus-app:v1.0.0 .
+docker build --build-arg DATABASE_URL="postgresql://..." -t focus-app:v1.0.0 .
 ```
 
 ### Multi-platform Build (for CI/CD)
