@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db } from "../src/db";
+import { getDb } from "../src/db";
 import { actions, user } from "../src/db/schema";
 import { getActions, markActionsRead } from "../src/lib/actions";
 import { createTask, deleteTask, updateTask } from "../src/lib/storage";
@@ -11,7 +11,7 @@ async function verify() {
 	const taskId = `verify-task-${Date.now()}`;
 	// 0. Create User
 	console.log("0. Creating User...");
-	await db.insert(user).values({
+	await getDb().insert(user).values({
 		id: userId,
 		name: "Verify User",
 		email: `verify-${Date.now()}@example.com`,

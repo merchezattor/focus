@@ -1,10 +1,10 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@/db"; // Adjust path to your db instance
+import { getDb } from "@/db";
 import * as schema from "@/db/schema";
 
 export const auth = betterAuth({
-	database: drizzleAdapter(db, {
+	database: drizzleAdapter(getDb(), {
 		provider: "pg",
 		schema: {
 			...schema,

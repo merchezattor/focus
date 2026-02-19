@@ -12,7 +12,7 @@ import {
 	lte,
 	or,
 } from "drizzle-orm";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { apiTokens, comments, goals, projects, tasks } from "@/db/schema";
 import type { Comment, Goal, Project, Task } from "@/types";
 
@@ -23,7 +23,7 @@ import { type ActionType, type ActorType, logAction } from "./actions";
 export async function getTaskCounts(
 	userId: string,
 ): Promise<{ inboxCount: number; todayCount: number }> {
-	const inboxResult = await db
+	const inboxResult = await getDb()
 		.select({ value: count() })
 		.from(tasks)
 		.where(
@@ -45,7 +45,7 @@ export async function getTaskCounts(
 	const todayEnd = new Date();
 	todayEnd.setHours(23, 59, 59, 999);
 
-	const todayResult = await db
+	const todayResult = await getDb()
 		.select({ value: count() })
 		.from(tasks)
 		.where(
@@ -64,7 +64,7 @@ export async function getTaskCounts(
 }
 
 export async function readProjects(userId: string): Promise<Project[]> {
-	const dbProjects = await db
+	const dbProjects = await getDb()
 		.select()
 		.from(projects)
 		.where(eq(projects.userId, userId))
@@ -89,7 +89,7 @@ export async function createProject(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	await db.insert(projects).values({
+	await getDb().insert(projects).values({
 		id: project.id,
 		name: project.name,
 		color: project.color,
@@ -138,7 +138,7 @@ export async function updateProject(
 	if (updates.updatedAt !== undefined) dbUpdates.updatedAt = updates.updatedAt;
 
 	if (Object.keys(dbUpdates).length > 0) {
-		const result = await db
+		const result = await getDb()
 			.update(projects)
 			.set(dbUpdates)
 			.where(eq(projects.id, id))
@@ -161,7 +161,7 @@ export async function updateProject(
 // --- Goals ---
 
 export async function readGoals(userId: string): Promise<Goal[]> {
-	const dbGoals = await db
+	const dbGoals = await getDb()
 		.select()
 		.from(goals)
 		.where(eq(goals.userId, userId))
@@ -184,7 +184,7 @@ export async function createGoal(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	await db.insert(goals).values({
+	await getDb().insert(goals).values({
 		id: goal.id,
 		name: goal.name,
 		description: goal.description,
@@ -224,7 +224,7 @@ export async function updateGoal(
 	if (updates.updatedAt !== undefined) dbUpdates.updatedAt = updates.updatedAt;
 
 	if (Object.keys(dbUpdates).length > 0) {
-		const result = await db
+		const result = await getDb()
 			.update(goals)
 			.set(dbUpdates)
 			.where(eq(goals.id, id))
@@ -248,7 +248,7 @@ export async function deleteGoal(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	const result = await db
+	const result = await getDb()
 		.delete(goals)
 		.where(eq(goals.id, id))
 		.returning({ name: goals.name });
@@ -267,7 +267,7 @@ export async function deleteGoal(
 
 export async function getTaskById(id: string): Promise<Task | undefined> {
 	// Simple fetch by ID without filters
-	const result = await db.select().from(tasks).where(eq(tasks.id, id));
+	const result = await getDb().select().from(tasks).where(eq(tasks.id, id));
 
 	if (!result[0]) return undefined;
 
@@ -405,14 +405,14 @@ export async function searchTasks(
 	}
 
 	// Execute Query
-	const dbTasks = await db
+	const dbTasks = await getDb()
 		.select()
 		.from(tasks)
 		.where(and(...conditions))
 		.orderBy(tasks.priority, desc(tasks.created_at)); // Default sort
 
 	// Fetch comments (simplified for now, same as readTasks)
-	const dbComments = await db.select().from(comments);
+	const dbComments = await getDb().select().from(comments);
 	const commentsByTaskId: Record<string, Comment[]> = {};
 	for (const c of dbComments) {
 		if (!commentsByTaskId[c.task_id]) {
@@ -443,7 +443,7 @@ export async function searchTasks(
 
 export async function readTasks(userId: string): Promise<Task[]> {
 	// Fetch tasks belonging to the user
-	const dbTasks = await db
+	const dbTasks = await getDb()
 		.select()
 		.from(tasks)
 		.where(eq(tasks.userId, userId))
@@ -455,9 +455,9 @@ export async function readTasks(userId: string): Promise<Task[]> {
 	// Actually, we should filter comments by task_id which are in dbTasks.
 	// Let's grab all comments for now, assuming not massive scale yet, or better:
 	// const taskIds = dbTasks.map(t => t.id);
-	// const dbComments = await db.select().from(comments).where(inArray(comments.task_id, taskIds));
+	// const dbComments = await getDb().select().from(comments).where(inArray(comments.task_id, taskIds));
 	// But for MVP, let's keep it simple: select all comments, or just select * since we don't have user_id on comments.
-	const dbComments = await db.select().from(comments);
+	const dbComments = await getDb().select().from(comments);
 
 	const commentsByTaskId: Record<string, Comment[]> = {};
 	for (const c of dbComments) {
@@ -493,7 +493,7 @@ export async function createTask(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	await db.insert(tasks).values({
+	await getDb().insert(tasks).values({
 		id: task.id,
 		content: task.title,
 		description: task.description || null,
@@ -546,7 +546,7 @@ export async function updateTask(
 	if (updates.updatedAt !== undefined) dbUpdates.updated_at = updates.updatedAt;
 
 	if (Object.keys(dbUpdates).length > 0) {
-		const result = await db
+		const result = await getDb()
 			.update(tasks)
 			.set(dbUpdates)
 			.where(eq(tasks.id, id))
@@ -577,7 +577,7 @@ export async function deleteTask(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	const result = await db
+	const result = await getDb()
 		.delete(tasks)
 		.where(eq(tasks.id, id))
 		.returning({ content: tasks.content });
@@ -597,7 +597,7 @@ export async function deleteTask(
 export async function listApiTokens(
 	userId: string,
 ): Promise<Array<{ id: string; name: string; createdAt: Date }>> {
-	const tokens = await db
+	const tokens = await getDb()
 		.select({
 			id: apiTokens.id,
 			name: apiTokens.name,
@@ -617,7 +617,7 @@ export async function createApiToken(
 	const { randomBytes } = await import("node:crypto");
 	const newToken = `focus_${randomBytes(24).toString("hex")}`;
 
-	const result = await db
+	const result = await getDb()
 		.insert(apiTokens)
 		.values({
 			id: crypto.randomUUID(),
@@ -640,7 +640,7 @@ export async function deleteApiToken(
 	id: string,
 	userId: string,
 ): Promise<void> {
-	await db
+	await getDb()
 		.delete(apiTokens)
 		.where(and(eq(apiTokens.id, id), eq(apiTokens.userId, userId)));
 }
@@ -651,7 +651,7 @@ export async function createComment(
 	taskId: string,
 	comment: Comment,
 ): Promise<void> {
-	await db.insert(comments).values({
+	await getDb().insert(comments).values({
 		id: comment.id,
 		content: comment.content,
 		posted_at: comment.postedAt,
@@ -660,7 +660,7 @@ export async function createComment(
 }
 
 export async function deleteComment(commentId: string): Promise<void> {
-	await db.delete(comments).where(eq(comments.id, commentId));
+	await getDb().delete(comments).where(eq(comments.id, commentId));
 }
 
 export async function syncComments(
@@ -672,7 +672,7 @@ export async function syncComments(
 ): Promise<void> {
 	// 1. Get existing comments
 	// (We could optimize by fetching IDs only, but for now select * is fine for MVP)
-	const existingDbComments = await db
+	const existingDbComments = await getDb()
 		.select()
 		.from(comments)
 		.where(eq(comments.task_id, taskId));
@@ -730,8 +730,8 @@ export async function deleteProject(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	await db.delete(tasks).where(eq(tasks.project_id, id));
-	const result = await db
+	await getDb().delete(tasks).where(eq(tasks.project_id, id));
+	const result = await getDb()
 		.delete(projects)
 		.where(eq(projects.id, id))
 		.returning({ name: projects.name });

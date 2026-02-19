@@ -28,9 +28,6 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Accept DATABASE_URL as build argument (required for static generation)
-ARG DATABASE_URL
-
 # Build the application
 RUN bun run build
 

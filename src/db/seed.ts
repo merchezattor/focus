@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { db } from "./index";
+import { getDb } from "./index";
 import { comments, projects, tasks } from "./schema";
 
 async function seed() {

@@ -1,6 +1,6 @@
 import { and, count, desc, eq, inArray, not } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { actions } from "@/db/schema";
 
 export type ActionType =
@@ -41,7 +41,7 @@ export function logAction(params: LogActionParams) {
 
 	const performLog = async () => {
 		try {
-			await db.insert(actions).values({
+			await getDb().insert(actions).values({
 				id: uuidv4(),
 				entityId,
 				entityType,

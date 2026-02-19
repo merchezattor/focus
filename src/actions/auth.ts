@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { apiTokens } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { createApiToken, deleteApiToken, listApiTokens } from "@/lib/storage";
@@ -17,7 +17,7 @@ export async function getApiToken() {
 	});
 	if (!session) return null;
 
-	const token = await db.query.apiTokens.findFirst({
+	const token = await getDb().query.apiTokens.findFirst({
 		where: eq(apiTokens.userId, session.user.id),
 	});
 
@@ -33,7 +33,7 @@ export async function generateApiToken() {
 	// Generate simple token: "focus_" prefix + 24 random bytes (48 hex chars)
 	const newToken = `focus_${randomBytes(24).toString("hex")}`;
 
-	const existing = await db.query.apiTokens.findFirst({
+	const existing = await getDb().query.apiTokens.findFirst({
 		where: eq(apiTokens.userId, session.user.id),
 	});
 
@@ -47,7 +47,7 @@ export async function generateApiToken() {
 			})
 			.where(eq(apiTokens.id, existing.id));
 	} else {
-		await db.insert(apiTokens).values({
+		await getDb().insert(apiTokens).values({
 			id: crypto.randomUUID(),
 			token: newToken,
 			userId: session.user.id,

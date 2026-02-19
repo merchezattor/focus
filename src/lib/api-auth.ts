@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import type { NextRequest } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { apiTokens, user } from "@/db/schema";
 import type { ActorType } from "@/lib/actions";
 import { auth } from "@/lib/auth";
@@ -25,13 +25,13 @@ export async function getAuthenticatedUser(request: NextRequest) {
 	if (authHeader?.startsWith("Bearer ")) {
 		const token = authHeader.split(" ")[1];
 
-		const apiToken = await db.query.apiTokens.findFirst({
+		const apiToken = await getDb().query.apiTokens.findFirst({
 			where: eq(apiTokens.token, token),
 		});
 
 		if (apiToken) {
 			// Fetch real user details
-			const dbUser = await db.query.user.findFirst({
+			const dbUser = await getDb().query.user.findFirst({
 				where: eq(user.id, apiToken.userId),
 			});
 
