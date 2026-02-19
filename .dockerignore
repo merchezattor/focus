@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Environment files (sensitive)
+.env
+.env.local
+.env.*.local
+
+# Development
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+*.tsbuildinfo
+
+# Documentation
+README.md
+docs/
+
+# Local development scripts
+scripts/manual-migrate.ts
+scripts/inspect-db.ts
