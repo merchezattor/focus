@@ -35,9 +35,7 @@ Go to **Settings → Secrets and variables → Actions → New repository secret
 
 | Secret | Description | How to get |
 |--------|-------------|------------|
-| `DOKPLOY_URL` | Your Dokploy instance URL | `https://dokploy.yourdomain.com` |
-| `DOKPLOY_API_KEY` | API key for authentication | Dokploy UI → Settings → API Keys |
-| `DOKPLOY_APPLICATION_ID` | Application ID in Dokploy | Dokploy UI → Application → Settings |
+| `DOKPLOY_WEBHOOK_URL` | Webhook URL for auto-deploy | Dokploy UI → Application → Deployments → Copy Webhook URL |
 
 ### 3. Setting Up Dokploy
 
