@@ -27,8 +27,6 @@ COPY . .
 # Set production environment
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-# Dummy DATABASE_URL for build-time only (db not accessed during build)
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
 # Build the application
 RUN bun run build
