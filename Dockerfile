@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Install dependencies first for better layer caching
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production=false
+RUN bun install --frozen-lockfile
 
 # ========================================
 # Stage 2: Builder
@@ -27,6 +27,8 @@ COPY . .
 # Set production environment
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+# Dummy DATABASE_URL for build-time only (db not accessed during build)
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
 # Build the application
 RUN bun run build
