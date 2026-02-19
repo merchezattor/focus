@@ -5,12 +5,14 @@
 	"scripts": {
 		"dev": "next dev",
 		"build": "next build",
-		"start": "bun run db:migrate && next start",
+		"start": "next start",
 		"lint": "biome check",
 		"format": "biome format --write .",
 		"check": "biome check --write .",
 		"typecheck": "tsc --noEmit",
-		"db:migrate": "drizzle-kit push"
+		"db:push": "drizzle-kit push",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate"
 	},
 	"dependencies": {
 		"@dagrejs/dagre": "^2.0.3",
