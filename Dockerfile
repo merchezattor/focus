@@ -28,28 +28,30 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Accept DATABASE_URL as build argument (required for static generation)
+ARG DATABASE_URL
+
 # Build the application
 RUN bun run build
 
 # ========================================
 # Stage 3: Production Runner
 # ========================================
-FROM oven/bun:1-alpine AS runner
+FROM node:20-bookworm-slim AS runner
 
 WORKDIR /app
 
-# Set production environment
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
+# Install ca-certificates for HTTPS connections
+RUN apt-get update && apt-get install -y ca-certificates --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs --ingroup nodejs
+RUN groupadd -r nodejs && useradd -r -g nodejs -d /app -s /sbin/nologin nextjs \
+    && chown -R nextjs:nodejs /app
 
-# Copy package.json for npm scripts
+# Copy package.json and node_modules for npm scripts and dependencies
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 # Copy standalone output from builder
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
@@ -59,12 +61,18 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 # Switch to non-root user
 USER nextjs
 
+# Set production environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
 # Expose port
 EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD bun run -e "fetch('http://localhost:3000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1))" || exit 1
+  CMD node -e "fetch('http://localhost:3000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))" || exit 1
 
 # Start the application (runs migrations then starts server)
-CMD ["bun", "run", "start"]
+CMD ["npm", "run", "start"]
