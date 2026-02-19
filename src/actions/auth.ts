@@ -38,7 +38,7 @@ export async function generateApiToken() {
 	});
 
 	if (existing) {
-		await db
+		await getDb()
 			.update(apiTokens)
 			.set({
 				token: newToken,

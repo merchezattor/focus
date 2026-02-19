@@ -493,20 +493,22 @@ export async function createTask(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	await getDb().insert(tasks).values({
-		id: task.id,
-		content: task.title,
-		description: task.description || null,
-		completed: task.completed,
-		status: task.status,
-		priority: task.priority,
-		project_id: task.projectId || null,
-		due_date: task.dueDate,
-		plan_date: task.planDate,
-		created_at: task.createdAt,
-		updated_at: task.updatedAt,
-		userId: userId,
-	});
+	await getDb()
+		.insert(tasks)
+		.values({
+			id: task.id,
+			content: task.title,
+			description: task.description || null,
+			completed: task.completed,
+			status: task.status,
+			priority: task.priority,
+			project_id: task.projectId || null,
+			due_date: task.dueDate,
+			plan_date: task.planDate,
+			created_at: task.createdAt,
+			updated_at: task.updatedAt,
+			userId: userId,
+		});
 
 	if (task.comments && task.comments.length > 0) {
 		for (const c of task.comments) {

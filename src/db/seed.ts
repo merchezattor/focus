@@ -26,7 +26,7 @@ async function seed() {
 
 	// Seed Projects
 	for (const p of projectsData) {
-		await db
+		await getDb()
 			.insert(projects)
 			.values({
 				id: p.id,
@@ -43,7 +43,7 @@ async function seed() {
 	// Seed Tasks & Comments
 	for (const t of tasksData) {
 		// Insert Task
-		await db
+		await getDb()
 			.insert(tasks)
 			.values({
 				id: t.id,
@@ -62,7 +62,7 @@ async function seed() {
 		// Insert Comments if any
 		if (t.comments && Array.isArray(t.comments)) {
 			for (const c of t.comments) {
-				await db
+				await getDb()
 					.insert(comments)
 					.values({
 						id: c.id,

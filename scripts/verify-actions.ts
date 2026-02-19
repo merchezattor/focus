@@ -11,14 +11,16 @@ async function verify() {
 	const taskId = `verify-task-${Date.now()}`;
 	// 0. Create User
 	console.log("0. Creating User...");
-	await getDb().insert(user).values({
-		id: userId,
-		name: "Verify User",
-		email: `verify-${Date.now()}@example.com`,
-		emailVerified: true,
-		createdAt: new Date(),
-		updatedAt: new Date(),
-	});
+	await getDb()
+		.insert(user)
+		.values({
+			id: userId,
+			name: "Verify User",
+			email: `verify-${Date.now()}@example.com`,
+			emailVerified: true,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		});
 
 	// 1. Create Task
 	console.log("1. Creating Task...");
@@ -121,7 +123,7 @@ async function verify() {
 		// But wait, getActions excludes own actions. verify-user created it. other-user reads it.
 
 		// We need to check the DB directly to be sure about the flag
-		const record = await db
+		const record = await getDb()
 			.select()
 			.from(actions)
 			.where(eq(actions.id, createLog.id));

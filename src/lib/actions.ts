@@ -119,7 +119,7 @@ export async function getActions(params: {
 		filters.push(eq(actions.entityId, entityId));
 	}
 
-	const result = await db
+	const result = await getDb()
 		.select()
 		.from(actions)
 		.where(and(...filters))
@@ -132,21 +132,21 @@ export async function getActions(params: {
 export async function markActionsRead(ids: string[]) {
 	if (ids.length === 0) return;
 
-	await db
+	await getDb()
 		.update(actions)
 		.set({ isRead: true })
 		.where(inArray(actions.id, ids));
 }
 
 export async function markAllActionsRead(userId: string) {
-	await db
+	await getDb()
 		.update(actions)
 		.set({ isRead: true })
 		.where(eq(actions.isRead, false));
 }
 
 export async function getUnreadActionsCount(userId: string): Promise<number> {
-	const result = await db
+	const result = await getDb()
 		.select({ value: count() })
 		.from(actions)
 		.where(eq(actions.isRead, false));
