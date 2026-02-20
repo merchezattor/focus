@@ -21,7 +21,13 @@ const runMigrate = async () => {
 	} catch (error) {
 		// Ignore "already exists" errors - database is already up to date
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		if (errorMessage.includes("already exists")) {
+		const causeMessage =
+			error?.cause instanceof Error ? error.cause.message : "";
+
+		if (
+			errorMessage.includes("already exists") ||
+			causeMessage.includes("already exists")
+		) {
 			console.log("⚠️  Objects already exist, skipping migration...");
 		} else {
 			throw error;
