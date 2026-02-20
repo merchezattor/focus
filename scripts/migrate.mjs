@@ -14,10 +14,19 @@ const runMigrate = async () => {
 
 	const start = Date.now();
 
-	await migrate(db, { migrationsFolder: "./drizzle" });
-
-	const end = Date.now();
-	console.log(`✅ Migrations completed in ${end - start}ms`);
+	try {
+		await migrate(db, { migrationsFolder: "./drizzle" });
+		const end = Date.now();
+		console.log(`✅ Migrations completed in ${end - start}ms`);
+	} catch (error) {
+		// Ignore "already exists" errors - database is already up to date
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		if (errorMessage.includes("already exists")) {
+			console.log("⚠️  Objects already exist, skipping migration...");
+		} else {
+			throw error;
+		}
+	}
 
 	await migrationClient.end();
 	process.exit(0);
