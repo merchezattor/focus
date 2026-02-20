@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
 			actorType: auth.actorType,
 			tokenName: auth.tokenName,
 		};
+		console.log("[MCP] Creating context with tokenName:", auth.tokenName);
 
 		const server = createMcpServer(context);
 		await server.connect(transport);
