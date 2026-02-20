@@ -57,10 +57,11 @@ The project structure follows standard Next.js App Router conventions:
 ### Database & Migrations
 
 - **ORM:** Drizzle ORM with `postgres` driver (TCP-based).
-- **Migration Workflow:**
-  - **Local:** Use `bun run db:migrate` (mapped to `drizzle-kit push`).
+- **Migration Workflow (2025 Best Practice):**
+  - **Development:** Use `bun run db:push` for rapid prototyping (auto-generates schema changes).
+  - **Production:** Uses formal migrations via `drizzle-kit migrate` with SQL files in `/drizzle` folder.
   - **Production (Dokploy):** Migrations run automatically at **runtime** when the container starts (via `bun run start`). This is necessary because the database is not accessible during the isolated build phase.
-  - **Note:** We are currently using `push` for rapid MVP iteration. Do not use `generate/migrate` unless explicitly instructed to migrate to a formal migration flow.
+  - **Migration Script:** Located at `scripts/migrate.mjs` - includes retry logic (3 attempts) for network resilience.
 - **Driver:** Uses standard `postgres` package (not `@neondatabase/serverless`).
 
 ### Icons
@@ -73,7 +74,8 @@ The project structure follows standard Next.js App Router conventions:
 | Action | Command |
 | :--- | :--- |
 | **Start Dev Server** | `bun dev` |
-| **Database Push** | `bun run db:migrate` |
+| **Database Push (Dev)** | `bun run db:push` |
+| **Database Migrate (Prod)** | `bun run db:migrate` |
 | **Lint & Format (Check)** | `bun run check` |
 | **Lint (Verify only)** | `bun run lint` |
 | **Build** | `bun run build` |
