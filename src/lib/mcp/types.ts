@@ -10,6 +10,7 @@ type User = typeof user.$inferSelect;
 export interface MCPServerContext {
 	user: User;
 	actorType: ActorType;
+	tokenName?: string;
 }
 
 /**

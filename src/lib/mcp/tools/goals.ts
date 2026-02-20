@@ -133,7 +133,12 @@ const handleCreateGoal: MCPToolHandler<
 			updatedAt: new Date(),
 		};
 
-		await createGoal(goal, context.user.id, context.actorType);
+		await createGoal(
+			goal,
+			context.user.id,
+			context.actorType,
+			context.tokenName,
+		);
 
 		return {
 			content: [
@@ -169,7 +174,13 @@ const handleUpdateGoal: MCPToolHandler<
 		if (args.dueDate !== undefined)
 			updates.dueDate = args.dueDate ? new Date(args.dueDate) : undefined;
 
-		await updateGoal(args.id, updates, context.user.id, context.actorType);
+		await updateGoal(
+			args.id,
+			updates,
+			context.user.id,
+			context.actorType,
+			context.tokenName,
+		);
 
 		return {
 			content: [
@@ -196,7 +207,12 @@ const handleDeleteGoal: MCPToolHandler<
 	z.infer<typeof deleteGoalSchema>
 > = async (args, context) => {
 	try {
-		await deleteGoal(args.id, context.user.id, context.actorType);
+		await deleteGoal(
+			args.id,
+			context.user.id,
+			context.actorType,
+			context.tokenName,
+		);
 
 		return {
 			content: [

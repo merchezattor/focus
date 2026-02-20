@@ -289,7 +289,7 @@ async function createTaskTool(
 			comments: [],
 		};
 
-		await createTask(task, context.user.id, "agent");
+		await createTask(task, context.user.id, "agent", context.tokenName);
 
 		return {
 			content: [{ type: "text", text: JSON.stringify(task, null, 2) }],
@@ -332,7 +332,13 @@ async function updateTaskTool(
 			updates.planDate = parsed.planDate ? new Date(parsed.planDate) : null;
 		updates.updatedAt = new Date();
 
-		await updateTask(parsed.id, updates, context.user.id, "agent");
+		await updateTask(
+			parsed.id,
+			updates,
+			context.user.id,
+			"agent",
+			context.tokenName,
+		);
 
 		return {
 			content: [
@@ -365,7 +371,7 @@ async function deleteTaskTool(
 	try {
 		const parsed = deleteTaskSchema.parse(args);
 
-		await deleteTask(parsed.id, context.user.id, "agent");
+		await deleteTask(parsed.id, context.user.id, "agent", context.tokenName);
 
 		return {
 			content: [
@@ -415,7 +421,11 @@ async function addCommentTool(
 			actorType: "agent",
 			actionType: "update",
 			changes: { comments: "added" },
-			metadata: { commentId: comment.id, title: task?.title },
+			metadata: {
+				commentId: comment.id,
+				title: task?.title,
+				tokenName: context.tokenName,
+			},
 		});
 
 		return {

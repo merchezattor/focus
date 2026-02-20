@@ -123,7 +123,12 @@ export const focusCreateProject: MCPToolHandler<
 			updatedAt: now,
 		};
 
-		await createProject(project, context.user.id, context.actorType);
+		await createProject(
+			project,
+			context.user.id,
+			context.actorType,
+			context.tokenName,
+		);
 
 		return {
 			content: [
@@ -162,7 +167,13 @@ export const focusUpdateProject: MCPToolHandler<
 		if (args.isFavorite !== undefined) updates.isFavorite = args.isFavorite;
 		if (args.viewType !== undefined) updates.viewType = args.viewType;
 
-		await updateProject(args.id, updates, context.user.id, context.actorType);
+		await updateProject(
+			args.id,
+			updates,
+			context.user.id,
+			context.actorType,
+			context.tokenName,
+		);
 
 		return {
 			content: [
@@ -194,7 +205,12 @@ export const focusDeleteProject: MCPToolHandler<
 	context: MCPServerContext,
 ): Promise<MCPResponse> => {
 	try {
-		await deleteProject(args.id, context.user.id, context.actorType);
+		await deleteProject(
+			args.id,
+			context.user.id,
+			context.actorType,
+			context.tokenName,
+		);
 
 		return {
 			content: [

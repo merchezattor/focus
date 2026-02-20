@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
 		const context: MCPServerContext = {
 			user: dbUser,
 			actorType: auth.actorType,
+			tokenName: auth.tokenName,
 		};
 
 		const server = createMcpServer(context);
