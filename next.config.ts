@@ -8,7 +8,9 @@ const nextConfig: NextConfig = {
 			static: 180,
 		},
 		serverActions: {
-			allowedOrigins: [process.env.BETTER_AUTH_BASE_URL!],
+			allowedOrigins: process.env.BETTER_AUTH_BASE_URL
+				? [process.env.BETTER_AUTH_BASE_URL]
+				: [],
 		},
 	},
 };
