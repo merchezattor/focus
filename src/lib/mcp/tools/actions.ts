@@ -30,7 +30,7 @@ const listActionsSchema = z.object({
 		.min(1)
 		.max(100)
 		.optional()
-		.describe("Max number of results to return. 1–100, defaults to 50."),
+		.describe("Max number of results to return. Defaults to 50. Max 100."),
 });
 
 const markReadSchema = z.object({
@@ -150,13 +150,14 @@ export const actionTools = [
 	{
 		name: "focus_list_actions",
 		description:
-			"List activity log (actions). Filter by actor type, entity type (task/project/goal), or specific entity ID to see changes.",
+			"List activity log entries. Returns: { success, data: { actions } }. Use to see recent user/agent actions. Filter by actorType, entityType, entityId. Defaults to 50 results, max 100.",
 		schema: listActionsSchema,
 		handler: focus_list_actions,
 	},
 	{
 		name: "focus_mark_actions_read",
-		description: "Mark activity log items as read",
+		description:
+			"Mark activity log items as read. Returns: { success, data: { markedCount } }. Use after reviewing activity.",
 		schema: markReadSchema,
 		handler: focus_mark_actions_read,
 	},

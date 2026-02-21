@@ -67,25 +67,28 @@ const deleteGoalSchema = z.object({
 // Tool definitions
 export const focus_list_goals = {
 	name: "focus_list_goals",
-	description: "List all goals",
+	description:
+		"List all goals. Returns: Array of Goal objects with id, name, priority, color.",
 	schema: listGoalsSchema,
 } as const;
 
 export const focus_create_goal = {
 	name: "focus_create_goal",
-	description: "Create a new goal",
+	description:
+		"Create a new goal. Returns: Complete Goal with generated id. Goals track long-term objectives (different from projects).",
 	schema: createGoalSchema,
 } as const;
 
 export const focus_update_goal = {
 	name: "focus_update_goal",
-	description: "Update a goal",
+	description:
+		"Update a goal by ID. Partial update: only include changed fields. dueDate can be cleared (set to null).",
 	schema: updateGoalSchema,
 } as const;
 
 export const focus_delete_goal = {
 	name: "focus_delete_goal",
-	description: "Delete a goal",
+	description: "Delete a goal by ID. Returns: { success, id }.",
 	schema: deleteGoalSchema,
 } as const;
 

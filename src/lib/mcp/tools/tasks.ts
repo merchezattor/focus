@@ -468,38 +468,42 @@ export const taskTools = [
 	{
 		name: "focus_list_tasks",
 		description:
-			"List and search tasks. Supports filters for priority, status, due date, plan date, and text search.",
+			"List and search tasks with filters. Returns: Array of Task objects. Use focus_list_projects to get valid projectId values. Note: status filter excludes 'review'.",
 		schema: listTasksSchema,
 		handler: listTasks,
 	},
 	{
 		name: "focus_list_inbox",
 		description:
-			"List tasks from the inbox (tasks without a project). Supports the same filters as focus_list_tasks.",
+			"List tasks without a project (inbox). Returns: Array of Task objects. Use when: You need unassigned tasks. For project tasks, use focus_list_tasks.",
 		schema: listInboxSchema,
 		handler: listInbox,
 	},
 	{
 		name: "focus_create_task",
-		description: "Create a new task with title, priority, and optional fields",
+		description:
+			"Create a new task with title and priority. Returns: Complete Task with generated id, status defaults to 'todo'. Use focus_list_projects first to get valid projectId.",
 		schema: createTaskSchema,
 		handler: createTaskTool,
 	},
 	{
 		name: "focus_update_task",
-		description: "Update an existing task by ID",
+		description:
+			"Update an existing task by ID. Returns: Updated Task object. Partial update: only include changed fields. Set nullable fields to null to clear (projectId, dueDate, planDate).",
 		schema: updateTaskSchema,
 		handler: updateTaskTool,
 	},
 	{
 		name: "focus_delete_task",
-		description: "Delete a task by ID",
+		description:
+			"Delete a task by ID. Returns: { success: boolean, id: string }.",
 		schema: deleteTaskSchema,
 		handler: deleteTaskTool,
 	},
 	{
 		name: "focus_add_task_comment",
-		description: "Add a comment to a task",
+		description:
+			"Add a comment to a task. Returns: Comment object. Logs action to activity feed.",
 		schema: addCommentSchema,
 		handler: addCommentTool,
 	},

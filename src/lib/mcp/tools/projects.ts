@@ -32,7 +32,7 @@ const createProjectInputSchema = z.object({
 		.uuid()
 		.optional()
 		.describe(
-			"UUID of a parent goal or project. Must set parentType if provided.",
+			"UUID of a parent goal or project. Must set parentType if provided. UUID from focus_list_goals or focus_list_projects.",
 		),
 	parentType: z
 		.enum(["goal", "project"])
@@ -242,25 +242,28 @@ export const focusDeleteProject: MCPToolHandler<
 export const projectTools = [
 	{
 		name: "focus_list_projects",
-		description: "List all projects",
+		description:
+			"List all projects. Returns: Array of Project objects with id, name, color.",
 		schema: _emptyInputSchema,
 		handler: focusListProjects,
 	},
 	{
 		name: "focus_create_project",
-		description: "Create a new project",
+		description:
+			"Create a new project. Returns: Complete Project with generated id. viewType defaults to 'list'. parentId requires parentType.",
 		schema: createProjectInputSchema,
 		handler: focusCreateProject,
 	},
 	{
 		name: "focus_update_project",
-		description: "Update a project",
+		description:
+			"Update a project by ID. Partial update: only include changed fields. No fields can be cleared (no nullable params).",
 		schema: updateProjectInputSchema,
 		handler: focusUpdateProject,
 	},
 	{
 		name: "focus_delete_project",
-		description: "Delete a project",
+		description: "Delete a project by ID. Returns: { success, id }.",
 		schema: deleteProjectInputSchema,
 		handler: focusDeleteProject,
 	},
