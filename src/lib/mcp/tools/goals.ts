@@ -101,7 +101,7 @@ const handleListGoals: MCPToolHandler<z.infer<typeof listGoalsSchema>> = async (
 			content: [
 				{
 					type: "text" as const,
-					text: JSON.stringify(goals, null, 2),
+					text: JSON.stringify({ success: true, data: goals }, null, 2),
 				},
 			],
 		};
@@ -144,7 +144,7 @@ const handleCreateGoal: MCPToolHandler<
 			content: [
 				{
 					type: "text" as const,
-					text: `Goal created successfully with ID: ${goal.id}`,
+					text: JSON.stringify({ success: true, data: goal }),
 				},
 			],
 		};
@@ -186,7 +186,10 @@ const handleUpdateGoal: MCPToolHandler<
 			content: [
 				{
 					type: "text" as const,
-					text: `Goal ${args.id} updated successfully`,
+					text: JSON.stringify({
+						success: true,
+						data: { id: args.id, ...updates },
+					}),
 				},
 			],
 		};
@@ -218,7 +221,7 @@ const handleDeleteGoal: MCPToolHandler<
 			content: [
 				{
 					type: "text" as const,
-					text: `Goal ${args.id} deleted successfully`,
+					text: JSON.stringify({ success: true, id: args.id }),
 				},
 			],
 		};
