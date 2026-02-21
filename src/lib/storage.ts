@@ -287,6 +287,43 @@ export async function getTaskById(id: string): Promise<Task | undefined> {
 	};
 }
 
+export async function getTaskByIdForUser(
+	id: string,
+	userId: string,
+): Promise<Task | undefined> {
+	const result = await getDb()
+		.select()
+		.from(tasks)
+		.where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
+
+	if (!result[0]) return undefined;
+
+	// Fetch comments for this task
+	const dbComments = await getDb()
+		.select()
+		.from(comments)
+		.where(eq(comments.task_id, id));
+
+	return {
+		id: result[0].id,
+		title: result[0].content,
+		description: result[0].description || undefined,
+		completed: result[0].completed,
+		status: (result[0].status as "todo" | "in_progress" | "done") || "todo",
+		priority: result[0].priority as "p1" | "p2" | "p3" | "p4",
+		projectId: result[0].project_id,
+		dueDate: result[0].due_date,
+		planDate: result[0].plan_date,
+		createdAt: result[0].created_at,
+		updatedAt: result[0].updated_at,
+		comments: dbComments.map((c) => ({
+			id: c.id,
+			content: c.content,
+			postedAt: c.posted_at,
+		})),
+	};
+}
+
 // --- Advanced Search ---
 
 export interface TaskFilters {
@@ -297,6 +334,7 @@ export interface TaskFilters {
 	dueDateStr?: string; // "today", "overdue", "upcoming", or ISO date
 	planDateStr?: string; // "today", "overdue", "upcoming", or ISO date
 	search?: string; // title/description search
+	limit?: number; // max results to return
 }
 
 export async function searchTasks(
@@ -405,14 +443,25 @@ export async function searchTasks(
 	}
 
 	// Execute Query
-	const dbTasks = await getDb()
+	const query = getDb()
 		.select()
 		.from(tasks)
 		.where(and(...conditions))
-		.orderBy(tasks.priority, desc(tasks.created_at)); // Default sort
+		.orderBy(tasks.priority, desc(tasks.created_at));
 
-	// Fetch comments (simplified for now, same as readTasks)
-	const dbComments = await getDb().select().from(comments);
+	const dbTasks = await (filters.limit
+		? query.limit(filters.limit)
+		: query.limit(100));
+
+	// Fetch comments scoped to matched tasks only
+	const taskIds = dbTasks.map((t) => t.id);
+	const dbComments =
+		taskIds.length > 0
+			? await getDb()
+					.select()
+					.from(comments)
+					.where(inArray(comments.task_id, taskIds))
+			: [];
 	const commentsByTaskId: Record<string, Comment[]> = {};
 	for (const c of dbComments) {
 		if (!commentsByTaskId[c.task_id]) {
@@ -449,15 +498,15 @@ export async function readTasks(userId: string): Promise<Task[]> {
 		.where(eq(tasks.userId, userId))
 		.orderBy(tasks.priority, desc(tasks.created_at));
 
-	// Fetch comments for these tasks
-	// We can join or fetch all comments for user's tasks.
-	// For simplicity, let's fetch all comments for user's tasks.
-	// Actually, we should filter comments by task_id which are in dbTasks.
-	// Let's grab all comments for now, assuming not massive scale yet, or better:
-	// const taskIds = dbTasks.map(t => t.id);
-	// const dbComments = await getDb().select().from(comments).where(inArray(comments.task_id, taskIds));
-	// But for MVP, let's keep it simple: select all comments, or just select * since we don't have user_id on comments.
-	const dbComments = await getDb().select().from(comments);
+	// Fetch comments scoped to the user's tasks
+	const taskIds = dbTasks.map((t) => t.id);
+	const dbComments =
+		taskIds.length > 0
+			? await getDb()
+					.select()
+					.from(comments)
+					.where(inArray(comments.task_id, taskIds))
+			: [];
 
 	const commentsByTaskId: Record<string, Comment[]> = {};
 	for (const c of dbComments) {
@@ -551,7 +600,7 @@ export async function updateTask(
 		const result = await getDb()
 			.update(tasks)
 			.set(dbUpdates)
-			.where(eq(tasks.id, id))
+			.where(and(eq(tasks.id, id), eq(tasks.userId, actorId)))
 			.returning({ content: tasks.content });
 
 		const actionType: ActionType =
@@ -581,7 +630,7 @@ export async function deleteTask(
 ): Promise<void> {
 	const result = await getDb()
 		.delete(tasks)
-		.where(eq(tasks.id, id))
+		.where(and(eq(tasks.id, id), eq(tasks.userId, actorId)))
 		.returning({ content: tasks.content });
 
 	logAction({

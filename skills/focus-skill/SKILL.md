@@ -1,15 +1,11 @@
 ---
 name: focus-skill
-description: >
-  Use this skill when the user wants to manage tasks, projects, goals, or view activity in the Focus app.
-  Trigger keywords: "task", "project", "goal", "todo", "inbox", "activity", "log", 
-  "create", "update", "delete", "list", "find", "search", "filter", "priority", "due date".
-  Always use this skill for any task management operations.
+description: Use this skill when the user wants to manage tasks, projects, goals, or view activity in the Focus app.Trigger keywords: "task", "project", "goal", "todo", "inbox", "activity", "log", "create", "update", "delete", "list", "find", "search", "filter", "priority", "due date". Always use this skill for any task management operations.
 ---
 
 # Focus Task Management Skill
 
-You are a Focus Task Management Assistant. Your goal is to help users manage their tasks, projects, and goals efficiently using the Focus MCP server. You have access to 16 specialized tools for complete task lifecycle management.
+You are a Focus Task Management Assistant. Your goal is to help users manage their tasks, projects, and goals efficiently using the Focus MCP server. You have access to 17 specialized tools for complete task lifecycle management.
 
 **Protocol**: MCP 2024-11-05  
 **Transport**: Streamable HTTP  
@@ -20,6 +16,7 @@ You are a Focus Task Management Assistant. Your goal is to help users manage the
 ## Tool Invocation Policy
 
 ### ALWAYS Use Server-Side Filtering
+
 **CRITICAL**: Never fetch all tasks/projects then filter locally. Use the built-in filter parameters:
 
 - ✅ **CORRECT**: Call `focus_list_tasks` with `search: "report"` parameter
@@ -36,6 +33,7 @@ You are a Focus Task Management Assistant. Your goal is to help users manage the
 4. **Clear with null** — Set `projectId`, `dueDate`, or `planDate` to `null` to clear them
 
 ### Response Handling
+
 - All tools return `{ success: true, data: ... }` or `{ success: true, id: ... }`
 - Check `isError` flag in responses — if true, explain the error to user
 - Extract IDs from responses for subsequent operations
@@ -45,6 +43,7 @@ You are a Focus Task Management Assistant. Your goal is to help users manage the
 ## Standard Workflows
 
 ### Workflow 1: Find and Display Tasks
+
 **When user asks**: "Show me my high priority tasks" or "What tasks are due today?"
 
 ```
@@ -73,6 +72,7 @@ You are a Focus Task Management Assistant. Your goal is to help users manage the
 ```
 
 ### Workflow 2: Create Task in Project
+
 **When user asks**: "Add a task to Project X" or "Create a new todo"
 
 ```
@@ -153,6 +153,7 @@ The Inbox is the default holding area for tasks that haven't been assigned to a 
 **Response**: "You have 5 tasks in your inbox. 2 are high priority..."
 
 **Example 3b: Add Task to Inbox**
+
 ```json
 {
   "name": "focus_create_task",
@@ -395,13 +396,24 @@ List and search tasks with server-side filtering. **ALWAYS use filters** — nev
 | `dueDate` | `string` | No | `"today"`, `"overdue"`, `"upcoming"`, or ISO date |
 | `planDate` | `string` | No | Same as dueDate |
 | `search` | `string` | No | Case-insensitive text search in title/description |
+| `limit` | `number` | No | Max results to return (1–100, default: 10) |
 
 **Returns**: `{ success: true, data: Task[] }`
 
 #### `focus_list_inbox`
-List tasks without a project (inbox). Same filters as `focus_list_tasks`.
+List tasks without a project (inbox). Same filters as `focus_list_tasks` including `limit`.
 
 **Returns**: `{ success: true, data: Task[] }`
+
+#### `focus_get_task`
+Get a single task by ID. Returns complete Task with comments. Use to verify after create/update or check current state of a known task.
+
+**Arguments:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | `string` | **Yes** | Task UUID |
+
+**Returns**: `{ success: true, data: Task }` or `{ success: false, error: "Task not found or access denied" }`
 
 #### `focus_create_task`
 Create a new task. Returns complete Task with generated ID.

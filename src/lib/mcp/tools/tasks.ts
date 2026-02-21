@@ -7,6 +7,7 @@ import {
 	createTask,
 	deleteTask,
 	getTaskById,
+	getTaskByIdForUser,
 	searchTasks,
 	updateTask,
 } from "@/lib/storage";
@@ -57,6 +58,13 @@ const listTasksSchema = z.object({
 		.describe(
 			"Case-insensitive text search across task title and description.",
 		),
+	limit: z
+		.number()
+		.int()
+		.min(1)
+		.max(100)
+		.optional()
+		.describe("Max results to return. Defaults to 10, max 100."),
 });
 
 const createTaskSchema = z.object({
@@ -187,6 +195,13 @@ const listInboxSchema = z.object({
 		.describe(
 			"Case-insensitive text search across task title and description.",
 		),
+	limit: z
+		.number()
+		.int()
+		.min(1)
+		.max(100)
+		.optional()
+		.describe("Max results to return. Defaults to 10, max 100."),
 });
 
 // --- Tool Implementations ---
@@ -209,6 +224,7 @@ async function listTasks(
 			dueDateStr: parsed.dueDate,
 			planDateStr: parsed.planDate,
 			search: parsed.search,
+			limit: parsed.limit ?? 10,
 		});
 
 		return {
@@ -247,6 +263,7 @@ async function listInbox(
 			dueDateStr: parsed.dueDate,
 			planDateStr: parsed.planDate,
 			search: parsed.search,
+			limit: parsed.limit ?? 10,
 		});
 
 		return {
@@ -462,22 +479,80 @@ async function addCommentTool(
 	}
 }
 
+// --- Get Task Tool ---
+
+const getTaskSchema = z.object({
+	id: z.string().uuid().describe("UUID of the task to retrieve."),
+});
+
+async function getTaskTool(
+	args: unknown,
+	context: MCPServerContext,
+): Promise<{
+	content: Array<{ type: string; text: string }>;
+	isError?: boolean;
+}> {
+	try {
+		const parsed = getTaskSchema.parse(args);
+
+		const task = await getTaskByIdForUser(parsed.id, context.user.id);
+
+		if (!task) {
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify({
+							success: false,
+							error: "Task not found or access denied",
+						}),
+					},
+				],
+				isError: true,
+			};
+		}
+
+		return {
+			content: [
+				{ type: "text", text: JSON.stringify({ success: true, data: task }) },
+			],
+		};
+	} catch (error) {
+		return {
+			content: [
+				{
+					type: "text",
+					text: error instanceof Error ? error.message : "Unknown error",
+				},
+			],
+			isError: true,
+		};
+	}
+}
+
 // --- Export Tools Array ---
 
 export const taskTools = [
 	{
 		name: "focus_list_tasks",
 		description:
-			"List and search tasks with filters. Returns: Array of Task objects. Use focus_list_projects to get valid projectId values. Note: status filter excludes 'review'.",
+			"List and search tasks with filters. Returns: Array of Task objects (default 10, max 100). Use focus_list_projects to get valid projectId values. Note: status filter excludes 'review'.",
 		schema: listTasksSchema,
 		handler: listTasks,
 	},
 	{
 		name: "focus_list_inbox",
 		description:
-			"List tasks without a project (inbox). Returns: Array of Task objects. Use when: You need unassigned tasks. For project tasks, use focus_list_tasks.",
+			"List tasks without a project (inbox). Returns: Array of Task objects (default 10, max 100). Use when: You need unassigned tasks. For project tasks, use focus_list_tasks.",
 		schema: listInboxSchema,
 		handler: listInbox,
+	},
+	{
+		name: "focus_get_task",
+		description:
+			"Get a single task by ID. Returns: Complete Task object with comments. Use after creating/updating a task to verify, or to check current state of a known task.",
+		schema: getTaskSchema,
+		handler: getTaskTool,
 	},
 	{
 		name: "focus_create_task",
