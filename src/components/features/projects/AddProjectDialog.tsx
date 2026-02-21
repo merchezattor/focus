@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -102,6 +102,7 @@ export function AddProjectDialog(
 		undefined,
 	);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isPending, startTransition] = useTransition();
 
 	// Sync state when opening with a project
 	useEffect(() => {
@@ -319,17 +320,61 @@ export function AddProjectDialog(
 						</div>
 					</div>
 
-					<div className="flex justify-end gap-2">
-						<Button
-							type="button"
-							variant="outline"
-							onClick={() => setOpen(false)}
-						>
-							Cancel
-						</Button>
-						<Button type="submit" disabled={!name.trim() || isLoading}>
-							{isLoading ? "Saving..." : projectToEdit ? "Save" : "Add Project"}
-						</Button>
+					<div className="flex justify-between items-center">
+						{projectToEdit ? (
+							<Button
+								type="button"
+								variant="destructive"
+								onClick={async () => {
+									if (!confirm("Are you sure you want to delete this project?"))
+										return;
+
+									try {
+										setIsLoading(true);
+										startTransition(async () => {
+											const res = await fetch(
+												`/api/projects?id=${projectToEdit.id}`,
+												{ method: "DELETE" },
+											);
+											if (!res.ok) throw new Error("Failed to delete project");
+											toast.success("Project deleted");
+											setOpen(false);
+											router.refresh();
+											router.push("/");
+										});
+									} catch (err) {
+										toast.error("Failed to delete project");
+										console.error(err);
+									} finally {
+										setIsLoading(false);
+									}
+								}}
+								disabled={isLoading || isPending}
+							>
+								Delete
+							</Button>
+						) : (
+							<div />
+						)}
+						<div className="flex gap-2">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setOpen(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={!name.trim() || isLoading || isPending}
+							>
+								{isLoading || isPending
+									? "Saving..."
+									: projectToEdit
+										? "Save"
+										: "Add Project"}
+							</Button>
+						</div>
 					</div>
 				</form>
 			</DialogContent>

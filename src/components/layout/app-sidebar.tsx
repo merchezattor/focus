@@ -10,31 +10,15 @@ import {
 	IconSearch,
 } from "@tabler/icons-react";
 import { useSetAtom } from "jotai";
-import {
-	Activity,
-	ChevronDown,
-	Flag,
-	MoreHorizontal,
-	Pencil,
-	Trash2,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { Activity, ChevronDown, Flag, MoreHorizontal } from "lucide-react";
 import { isAddGoalOpenAtom } from "@/components/features/goals/GlobalAddGoalDialog";
 import { ModeToggle } from "@/components/layout/mode-toggle";
 import { NavUser } from "@/components/layout/nav-user";
-import { Badge } from "@/components/ui/badge";
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
 	Sidebar,
 	SidebarContent,
@@ -49,7 +33,11 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { isAddProjectOpenAtom, projectToEditAtom } from "@/lib/atoms";
+import {
+	goalToEditAtom,
+	isAddProjectOpenAtom,
+	projectToEditAtom,
+} from "@/lib/atoms";
 import type { Goal, Project } from "@/types";
 
 const data = {
@@ -121,7 +109,7 @@ export function AppSidebar({
 	const setAddProjectOpen = useSetAtom(isAddProjectOpenAtom);
 	const setAddGoalOpen = useSetAtom(isAddGoalOpenAtom);
 	const setProjectToEdit = useSetAtom(projectToEditAtom);
-	const router = useRouter();
+	const setGoalToEdit = useSetAtom(goalToEditAtom);
 
 	const navMainWithCounts = data.navMain.map((item) => {
 		if (item.title === "Inbox")
@@ -165,10 +153,11 @@ export function AppSidebar({
 										<a href={item.url} className="flex items-center gap-2">
 											<item.icon className="h-4 w-4" />
 											<span>{item.title}</span>
+											{/* @ts-ignore */}
 											{!!item.count && (
-												<Badge variant="secondary" className="ml-auto text-xs">
+												<span className="ml-auto text-xs bg-secondary rounded-full px-2 py-0.5">
 													{item.count}
-												</Badge>
+												</span>
 											)}
 										</a>
 									</SidebarMenuButton>
@@ -209,6 +198,13 @@ export function AppSidebar({
 													<span>{goal.name}</span>
 												</a>
 											</SidebarMenuButton>
+											<SidebarMenuAction
+												showOnHover
+												onClick={() => setGoalToEdit(goal)}
+											>
+												<MoreHorizontal className="h-4 w-4" />
+												<span className="sr-only">Edit Goal</span>
+											</SidebarMenuAction>
 										</SidebarMenuItem>
 									))}
 									<SidebarMenuItem>
@@ -262,52 +258,13 @@ export function AppSidebar({
 														<span>{project.name}</span>
 													</a>
 												</SidebarMenuButton>
-												<DropdownMenu>
-													<DropdownMenuTrigger asChild>
-														<SidebarMenuAction showOnHover>
-															<MoreHorizontal className="h-4 w-4" />
-															<span className="sr-only">More</span>
-														</SidebarMenuAction>
-													</DropdownMenuTrigger>
-													<DropdownMenuContent side="right" align="start">
-														<DropdownMenuItem
-															onClick={() => setProjectToEdit(project)}
-														>
-															<Pencil className="mr-2 h-4 w-4" />
-															<span>Edit Project</span>
-														</DropdownMenuItem>
-														<DropdownMenuItem
-															className="text-destructive focus:text-destructive"
-															onClick={async (e) => {
-																e.stopPropagation();
-																if (
-																	!confirm(
-																		"Are you sure you want to delete this project?",
-																	)
-																)
-																	return;
-
-																try {
-																	const res = await fetch(
-																		`/api/projects?id=${project.id}`,
-																		{ method: "DELETE" },
-																	);
-																	if (!res.ok)
-																		throw new Error("Failed to delete");
-																	toast.success("Project deleted");
-																	router.refresh();
-																	router.push("/");
-																} catch (err) {
-																	toast.error("Failed to delete project");
-																	console.error(err);
-																}
-															}}
-														>
-															<Trash2 className="mr-2 h-4 w-4" />
-															<span>Delete Project</span>
-														</DropdownMenuItem>
-													</DropdownMenuContent>
-												</DropdownMenu>
+												<SidebarMenuAction
+													showOnHover
+													onClick={() => setProjectToEdit(project)}
+												>
+													<MoreHorizontal className="h-4 w-4" />
+													<span className="sr-only">Edit Project</span>
+												</SidebarMenuAction>
 											</SidebarMenuItem>
 										))}
 									<SidebarMenuItem>

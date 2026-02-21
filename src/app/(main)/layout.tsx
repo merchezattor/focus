@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { GlobalAddGoalDialog } from "@/components/features/goals/GlobalAddGoalDialog";
+import { GlobalEditGoalDialog } from "@/components/features/goals/GlobalEditGoalDialog";
 import { GlobalAddProjectDialog } from "@/components/features/projects/GlobalAddProjectDialog";
 import { GlobalEditProjectDialog } from "@/components/features/projects/GlobalEditProjectDialog";
 import { AddTaskFab } from "@/components/features/tasks/AddTaskFab";
@@ -52,6 +53,7 @@ export default async function MainLayout({
 			<GlobalAddProjectDialog goals={goals} projects={projects} />
 			<GlobalEditProjectDialog goals={goals} projects={projects} />
 			<GlobalAddGoalDialog />
+			<GlobalEditGoalDialog />
 			<AddTaskFab />
 			<SidebarInset>{children}</SidebarInset>
 		</SidebarProvider>

@@ -3,7 +3,7 @@
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Flag } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import type { Goal } from "@/types";
 
 // Usually better to let server handle ID or use a library.
 // For Create Project we generated ID on server or client?
@@ -77,7 +78,8 @@ export function AddGoalDialog({
 	onGoalCreated,
 	open: controlledOpen,
 	onOpenChange,
-}: AddGoalDialogProps) {
+	goalToEdit,
+}: AddGoalDialogProps & { goalToEdit?: Goal | null }) {
 	const router = useRouter();
 	const [internalOpen, setInternalOpen] = useState(false);
 
@@ -91,37 +93,78 @@ export function AddGoalDialog({
 	const [priority, setPriority] = useState("p1");
 	const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isPending, startTransition] = useTransition();
+
+	useEffect(() => {
+		if (open) {
+			if (goalToEdit) {
+				setName(goalToEdit.name);
+				setDescription(goalToEdit.description || "");
+				setColor(goalToEdit.color);
+				setPriority(goalToEdit.priority || "p1");
+				setDueDate(
+					goalToEdit.dueDate ? new Date(goalToEdit.dueDate) : undefined,
+				);
+			} else {
+				setName("");
+				setDescription("");
+				setColor(colors[0].value);
+				setPriority("p1");
+				setDueDate(undefined);
+			}
+		}
+	}, [open, goalToEdit]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setIsLoading(true);
 
 		try {
-			const res = await fetch("/api/goals", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					name,
-					description,
-					color,
-					priority,
-					dueDate: dueDate?.toISOString(),
-				}),
-			});
+			if (goalToEdit) {
+				const res = await fetch("/api/goals", {
+					method: "PUT",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						id: goalToEdit.id,
+						name,
+						description,
+						color,
+						priority,
+						dueDate: dueDate?.toISOString(),
+					}),
+				});
 
-			if (!res.ok) throw new Error("Failed to create goal");
+				if (!res.ok) throw new Error("Failed to update goal");
+				toast.success("Goal updated");
+			} else {
+				const res = await fetch("/api/goals", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						name,
+						description,
+						color,
+						priority,
+						dueDate: dueDate?.toISOString(),
+					}),
+				});
 
-			toast.success("Goal created");
+				if (!res.ok) throw new Error("Failed to create goal");
+				toast.success("Goal created");
+			}
+
 			setOpen(false);
 			setName("");
 			setDescription("");
 			setDueDate(undefined);
 			setPriority("p1");
 			setColor(colors[0].value);
-			onGoalCreated?.();
+			if (!goalToEdit) onGoalCreated?.();
 			router.refresh();
 		} catch (error) {
-			toast.error("Failed to create goal");
+			toast.error(
+				goalToEdit ? "Failed to update goal" : "Failed to create goal",
+			);
 			console.error(error);
 		} finally {
 			setIsLoading(false);
@@ -134,7 +177,7 @@ export function AddGoalDialog({
 				<DialogTrigger asChild>{trigger || children}</DialogTrigger>
 			)}
 			<DialogContent>
-				<DialogTitle>Add Goal</DialogTitle>
+				<DialogTitle>{goalToEdit ? "Edit Goal" : "Add Goal"}</DialogTitle>
 				<form onSubmit={handleSubmit} className="space-y-4">
 					<div className="space-y-2">
 						<label className="text-sm font-medium">Name</label>
@@ -236,17 +279,60 @@ export function AddGoalDialog({
 						</div>
 					</div>
 
-					<div className="flex justify-end gap-2 pt-4">
-						<Button
-							type="button"
-							variant="outline"
-							onClick={() => setOpen(false)}
-						>
-							Cancel
-						</Button>
-						<Button type="submit" disabled={isLoading || !name}>
-							{isLoading ? "Creating..." : "Create Goal"}
-						</Button>
+					<div className="flex justify-between items-center pt-4">
+						{goalToEdit ? (
+							<Button
+								type="button"
+								variant="destructive"
+								onClick={async () => {
+									if (!confirm("Are you sure you want to delete this goal?"))
+										return;
+
+									try {
+										setIsLoading(true);
+										startTransition(async () => {
+											const res = await fetch(
+												`/api/goals?id=${goalToEdit.id}`,
+												{
+													method: "DELETE",
+												},
+											);
+											if (!res.ok) throw new Error("Failed to delete goal");
+											toast.success("Goal deleted");
+											setOpen(false);
+											router.refresh();
+											router.push("/");
+										});
+									} catch (err) {
+										toast.error("Failed to delete goal");
+										console.error(err);
+									} finally {
+										setIsLoading(false);
+									}
+								}}
+								disabled={isLoading || isPending}
+							>
+								Delete
+							</Button>
+						) : (
+							<div />
+						)}
+						<div className="flex gap-2">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setOpen(false)}
+							>
+								Cancel
+							</Button>
+							<Button type="submit" disabled={isLoading || isPending || !name}>
+								{isLoading || isPending
+									? "Saving..."
+									: goalToEdit
+										? "Save"
+										: "Create Goal"}
+							</Button>
+						</div>
 					</div>
 				</form>
 			</DialogContent>
