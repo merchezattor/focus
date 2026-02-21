@@ -73,7 +73,7 @@ export const focus_list_actions: MCPToolHandler<
 			content: [
 				{
 					type: "text" as const,
-					text: JSON.stringify({ actions }),
+					text: JSON.stringify({ success: true, data: { actions } }),
 				},
 			],
 		};
@@ -122,7 +122,10 @@ export const focus_mark_actions_read: MCPToolHandler<
 			content: [
 				{
 					type: "text" as const,
-					text: JSON.stringify({ success: true, markedCount: ids.length }),
+					text: JSON.stringify({
+						success: true,
+						data: { markedCount: ids.length },
+					}),
 				},
 			],
 		};
