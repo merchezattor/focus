@@ -1,15 +1,16 @@
 import react from "@vitejs/plugin-react";
+import path from "path";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	plugins: [react(), tsconfigPaths()],
-	environment: "jsdom",
-	globals: true,
-	setupFiles: ["./vitest.setup.ts"],
 	test: {
 		include: ["src/**/*.{test,spec}.{ts,tsx}"],
 		exclude: ["node_modules", ".next", "e2e"],
+		environment: "jsdom",
+		globals: true,
+		setupFiles: ["./vitest.setup.ts"],
 		coverage: {
 			provider: "v8",
 			thresholds: {
@@ -22,7 +23,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			"@": "./src/",
+			"@": path.resolve(__dirname, "./src"),
 		},
 	},
 });

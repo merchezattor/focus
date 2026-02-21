@@ -1,7 +1,5 @@
-import {
-	type RenderOptions,
-	render as rtlRender,
-} from "@testing-library/react";
+import type { RenderOptions } from "@testing-library/react";
+import { render as rtlRender } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "jotai";
 import { ThemeProvider } from "next-themes";
@@ -26,7 +24,6 @@ function AllTheProviders({ children }: { children: ReactNode }) {
 
 function customRender(ui: ReactElement, options?: CustomRenderOptions) {
 	const user = userEvent.setup();
-
 	const { ...rtlOptions } = options ?? {};
 
 	return {
@@ -37,4 +34,6 @@ function customRender(ui: ReactElement, options?: CustomRenderOptions) {
 
 export * from "@testing-library/react";
 export { customRender as render };
-export { userEvent };
+// Export userEvent but don't call setup() at module load time
+// Tests should use userEvent.setup() inside each test
+export { userEvent } from "@testing-library/user-event";
