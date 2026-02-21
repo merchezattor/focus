@@ -212,7 +212,9 @@ async function listTasks(
 		});
 
 		return {
-			content: [{ type: "text", text: JSON.stringify(tasks, null, 2) }],
+			content: [
+				{ type: "text", text: JSON.stringify({ success: true, data: tasks }) },
+			],
 		};
 	} catch (error) {
 		return {
@@ -248,7 +250,12 @@ async function listInbox(
 		});
 
 		return {
-			content: [{ type: "text", text: JSON.stringify(inboxTasks, null, 2) }],
+			content: [
+				{
+					type: "text",
+					text: JSON.stringify({ success: true, data: inboxTasks }),
+				},
+			],
 		};
 	} catch (error) {
 		return {
@@ -293,7 +300,9 @@ async function createTaskTool(
 		console.log("[MCP] createTaskTool context.tokenName:", context.tokenName);
 
 		return {
-			content: [{ type: "text", text: JSON.stringify(task, null, 2) }],
+			content: [
+				{ type: "text", text: JSON.stringify({ success: true, data: task }) },
+			],
 		};
 	} catch (error) {
 		return {
@@ -345,7 +354,10 @@ async function updateTaskTool(
 			content: [
 				{
 					type: "text",
-					text: JSON.stringify({ id: parsed.id, ...updates }, null, 2),
+					text: JSON.stringify({
+						success: true,
+						data: { id: parsed.id, ...updates },
+					}),
 				},
 			],
 		};
@@ -430,7 +442,12 @@ async function addCommentTool(
 		});
 
 		return {
-			content: [{ type: "text", text: JSON.stringify(comment, null, 2) }],
+			content: [
+				{
+					type: "text",
+					text: JSON.stringify({ success: true, data: comment }),
+				},
+			],
 		};
 	} catch (error) {
 		return {
