@@ -83,7 +83,7 @@ export const focusListProjects: MCPToolHandler<Record<string, never>> = async (
 			content: [
 				{
 					type: "text" as const,
-					text: JSON.stringify(projects, null, 2),
+					text: JSON.stringify({ success: true, data: projects }),
 				},
 			],
 		};
@@ -134,7 +134,7 @@ export const focusCreateProject: MCPToolHandler<
 			content: [
 				{
 					type: "text" as const,
-					text: JSON.stringify(project, null, 2),
+					text: JSON.stringify({ success: true, data: project }),
 				},
 			],
 		};
@@ -179,7 +179,10 @@ export const focusUpdateProject: MCPToolHandler<
 			content: [
 				{
 					type: "text" as const,
-					text: `Project ${args.id} updated successfully`,
+					text: JSON.stringify({
+						success: true,
+						data: { id: args.id, ...updates },
+					}),
 				},
 			],
 		};
@@ -216,7 +219,7 @@ export const focusDeleteProject: MCPToolHandler<
 			content: [
 				{
 					type: "text" as const,
-					text: `Project ${args.id} deleted successfully`,
+					text: JSON.stringify({ success: true, id: args.id }),
 				},
 			],
 		};
