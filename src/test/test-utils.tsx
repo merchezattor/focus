@@ -3,7 +3,7 @@ import { render as rtlRender } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "jotai";
 import { ThemeProvider } from "next-themes";
-import React, { type ReactElement, type ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
 	themeProps?: {

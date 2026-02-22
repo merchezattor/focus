@@ -48,7 +48,7 @@ describe("EditTaskDialog", () => {
 
 	describe("Dialog open/close", () => {
 		it("renders with trigger button when provided", () => {
-			const trigger = <button>Edit Task</button>;
+			const trigger = <button type="button">Edit Task</button>;
 			render(<EditTaskDialog {...defaultProps} trigger={trigger} />);
 
 			expect(
@@ -61,7 +61,7 @@ describe("EditTaskDialog", () => {
 			render(
 				<EditTaskDialog
 					{...defaultProps}
-					trigger={<button>Edit Task</button>}
+					trigger={<button type="button">Edit Task</button>}
 				/>,
 			);
 

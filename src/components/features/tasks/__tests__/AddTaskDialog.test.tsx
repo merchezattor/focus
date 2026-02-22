@@ -238,7 +238,9 @@ describe("AddTaskDialog", () => {
 	describe("Custom trigger", () => {
 		it("renders custom trigger when provided", () => {
 			const CustomTrigger = (
-				<button data-testid="custom-trigger">Custom Add</button>
+				<button type="button" data-testid="custom-trigger">
+					Custom Add
+				</button>
 			);
 			render(<AddTaskDialog {...defaultProps} trigger={CustomTrigger} />);
 
@@ -248,7 +250,9 @@ describe("AddTaskDialog", () => {
 		it("opens dialog when custom trigger is clicked", async () => {
 			const user = userEvent.setup();
 			const CustomTrigger = (
-				<button data-testid="custom-trigger">Custom Add</button>
+				<button type="button" data-testid="custom-trigger">
+					Custom Add
+				</button>
 			);
 			render(<AddTaskDialog {...defaultProps} trigger={CustomTrigger} />);
 

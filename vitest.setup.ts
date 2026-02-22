@@ -1,7 +1,7 @@
 import "@testing-library/dom";
 import { cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
-import { vi } from "vitest";
+import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { server } from "@/test/mocks/server";
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -63,7 +63,7 @@ Object.defineProperty(globalThis, "crypto", {
 });
 
 // Mock matchMedia for next-themes
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(globalThis, "matchMedia", {
 	writable: true,
 	value: vi.fn().mockImplementation((query: string) => ({
 		matches: false,

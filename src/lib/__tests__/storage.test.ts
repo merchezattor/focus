@@ -99,6 +99,7 @@ describe("Storage Layer", () => {
 					status: "todo" as const,
 					priority: "p2" as const,
 					projectId: null,
+					dueDate: null,
 					comments: [],
 					createdAt: new Date(),
 					updatedAt: new Date(),

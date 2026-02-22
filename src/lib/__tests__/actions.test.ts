@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("actions.ts", () => {
 	describe("logAction", () => {
@@ -163,7 +163,10 @@ describe("actions.ts", () => {
 		it("should accept array of action ids", async () => {
 			const { markActionsRead } = await import("../actions");
 
+			const dbUrl = process.env.DATABASE_URL;
+			delete process.env.DATABASE_URL;
 			await expect(markActionsRead(["action-1", "action-2"])).rejects.toThrow();
+			if (dbUrl) process.env.DATABASE_URL = dbUrl;
 		});
 
 		it("should return early for empty array", async () => {
@@ -175,7 +178,10 @@ describe("actions.ts", () => {
 		it("should accept single action id", async () => {
 			const { markActionsRead } = await import("../actions");
 
+			const dbUrl = process.env.DATABASE_URL;
+			delete process.env.DATABASE_URL;
 			await expect(markActionsRead(["action-1"])).rejects.toThrow();
+			if (dbUrl) process.env.DATABASE_URL = dbUrl;
 		});
 	});
 
@@ -189,7 +195,10 @@ describe("actions.ts", () => {
 		it("should accept userId parameter", async () => {
 			const { markAllActionsRead } = await import("../actions");
 
+			const dbUrl = process.env.DATABASE_URL;
+			delete process.env.DATABASE_URL;
 			await expect(markAllActionsRead("user-1")).rejects.toThrow();
+			if (dbUrl) process.env.DATABASE_URL = dbUrl;
 		});
 	});
 
@@ -203,7 +212,10 @@ describe("actions.ts", () => {
 		it("should accept userId parameter", async () => {
 			const { getUnreadActionsCount } = await import("../actions");
 
+			const dbUrl = process.env.DATABASE_URL;
+			delete process.env.DATABASE_URL;
 			await expect(getUnreadActionsCount("user-1")).rejects.toThrow();
+			if (dbUrl) process.env.DATABASE_URL = dbUrl;
 		});
 
 		it("should return a number", async () => {

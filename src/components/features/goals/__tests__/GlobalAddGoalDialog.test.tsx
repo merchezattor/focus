@@ -1,5 +1,5 @@
 import { useAtom } from "jotai";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@/test/test-utils";
 import { GlobalAddGoalDialog, isAddGoalOpenAtom } from "../GlobalAddGoalDialog";
 
