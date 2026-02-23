@@ -550,6 +550,37 @@ Mark activity log items as read.
 
 **Returns**: `{ success: true, data: { markedCount } }`
 
+#### `focus_create_agentic_action`
+Create a manual agentic action log entry for a task.
+
+**Arguments:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `entityId` | `string` | **Yes** | Task UUID |
+| `entityType` | `string` | **Yes** | Only "task" supported |
+| `actionType` | `string` | **Yes** | "reviewed", "groomed", or "processed" |
+| `comment` | `string` | No | Optional comment (max 2000 chars) |
+
+**Returns**: `{ success: true, data: { entityId, entityType, actionType, comment } }`
+
+**Agentic Action Types:**
+- `reviewed` — Task was reviewed or inspected
+- `groomed` — Task was refined, clarified, or prepared
+- `processed` — Task was worked on or completed outside normal flow
+
+**Usage Example:**
+```json
+{
+  "name": "focus_create_agentic_action",
+  "arguments": {
+    "entityId": "task-uuid",
+    "entityType": "task",
+    "actionType": "groomed",
+    "comment": "Clarified requirements with stakeholder"
+  }
+}
+```
+
 ---
 
 ## Best Practices Summary
