@@ -130,6 +130,7 @@ export const actionTypeEnum = pgEnum("action_type", [
 	"reviewed",
 	"groomed",
 	"processed",
+	"pending",
 ]);
 
 export const entityTypeEnum = pgEnum("entity_type", [

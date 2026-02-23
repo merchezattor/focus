@@ -29,3 +29,11 @@ BEGIN
 EXCEPTION
   WHEN duplicate_object THEN null;
 END $$;
+--> statement-breakpoint
+-- Add pending to action_type enum (idempotent)
+DO $$
+BEGIN
+  ALTER TYPE "action_type" ADD VALUE 'pending';
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;

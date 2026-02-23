@@ -11,7 +11,8 @@ export type ActionType =
 	| "uncomplete"
 	| "reviewed"
 	| "groomed"
-	| "processed";
+	| "processed"
+	| "pending";
 
 export type EntityType = "task" | "project" | "goal";
 

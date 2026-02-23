@@ -46,7 +46,7 @@ const createAgenticActionSchema = z.object({
 		.enum(["task"])
 		.describe("Type of entity (only 'task' supported for v1)."),
 	actionType: z
-		.enum(["reviewed", "groomed", "processed"])
+		.enum(["reviewed", "groomed", "processed", "pending"])
 		.describe("Type of agentic action performed."),
 	comment: z
 		.string()
