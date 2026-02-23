@@ -58,7 +58,8 @@ The project structure follows standard Next.js App Router conventions:
 
 - **ORM:** Drizzle ORM with `postgres` driver (TCP-based).
 - **Migration Workflow (2025 Best Practice):**
-  - **Development:** Use `bun run db:push` for rapid prototyping (auto-generates schema changes).
+  - **Development:** Use `bun run db:push` for rapid prototyping (auto-generates schema changes without creating files).
+  - **Generating Migrations:** **Always** use `bun run db:generate` to create new migration files when preparing for production. **DO NOT** manually create `.sql` files, as they will be missing from Drizzle's `_journal.json` and silently ignored during deployment.
   - **Production:** Uses formal migrations via `drizzle-kit migrate` with SQL files in `/drizzle` folder.
   - **Production (Dokploy):** Migrations run automatically at **runtime** when the container starts (via `bun run start`). This is necessary because the database is not accessible during the isolated build phase.
   - **Migration Script:** Located at `scripts/migrate.mjs` - includes retry logic (3 attempts) for network resilience.
