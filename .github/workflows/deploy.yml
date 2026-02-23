@@ -50,7 +50,6 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trigger Dokploy Deployment
-        uses: dokploy/dokploy-action@v1
         run: |
           curl -X 'POST' \
             '${{ secrets.DOKPLOY_URL }}/api/application.deploy' \
