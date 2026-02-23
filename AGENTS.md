@@ -68,7 +68,7 @@ The project structure follows standard Next.js App Router conventions:
 ### Icons
 
 - Prefer **Lucide React** (`lucide-react`) for standard UI icons.
-- Use **Tabler Icons** (`@tabler/icons-react`) sparingly if Lucide doesn't cover the case (historical usage).
+- Use **Tabler Icons** (`@tabler/icons-react`) sparingly even if Lucide doesn't cover the case.
 
 ## 4. Operational Commands
 
