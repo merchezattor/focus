@@ -8,7 +8,10 @@ export type ActionType =
 	| "update"
 	| "delete"
 	| "complete"
-	| "uncomplete";
+	| "uncomplete"
+	| "reviewed"
+	| "groomed"
+	| "processed";
 
 export type EntityType = "task" | "project" | "goal";
 
@@ -22,6 +25,7 @@ interface LogActionParams {
 	actionType: ActionType;
 	changes?: Record<string, any>;
 	metadata?: Record<string, any>;
+	comment?: string;
 }
 
 /**
@@ -37,6 +41,7 @@ export function logAction(params: LogActionParams) {
 		actionType,
 		changes,
 		metadata,
+		comment,
 	} = params;
 
 	const performLog = async () => {
@@ -50,6 +55,7 @@ export function logAction(params: LogActionParams) {
 				actionType,
 				changes,
 				metadata,
+				comment,
 				isRead: false, // Default to unread
 			});
 		} catch (error) {

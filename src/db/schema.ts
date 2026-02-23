@@ -127,6 +127,9 @@ export const actionTypeEnum = pgEnum("action_type", [
 	"delete",
 	"complete",
 	"uncomplete",
+	"reviewed",
+	"groomed",
+	"processed",
 ]);
 
 export const entityTypeEnum = pgEnum("entity_type", [
@@ -152,6 +155,9 @@ export const actions = pgTable("actions", {
 
 	// Metadata for pure "events"
 	metadata: jsonb("metadata"),
+
+	// Optional comment for agentic actions
+	comment: text("comment"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 
