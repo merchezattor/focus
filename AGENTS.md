@@ -99,6 +99,3 @@ The project structure follows standard Next.js App Router conventions:
   - **Agents:** If acting via API with a Bearer token, you are logged as `actorType: "agent"`.
   - **Storage:** If using `lib/storage.ts` directly, ensure you pass the correct `actorType` ("user" or "agent") if not using the default.
 
----
-
-### Last Updated: Feb 18, 2026
