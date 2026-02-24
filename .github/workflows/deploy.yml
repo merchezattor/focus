@@ -53,9 +53,8 @@ jobs:
         run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Trigger Dokploy Deployment
-        uses: jegork/dokploy-update-image-action@main
+        uses: dokploy/dokploy-deploy-action@v1.0.0
         with:
-          base_url: ${{ secrets.DOKPLOY_URL }}
-          token: ${{ secrets.DOKPLOY_API_KEY }}
+          dokploy_url: ${{ secrets.DOKPLOY_URL }}
+          api_token: ${{ secrets.DOKPLOY_API_KEY }}
           application_id: ${{ secrets.DOKPLOY_APPLICATION_ID }}
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ env.SHORT_SHA }}
