@@ -1,60 +1,102 @@
-# syntax=docker/dockerfile:1
+# ============================================
+# Stage 1: Dependencies Installation Stage
+# ============================================
 
-# ========================================
-# Stage 1: Dependencies
-# ========================================
-FROM oven/bun:1-alpine AS deps
+# IMPORTANT: Node.js Version Maintenance
+# This Dockerfile uses Node.js 24.13.0-slim, which was the latest LTS version at the time of writing.
+# To ensure security and compatibility, regularly update the NODE_VERSION ARG to the latest LTS version.
+ARG NODE_VERSION=24.13.0-slim
 
+FROM node:${NODE_VERSION} AS dependencies
+
+# Set working directory
 WORKDIR /app
 
-# Install dependencies first for better layer caching
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
+# Copy package-related files first to leverage Docker's caching mechanism
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* bun.lock* .npmrc* ./
 
-# ========================================
-# Stage 2: Builder
-# ========================================
-FROM oven/bun:1-alpine AS builder
+# Install project dependencies with frozen lockfile for reproducible builds
+RUN --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,target=/usr/local/share/.cache/yarn \
+    --mount=type=cache,target=/root/.local/share/pnpm/store \
+    --mount=type=cache,target=/root/.bun/install/cache \
+  if [ -f package-lock.json ]; then \
+    npm ci --no-audit --no-fund; \
+  elif [ -f yarn.lock ]; then \
+    corepack enable yarn && yarn install --frozen-lockfile --production=false; \
+  elif [ -f pnpm-lock.yaml ]; then \
+    corepack enable pnpm && pnpm install --frozen-lockfile; \
+  elif [ -f bun.lock ]; then \
+    npm install -g bun && bun install --frozen-lockfile; \
+  else \
+    echo "No lockfile found." && exit 1; \
+  fi
 
+# ============================================
+# Stage 2: Build Next.js application in standalone mode
+# ============================================
+
+FROM node:${NODE_VERSION} AS builder
+
+# Set working directory
 WORKDIR /app
 
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+# Copy project dependencies from dependencies stage
+COPY --from=dependencies /app/node_modules ./node_modules
 
-# Copy source files
+# Copy application source code
 COPY . .
 
-# Set production environment
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build the application
-RUN bun run build
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+# ENV NEXT_TELEMETRY_DISABLED=1
 
-# ========================================
-# Stage 3: Production Runner
-# ========================================
-FROM node:20-alpine AS runner
+# Build Next.js application
+RUN --mount=type=cache,target=/app/.next/cache \
+  if [ -f package-lock.json ]; then \
+    npm run build; \
+  elif [ -f yarn.lock ]; then \
+    corepack enable yarn && yarn build; \
+  elif [ -f pnpm-lock.yaml ]; then \
+    corepack enable pnpm && pnpm build; \
+  elif [ -f bun.lock ]; then \
+    npm install -g bun && bun run build; \
+  else \
+    echo "No lockfile found." && exit 1; \
+  fi
 
+# ============================================
+# Stage 3: Run Next.js application
+# ============================================
+
+FROM node:${NODE_VERSION} AS runner
+
+# Set working directory
 WORKDIR /app
 
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs --ingroup nodejs
-
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-
-USER nextjs
-
+# Set production environment variables
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the run time.
+# ENV NEXT_TELEMETRY_DISABLED=1
+
+# Copy production assets
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+
+# Switch to non-root user for security best practices
+USER node
+
+# Expose port 3000 to allow HTTP traffic
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD node -e "fetch('http://localhost:3000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))" || exit 1
-
-CMD node server.js
+# Start Next.js standalone server
+CMD ["node", "server.js"]
