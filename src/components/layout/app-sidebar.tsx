@@ -225,65 +225,64 @@ export function AppSidebar({
 					</SidebarGroup>
 				</Collapsible>
 
-				<Collapsible defaultOpen className="group/collapsible">
-					<SidebarGroup>
-						<SidebarGroupLabel
-							asChild
-							className="flex items-center justify-between px-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:opacity-0"
+				<SidebarGroup>
+					<SidebarGroupLabel
+						asChild
+						className="flex items-center justify-between px-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+					>
+						<a
+							href="/projects"
+							className="flex items-center w-full cursor-pointer"
 						>
-							<CollapsibleTrigger>
-								<span>My Projects</span>
-								<ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-							</CollapsibleTrigger>
-						</SidebarGroupLabel>
-						<CollapsibleContent>
-							<SidebarGroupContent>
-								<SidebarMenu>
-									{projects
-										.filter((p) => !p.isFavorite)
-										.map((project) => (
-											<SidebarMenuItem key={project.id}>
-												<SidebarMenuButton
-													asChild
-													className={`w-full justify-start ${selectedProjectId === project.id ? "bg-accent" : ""}`}
-												>
-													<a
-														href={`/?project=${project.id}`}
-														className="flex items-center gap-2 w-full"
-													>
-														<div
-															className="h-2 w-2 rounded-full"
-															style={{ backgroundColor: project.color }}
-														/>
-														<span>{project.name}</span>
-													</a>
-												</SidebarMenuButton>
-												<SidebarMenuAction
-													showOnHover
-													onClick={() => setProjectToEdit(project)}
-												>
-													<MoreHorizontal className="h-4 w-4" />
-													<span className="sr-only">Edit Project</span>
-												</SidebarMenuAction>
-											</SidebarMenuItem>
-										))}
-									<SidebarMenuItem>
+							<span>My Projects</span>
+						</a>
+					</SidebarGroupLabel>
+					<SidebarGroupContent>
+						<SidebarMenu>
+							{projects
+								.filter((p) => !p.isFavorite && p.status === "working")
+								.slice(0, 5)
+								.map((project) => (
+									<SidebarMenuItem key={project.id}>
 										<SidebarMenuButton
 											asChild
-											className="w-full justify-start text-muted-foreground cursor-pointer"
-											onClick={() => setAddProjectOpen(true)}
+											className={`w-full justify-start ${selectedProjectId === project.id ? "bg-accent" : ""}`}
 										>
-											<span className="flex items-center gap-2">
-												<IconPlus className="h-4 w-4" />
-												<span>Add project</span>
-											</span>
+											<a
+												href={`/?project=${project.id}`}
+												className="flex items-center gap-2 w-full"
+											>
+												<div
+													className="h-2 w-2 rounded-full"
+													style={{ backgroundColor: project.color }}
+												/>
+												<span>{project.name}</span>
+											</a>
 										</SidebarMenuButton>
+										<SidebarMenuAction
+											showOnHover
+											onClick={() => setProjectToEdit(project)}
+										>
+											<MoreHorizontal className="h-4 w-4" />
+											<span className="sr-only">Edit Project</span>
+										</SidebarMenuAction>
 									</SidebarMenuItem>
-								</SidebarMenu>
-							</SidebarGroupContent>
-						</CollapsibleContent>
-					</SidebarGroup>
-				</Collapsible>
+								))}
+							<SidebarMenuItem>
+								<SidebarMenuButton
+									asChild
+									className="w-full justify-start text-muted-foreground cursor-pointer"
+									onClick={() => setAddProjectOpen(true)}
+								>
+									<span className="flex items-center gap-2">
+										<IconPlus className="h-4 w-4" />
+										<span>Add project</span>
+									</span>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
+						</SidebarMenu>
+					</SidebarGroupContent>
+				</SidebarGroup>
 			</SidebarContent>
 
 			<SidebarFooter>

@@ -1,34 +1,34 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1770377668300,
-      "tag": "0000_odd_doomsday",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1771567377677,
-      "tag": "0001_aberrant_inertia",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1771859047362,
-      "tag": "0002_oval_glorian",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1772473259662,
-      "tag": "0003_living_gamora",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "7",
+			"when": 1770377668300,
+			"tag": "0000_odd_doomsday",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1771567377677,
+			"tag": "0001_aberrant_inertia",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1771859047362,
+			"tag": "0002_oval_glorian",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1772473259662,
+			"tag": "0003_living_gamora",
+			"breakpoints": true
+		}
+	]
 }
