@@ -93,11 +93,17 @@ COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/.next/server ./.next/server
 
+# Copy database migration assets
+COPY --from=builder --chown=node:node /app/scripts/migrate.mjs ./scripts/migrate.mjs
+COPY --from=builder --chown=node:node /app/drizzle ./drizzle
+COPY --from=dependencies --chown=node:node /app/node_modules/postgres ./node_modules/postgres
+COPY --from=dependencies --chown=node:node /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
+
 # Switch to non-root user for security best practices
 USER node
 
 # Expose port 3000 to allow HTTP traffic
 EXPOSE 3000
 
-# Start Next.js standalone server
-CMD ["node", "server.js"]
+# Run database migrations, then start Next.js standalone server
+CMD ["sh", "-c", "node scripts/migrate.mjs && node server.js"]
