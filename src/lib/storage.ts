@@ -21,9 +21,11 @@ import { type ActionType, type ActorType, logAction } from "./actions";
 
 // ... existing code ...
 
-export async function getTaskCounts(
-	userId: string,
-): Promise<{ inboxCount: number; todayCount: number }> {
+export async function getTaskCounts(userId: string): Promise<{
+	inboxCount: number;
+	todayCount: number;
+	projectCounts: Record<string, number>;
+}> {
 	const inboxResult = await getDb()
 		.select({ value: count() })
 		.from(tasks)
@@ -58,9 +60,29 @@ export async function getTaskCounts(
 			),
 		);
 
+	const projectCountsResult = await getDb()
+		.select({ projectId: tasks.project_id, value: count() })
+		.from(tasks)
+		.where(
+			and(
+				eq(tasks.userId, userId),
+				eq(tasks.completed, false),
+				sql`${tasks.project_id} IS NOT NULL`,
+			),
+		)
+		.groupBy(tasks.project_id);
+
+	const projectCounts: Record<string, number> = {};
+	for (const row of projectCountsResult) {
+		if (row.projectId) {
+			projectCounts[row.projectId] = Number(row.value);
+		}
+	}
+
 	return {
-		inboxCount: inboxResult[0].value,
-		todayCount: todayResult[0].value,
+		inboxCount: Number(inboxResult[0]?.value || 0),
+		todayCount: Number(todayResult[0]?.value || 0),
+		projectCounts,
 	};
 }
 

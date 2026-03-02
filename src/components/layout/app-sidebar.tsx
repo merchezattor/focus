@@ -94,6 +94,7 @@ interface AppSidebarProps {
 		inboxCount: number;
 		todayCount: number;
 		eventsCount?: number;
+		projectCounts?: Record<string, number>;
 	};
 }
 
@@ -240,7 +241,12 @@ export function AppSidebar({
 					<SidebarGroupContent>
 						<SidebarMenu>
 							{projects
-								.filter((p) => !p.isFavorite && p.status === "working")
+								.filter(
+									(p) =>
+										!p.isFavorite &&
+										p.status === "working" &&
+										(counts?.projectCounts?.[p.id] || 0) > 0,
+								)
 								.slice(0, 5)
 								.map((project) => (
 									<SidebarMenuItem key={project.id}>
