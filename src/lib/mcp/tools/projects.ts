@@ -23,6 +23,10 @@ const createProjectInputSchema = z.object({
 		.regex(/^#[0-9A-Fa-f]{6}$/)
 		.describe('Hex color code in #RRGGBB format, e.g. "#E44332".'),
 	description: z.string().optional().describe("Project description."),
+	status: z
+		.enum(["working", "archived", "complete", "frozen"])
+		.optional()
+		.describe('Project status. Defaults to "working".'),
 	isFavorite: z
 		.boolean()
 		.optional()
@@ -60,6 +64,10 @@ const updateProjectInputSchema = z.object({
 		.optional()
 		.describe('New hex color code in #RRGGBB format, e.g. "#10B981".'),
 	description: z.string().optional().describe("New project description."),
+	status: z
+		.enum(["working", "archived", "complete", "frozen"])
+		.optional()
+		.describe("Change project status."),
 	isFavorite: z.boolean().optional().describe("Pin/unpin as favorite."),
 	viewType: z
 		.enum(["list", "board"])
@@ -115,6 +123,7 @@ export const focusCreateProject: MCPToolHandler<
 			name: args.name,
 			color: args.color,
 			description: args.description,
+			status: args.status ?? "working",
 			isFavorite: args.isFavorite ?? false,
 			parentId: args.parentId,
 			parentType: args.parentType,
@@ -164,6 +173,7 @@ export const focusUpdateProject: MCPToolHandler<
 		if (args.name !== undefined) updates.name = args.name;
 		if (args.color !== undefined) updates.color = args.color;
 		if (args.description !== undefined) updates.description = args.description;
+		if (args.status !== undefined) updates.status = args.status;
 		if (args.isFavorite !== undefined) updates.isFavorite = args.isFavorite;
 		if (args.viewType !== undefined) updates.viewType = args.viewType;
 

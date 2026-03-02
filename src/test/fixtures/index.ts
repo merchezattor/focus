@@ -41,6 +41,7 @@ export function createProject(overrides?: Partial<Project>): Project {
 		name: "Test Project",
 		color: "#3b82f6",
 		description: undefined,
+		status: "working",
 		parentId: null,
 		parentType: null,
 		viewType: "list",

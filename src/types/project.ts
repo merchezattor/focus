@@ -5,6 +5,9 @@ export const projectSchema = z.object({
 	name: z.string().min(1).max(100),
 	color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
 	description: z.string().optional(),
+	status: z
+		.enum(["working", "archived", "complete", "frozen"])
+		.default("working"),
 	parentId: z.string().nullable().optional(),
 	parentType: z.enum(["goal", "project"]).nullable().optional(),
 	viewType: z.enum(["list", "board"]).default("list").optional(),

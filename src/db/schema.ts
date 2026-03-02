@@ -59,6 +59,13 @@ export const verification = pgTable("verification", {
 
 export const priorityEnum = pgEnum("priority", ["p1", "p2", "p3", "p4"]);
 
+export const projectStatusEnum = pgEnum("project_status", [
+	"working",
+	"archived",
+	"complete",
+	"frozen",
+]);
+
 export const goals = pgTable("goals", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),
@@ -77,6 +84,7 @@ export const projects = pgTable("projects", {
 	color: text("color").notNull(),
 	description: text("description"),
 	isFavorite: boolean("is_favorite").default(false).notNull(),
+	status: projectStatusEnum("status").default("working").notNull(),
 	parent_id: text("parent_id"), // UUID of parent Goal or Project
 	parent_type: text("parent_type"), // 'goal' | 'project'
 	view_type: text("view_type").default("list").notNull(), // 'list' | 'board'

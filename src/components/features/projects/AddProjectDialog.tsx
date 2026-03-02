@@ -29,6 +29,9 @@ const createProjectSchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	description: z.string().optional(),
 	viewType: z.enum(["list", "board"]).default("list"),
+	status: z
+		.enum(["working", "archived", "complete", "frozen"])
+		.default("working"),
 });
 
 interface AddProjectDialogProps {
@@ -97,6 +100,7 @@ export function AddProjectDialog(
 		colors[Math.floor(Math.random() * colors.length)],
 	);
 	const [viewType, setViewType] = useState("list");
+	const [status, setStatus] = useState("working");
 	const [parentId, setParentId] = useState<string | undefined>(undefined);
 	const [parentType, setParentType] = useState<"goal" | "project" | undefined>(
 		undefined,
@@ -112,6 +116,7 @@ export function AddProjectDialog(
 				setDescription(projectToEdit.description || "");
 				setColor(projectToEdit.color);
 				setViewType(projectToEdit.viewType || "list");
+				setStatus(projectToEdit.status || "working");
 				setParentId(projectToEdit.parentId || undefined);
 				setParentType(projectToEdit.parentType || undefined);
 			} else {
@@ -120,6 +125,7 @@ export function AddProjectDialog(
 				setDescription("");
 				setColor(colors[Math.floor(Math.random() * colors.length)]);
 				setViewType("list");
+				setStatus("working");
 				setParentId(undefined);
 				setParentType(undefined);
 			}
@@ -139,6 +145,7 @@ export function AddProjectDialog(
 			name,
 			description,
 			viewType,
+			status,
 		});
 		if (!result.success) {
 			toast.error(result.error.issues[0].message);
@@ -159,6 +166,7 @@ export function AddProjectDialog(
 						description,
 						color,
 						viewType,
+						status,
 						parentId: parentId || null,
 						parentType: parentType || null,
 					}),
@@ -179,6 +187,7 @@ export function AddProjectDialog(
 						description,
 						color,
 						viewType,
+						status,
 						parentId: parentId || null,
 						parentType: parentType || null,
 						isFavorite: false,
@@ -251,6 +260,21 @@ export function AddProjectDialog(
 							<SelectContent>
 								<SelectItem value="list">List</SelectItem>
 								<SelectItem value="board">Board (Kanban)</SelectItem>
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className="space-y-2">
+						<label className="text-sm font-medium">Status</label>
+						<Select value={status} onValueChange={setStatus}>
+							<SelectTrigger>
+								<SelectValue placeholder="Select status" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="working">Working</SelectItem>
+								<SelectItem value="archived">Archived</SelectItem>
+								<SelectItem value="complete">Complete</SelectItem>
+								<SelectItem value="frozen">Frozen</SelectItem>
 							</SelectContent>
 						</Select>
 					</div>

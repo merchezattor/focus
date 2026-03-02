@@ -75,6 +75,7 @@ export async function readProjects(userId: string): Promise<Project[]> {
 		name: p.name,
 		color: p.color,
 		description: p.description || undefined,
+		status: p.status,
 		isFavorite: p.isFavorite,
 		parentId: p.parent_id || undefined,
 		parentType: (p.parent_type as "goal" | "project") || undefined,
@@ -95,6 +96,7 @@ export async function createProject(
 		name: project.name,
 		color: project.color,
 		description: project.description,
+		status: project.status,
 		isFavorite: project.isFavorite,
 		parent_id: project.parentId,
 		parent_type: project.parentType,
@@ -127,6 +129,7 @@ export async function updateProject(
 	if (updates.description !== undefined)
 		dbUpdates.description = updates.description;
 	if (updates.color !== undefined) dbUpdates.color = updates.color;
+	if (updates.status !== undefined) dbUpdates.status = updates.status;
 	if (updates.isFavorite !== undefined)
 		dbUpdates.isFavorite = updates.isFavorite;
 	if (updates.isFavorite !== undefined)
