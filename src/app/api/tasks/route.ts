@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/api-auth";
-import { createTask, readTasks, updateTask } from "@/lib/storage";
+import { createTask, searchTasks, updateTask } from "@/lib/storage";
 import { type Task, taskSchema } from "@/types";
 
 // Schema for creating a task (id, createdAt, updatedAt are generated server-side)
@@ -52,11 +52,21 @@ export async function GET(request: NextRequest) {
 		const { searchParams } = new URL(request.url);
 		const projectId = searchParams.get("projectId");
 
-		let tasks = await readTasks(user.id);
+		// Parse advanced filters
+		const dueDateStr = searchParams.get("dueDateStr") || undefined;
+		const lastActionTypeParam = searchParams.get("lastActionType");
+		const lastActionType = lastActionTypeParam
+			? (lastActionTypeParam.split(",") as any[])
+			: undefined;
+
+		let tasks = await searchTasks(user.id, {
+			dueDateStr,
+			lastActionType,
+		});
 
 		// Filter by project if specified
 		if (projectId) {
-			tasks = tasks.filter((task) => task.projectId === projectId);
+			tasks = tasks.filter((task: Task) => task.projectId === projectId);
 		}
 
 		return NextResponse.json({ tasks });

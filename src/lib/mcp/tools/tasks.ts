@@ -65,6 +65,24 @@ const listTasksSchema = z.object({
 		.max(100)
 		.optional()
 		.describe("Max results to return. Defaults to 10, max 100."),
+	lastActionType: z
+		.array(
+			z.enum([
+				"create",
+				"update",
+				"delete",
+				"complete",
+				"uncomplete",
+				"reviewed",
+				"groomed",
+				"processed",
+				"pending",
+			]),
+		)
+		.optional()
+		.describe(
+			"Filter tasks by the type of their most recent action (e.g. ['processed', 'reviewed']). Multiple values are OR'd.",
+		),
 });
 
 const createTaskSchema = z.object({
@@ -202,6 +220,24 @@ const listInboxSchema = z.object({
 		.max(100)
 		.optional()
 		.describe("Max results to return. Defaults to 10, max 100."),
+	lastActionType: z
+		.array(
+			z.enum([
+				"create",
+				"update",
+				"delete",
+				"complete",
+				"uncomplete",
+				"reviewed",
+				"groomed",
+				"processed",
+				"pending",
+			]),
+		)
+		.optional()
+		.describe(
+			"Filter tasks by the type of their most recent action (e.g. ['processed', 'reviewed']). Multiple values are OR'd.",
+		),
 });
 
 // --- Tool Implementations ---
@@ -224,6 +260,7 @@ async function listTasks(
 			dueDateStr: parsed.dueDate,
 			planDateStr: parsed.planDate,
 			search: parsed.search,
+			lastActionType: parsed.lastActionType as any,
 			limit: parsed.limit ?? 10,
 		});
 
@@ -263,6 +300,7 @@ async function listInbox(
 			dueDateStr: parsed.dueDate,
 			planDateStr: parsed.planDate,
 			search: parsed.search,
+			lastActionType: parsed.lastActionType as any,
 			limit: parsed.limit ?? 10,
 		});
 

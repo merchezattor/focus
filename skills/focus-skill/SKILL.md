@@ -279,6 +279,28 @@ The Inbox is the default holding area for tasks that haven't been assigned to a 
 }
 ```
 
+### Workflow 7: Filter by Status History / Last Action
+**When user asks**: "Find tasks I recently groomed" or "Show me tasks the agent processed today"
+
+```text
+1. Call focus_list_tasks or focus_list_inbox with lastActionType parameter
+   - lastActionType: ["groomed", "processed", "reviewed"]
+   
+2. Combine with dueDate or priority filters for high-value targets:
+   - lastActionType: ["reviewed"] + dueDate: "today"
+```
+
+**Example**:
+```json
+{
+  "name": "focus_list_tasks",
+  "arguments": {
+    "lastActionType": ["groomed"],
+    "dueDate": "upcoming"
+  }
+}
+```
+
 ---
 
 ## Constraints & Guardrails
@@ -396,6 +418,7 @@ List and search tasks with server-side filtering. **ALWAYS use filters** — nev
 | `dueDate` | `string` | No | `"today"`, `"overdue"`, `"upcoming"`, or ISO date |
 | `planDate` | `string` | No | Same as dueDate |
 | `search` | `string` | No | Case-insensitive text search in title/description |
+| `lastActionType` | `string[]` | No | Filter by most recent action: `["create", "update", "reviewed", "groomed", "processed", "pending"]` |
 | `limit` | `number` | No | Max results to return (1–100, default: 10) |
 
 **Returns**: `{ success: true, data: Task[] }`

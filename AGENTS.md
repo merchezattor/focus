@@ -20,57 +20,83 @@
 
 ## 2. Architecture & "Mental Map"
 
-The project structure follows standard Next.js App Router conventions:
+The project uses a `src/` directory structure (deviation from Next.js default):
 
-- **`/app`**: Routes and Pages.
-  - `(main)`: Authenticated routes (Layout, Map, Sidebar).
-  - `/api`: API Route Handlers (Tasks, Projects, Goals).
-- **`/components`**: React components.
-  - `/ui`: Reusable Shadcn primitives (Button, Dialog, etc.).
-  - `/projects`, `/tasks`, `/goals`: Feature-specific components.
-  - `app-sidebar.tsx`: Main navigation sidebar.
-- **`/db`**: Database configuration.
-  - `schema.ts`: Drizzle schema definitions.
-- **`/lib`**: Utilities.
-  - `storage.ts`: Database access functions (CRUD).
-  - `atoms.ts`: Jotai state atoms.
-  - `auth.ts`: Auth configuration.
-- **`/skills`**: MCP Skills integration (e.g., `focus-skill` for external agent interaction).
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── (main)/            # Authenticated layout group
+│   │   ├── layout.tsx     # Main app layout with sidebar
+│   │   ├── page.tsx       # Dashboard
+│   │   └── ...            # Other routes
+│   ├── (auth)/            # Auth routes (login)
+│   └── api/               # API Route Handlers
+├── components/
+│   ├── ui/                # Shadcn UI primitives
+│   ├── features/          # Domain components (tasks, projects, goals)
+│   └── layout/            # Layout components (sidebar, header)
+├── db/                    # Drizzle ORM
+│   ├── schema.ts          # Database schema
+│   └── index.ts           # DB connection
+├── lib/                   # Utilities
+│   ├── storage.ts         # Database CRUD operations
+│   ├── atoms.ts           # Jotai global state
+│   ├── auth.ts            # Better-Auth config
+│   └── actions.ts         # Activity logging
+├── actions/               # Server Actions (Next.js)
+├── types/                 # TypeScript types
+└── hooks/                 # Custom React hooks
+```
 
-## 3. Development Conventions
+## 3. Where to Look
+
+| Task | Location | Notes |
+|------|----------|-------|
+| Add new page | `src/app/(main)/` | Use authenticated layout |
+| API endpoint | `src/app/api/**/route.ts` | RESTful patterns |
+| Database change | `src/db/schema.ts` | Then run `bun run db:push` |
+| New UI primitive | `src/components/ui/` | Use `bunx shadcn add <component>` |
+| Feature component | `src/components/features/<domain>/` | Domain-organized |
+| Global state | `src/lib/atoms.ts` | Jotai atoms |
+| Server action | `src/actions/` | Colocated by domain |
+
+## 4. Conventions
 
 ### Coding Style
 
-- **Components:** Use `export function ComponentName` (avoid arrow functions for top-level components).
-- **Type Safety:** Strict TypeScript usage. Define types in `@/types` or colocated if specific.
-- **Imports:** Use absolute imports `@/...`.
-- **UI:** Use **Shadcn UI** components from `@/components/ui` whenever possible. Do not invent new UI primitives unless necessary.
-- **State:** Use **Jotai** atoms for global UI state (Sidebar toggles, Dialog open states).
+- **Components:** Use `export function ComponentName` (avoid arrow functions for top-level components)
+- **Type Safety:** Strict TypeScript. Define types in `@/types` or colocated
+- **Imports:** Use absolute imports `@/...`
+- **UI:** Use **Shadcn UI** components from `@/components/ui` whenever possible
+- **State:** Use **Jotai** atoms for global UI state (Sidebar toggles, Dialog open states)
 
 ### Linting & Formatting
 
-- **Linter/Formatter:** Biome.
-- **Rule:** After making ANY changes, you **MUST** run the linter and fixer to ensure code quality and consistency.
-  - Run `bun run check` to verify and auto-fix issues.
-  - If issues persist, fix them manually. **DO NOT** leave linting errors unresolved.
+- **Linter/Formatter:** Biome
+- **Rule:** After making ANY changes, run `bun run check` to verify and auto-fix
+- **DO NOT** leave linting errors unresolved
 
 ### Database & Migrations
 
-- **ORM:** Drizzle ORM with `postgres` driver (TCP-based).
-- **Migration Workflow (2025 Best Practice):**
-  - **Development:** Use `bun run db:push` for rapid prototyping (auto-generates schema changes without creating files).
-  - **Generating Migrations:** Use `bun run db:generate` to create new migration files when preparing for production.
-  - **Production:** Uses formal migrations via `drizzle-kit migrate` with SQL files in `/drizzle` folder.
-  - **Production (Dokploy):** Migrations run automatically at **runtime** when the container starts (via `bun run start`). This is necessary because the database is not accessible during the isolated build phase.
-  - **Migration Script:** Located at `scripts/migrate.mjs` - includes retry logic (3 attempts) for network resilience.
-- **Driver:** Uses standard `postgres` package (not `@neondatabase/serverless`).
+- **ORM:** Drizzle ORM with `postgres` driver (TCP-based)
+- **Development:** Use `bun run db:push` for rapid prototyping
+- **Production:** Uses formal migrations via `drizzle-kit migrate`
+- **Production (Dokploy):** Migrations run automatically at **runtime** when container starts
+- **Migration Script:** `scripts/migrate.mjs` - includes retry logic (3 attempts)
 
 ### Icons
 
-- Prefer **Lucide React** (`lucide-react`) for standard UI icons.
-- Use **Tabler Icons** (`@tabler/icons-react`) sparingly even if Lucide doesn't cover the case.
+- Prefer **Lucide React** (`lucide-react`) for standard UI icons
+- Use **Tabler Icons** (`@tabler/icons-react`) sparingly
 
-## 4. Operational Commands
+## 5. Anti-Patterns (Forbidden)
+
+- **DO NOT** modify `.git` or strictly internal configuration files unless asked
+- **DO NOT** use `fs` or direct file system calls in client components (`"use client"`)
+- **DO NOT** hallucinate routes; verify current route structure in `/app`
+- **DO NOT** do something that you were not asked to do — always prefer to confirm with user
+
+## 6. Commands
 
 | Action | Command |
 | :--- | :--- |
@@ -79,23 +105,22 @@ The project structure follows standard Next.js App Router conventions:
 | **Database Migrate (Prod)** | `bun run db:migrate` |
 | **Lint & Format (Check)** | `bun run check` |
 | **Lint (Verify only)** | `bun run lint` |
+| **Test** | `bun run test` |
 | **Build** | `bun run build` |
 
-## 5. Agent Directives (Do's & Don'ts)
+## 7. Known "Gotchas"
 
-- **DO** check `package.json` before installing new dependencies.
-- **DO** use `task_boundary` to plan complex changes.
-- **DO NOT** modify `.git` or strictly internal configuration files unless asked.
-- **DO NOT** use `fs` or direct file system calls in client components ("use client").
-- **DO NOT** hallucinate routes; verify current route structure in `/app`.
-- **DO NOT** do somethink that you were not asked to do. Always prefer to confirm with user before starting implementation. (VERY IMPORTANT!)
+- **Hydration Mismatches:** If you use random values (IDs, colors) in render, ensure they are stable (use `useEffect`) or suppress hydration warnings on specific elements if using Radix primitives
+- **Sidebar Context:** The sidebar relies on `SidebarProvider`. Ensure any usage of sidebar hooks is within this context
+- **Dialogs:** We use "Global" dialogs (`GlobalAddTaskDialog`, etc.) mounted in the layout to allow triggering from anywhere via Jotai atoms
+- **Activity Log:** Actions (Create/Update/Delete) on Tasks, Projects, and Goals are **automatically logged**
+  - **Agents:** If acting via API with a Bearer token, you are logged as `actorType: "agent"`
+  - **Storage:** If using `lib/storage.ts` directly, ensure you pass the correct `actorType` ("user" or "agent")
 
-## 6. Known "Gotchas"
+---
 
-- **Hydration Mismatches:** If you use random values (IDs, colors) in render, ensure they are stable (use `useEffect`) or suppress hydration warnings on specific elements if using Radix primitives.
-- **Sidebar Context:** The sidebar relies on `SidebarProvider`. Ensure any usage of sidebar hooks is within this context.
-- **Dialogs:** We use "Global" dialogs (`GlobalAddTaskDialog`) mounted in the layout to allow triggering from anywhere via Jotai atoms.
-- **Activity Log:** Actions (Create/Update/Delete) on Tasks, Projects, and Goals are **automatically logged**.
-  - **Agents:** If acting via API with a Bearer token, you are logged as `actorType: "agent"`.
-  - **Storage:** If using `lib/storage.ts` directly, ensure you pass the correct `actorType` ("user" or "agent") if not using the default.
+## Subdirectory Knowledge Bases
 
+- [`src/components/ui/`](src/components/ui/AGENTS.md) — Shadcn UI components
+- [`src/lib/`](src/lib/AGENTS.md) — Utilities, storage, auth, state
+- [`src/components/features/`](src/components/features/AGENTS.md) — Feature components

@@ -11,6 +11,7 @@ import {
 	lt,
 	lte,
 	or,
+	sql,
 } from "drizzle-orm";
 import { getDb } from "@/db";
 import { apiTokens, comments, goals, projects, tasks } from "@/db/schema";
@@ -334,6 +335,7 @@ export interface TaskFilters {
 	dueDateStr?: string; // "today", "overdue", "upcoming", or ISO date
 	planDateStr?: string; // "today", "overdue", "upcoming", or ISO date
 	search?: string; // title/description search
+	lastActionType?: ActionType[]; // action type filter
 	limit?: number; // max results to return
 }
 
@@ -440,6 +442,25 @@ export async function searchTasks(
 				);
 			}
 		}
+	}
+
+	// 8. Last Action Logic
+	if (filters.lastActionType && filters.lastActionType.length > 0) {
+		const actionTypesList = sql.join(
+			filters.lastActionType.map((t) => sql`${t}`),
+			sql`, `,
+		);
+		const latestActionSubquery = sql`
+      SELECT a.entity_id 
+      FROM actions a
+      WHERE a.entity_type = 'task'
+      AND a.created_at = (
+        SELECT MAX(created_at) FROM actions a2 WHERE a2.entity_id = a.entity_id AND a2.entity_type = 'task'
+      )
+      AND a.action_type IN (${actionTypesList})
+    `;
+
+		conditions.push(inArray(tasks.id, latestActionSubquery));
 	}
 
 	// Execute Query
