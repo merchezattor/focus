@@ -184,20 +184,25 @@ export function MapClient({
 				});
 			}
 
-			const allProjects = [...initialProjects];
+			const allProjects = initialProjects.filter(
+				(p) => p.status !== "archived" && p.status !== "complete",
+			);
 
 			for (const project of allProjects) {
 				const nodeId = `proj-${project.id}`;
+				const isWorking = project.status === "working";
 				nodes.push({
 					id: nodeId,
 					data: { label: project.name },
 					style: {
-						background: "#fff",
-						border: "1px solid #777",
+						background: isWorking ? "#fff" : "#f3f4f6",
+						border: "1px solid",
 						borderRadius: "5px",
 						padding: "10px",
 						fontWeight: "bold",
-						borderColor: project.color || "#777",
+						borderColor: isWorking ? project.color || "#777" : "#d1d5db",
+						color: isWorking ? "inherit" : "#6b7280",
+						opacity: isWorking ? 1 : 0.6,
 						width: nodeWidth,
 					},
 				});
@@ -235,7 +240,10 @@ export function MapClient({
 			}
 
 			for (const [projectId, counts] of Object.entries(tasksByProject)) {
-				if (!allProjects.find((p) => p.id === projectId)) continue;
+				const associatedProject = allProjects.find((p) => p.id === projectId);
+				if (!associatedProject || associatedProject.status !== "working") {
+					continue;
+				}
 
 				const nodeId = `summary-${projectId}`;
 				const totalTasks = Object.values(counts).reduce((a, b) => a + b, 0);

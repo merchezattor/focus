@@ -1,4 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const mockDb = {
+	select: vi.fn(),
+	insert: vi.fn(() => ({
+		values: vi.fn(),
+	})),
+	update: vi.fn(),
+	delete: vi.fn(),
+};
+
+vi.mock("@/db", () => ({
+	getDb: vi.fn(() => mockDb),
+}));
 
 describe("actions.ts", () => {
 	describe("logAction", () => {

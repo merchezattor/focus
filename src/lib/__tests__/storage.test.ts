@@ -34,6 +34,7 @@ vi.mock("@/db", () => ({
 
 vi.mock("../actions", () => ({
 	logAction: vi.fn(),
+	getUnreadActionsCount: vi.fn(() => Promise.resolve(0)),
 }));
 
 describe("Storage Layer", () => {
@@ -267,6 +268,7 @@ describe("Storage Layer", () => {
 					id: "project-1",
 					name: "Test Project",
 					color: "#3b82f6",
+					status: "working" as const,
 					description: undefined,
 					isFavorite: false,
 					parentId: undefined,
