@@ -40,6 +40,7 @@ export function createProject(overrides?: Partial<Project>): Project {
 		id,
 		name: "Test Project",
 		color: "#3b82f6",
+		priority: "p4",
 		description: undefined,
 		status: "working",
 		parentId: null,
