@@ -153,10 +153,20 @@ export async function markAllActionsRead(userId: string) {
 }
 
 export async function getUnreadActionsCount(userId: string): Promise<number> {
+	const ownUserAction = and(
+		eq(actions.actorId, userId),
+		eq(actions.actorType, "user"),
+	);
+
 	const result = await getDb()
 		.select({ value: count() })
 		.from(actions)
-		.where(eq(actions.isRead, false));
+		.where(
+			and(
+				eq(actions.isRead, false),
+				ownUserAction ? not(ownUserAction) : undefined,
+			),
+		);
 
 	return result[0]?.value || 0;
 }
