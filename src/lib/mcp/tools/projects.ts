@@ -27,6 +27,10 @@ const createProjectInputSchema = z.object({
 		.enum(["working", "archived", "complete", "frozen"])
 		.optional()
 		.describe('Project status. Defaults to "working".'),
+	priority: z
+		.enum(["p1", "p2", "p3", "p4"])
+		.optional()
+		.describe("Project priority. Defaults to 'p4'."),
 	isFavorite: z
 		.boolean()
 		.optional()
@@ -68,6 +72,10 @@ const updateProjectInputSchema = z.object({
 		.enum(["working", "archived", "complete", "frozen"])
 		.optional()
 		.describe("Change project status."),
+	priority: z
+		.enum(["p1", "p2", "p3", "p4"])
+		.optional()
+		.describe("Change project priority. 'p1', 'p2', 'p3', or 'p4'."),
 	isFavorite: z.boolean().optional().describe("Pin/unpin as favorite."),
 	viewType: z
 		.enum(["list", "board"])
@@ -124,6 +132,7 @@ export const focusCreateProject: MCPToolHandler<
 			color: args.color,
 			description: args.description,
 			status: args.status ?? "working",
+			priority: args.priority ?? "p4",
 			isFavorite: args.isFavorite ?? false,
 			parentId: args.parentId,
 			parentType: args.parentType,
@@ -174,6 +183,7 @@ export const focusUpdateProject: MCPToolHandler<
 		if (args.color !== undefined) updates.color = args.color;
 		if (args.description !== undefined) updates.description = args.description;
 		if (args.status !== undefined) updates.status = args.status;
+		if (args.priority !== undefined) updates.priority = args.priority;
 		if (args.isFavorite !== undefined) updates.isFavorite = args.isFavorite;
 		if (args.viewType !== undefined) updates.viewType = args.viewType;
 

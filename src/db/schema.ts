@@ -82,6 +82,7 @@ export const projects = pgTable("projects", {
 	id: text("id").primaryKey(), // using UUID string
 	name: text("name").notNull(),
 	color: text("color").notNull(),
+	priority: text("priority").notNull().default("p4"),
 	description: text("description"),
 	isFavorite: boolean("is_favorite").default(false).notNull(),
 	status: projectStatusEnum("status").default("working").notNull(),

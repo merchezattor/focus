@@ -91,11 +91,12 @@ export async function readProjects(userId: string): Promise<Project[]> {
 		.select()
 		.from(projects)
 		.where(eq(projects.userId, userId))
-		.orderBy(projects.createdAt);
+		.orderBy(projects.priority, desc(projects.createdAt));
 	return dbProjects.map((p) => ({
 		id: p.id,
 		name: p.name,
 		color: p.color,
+		priority: p.priority as "p1" | "p2" | "p3" | "p4",
 		description: p.description || undefined,
 		status: p.status,
 		isFavorite: p.isFavorite,
@@ -117,6 +118,7 @@ export async function createProject(
 		id: project.id,
 		name: project.name,
 		color: project.color,
+		priority: project.priority,
 		description: project.description,
 		status: project.status,
 		isFavorite: project.isFavorite,
@@ -151,6 +153,7 @@ export async function updateProject(
 	if (updates.description !== undefined)
 		dbUpdates.description = updates.description;
 	if (updates.color !== undefined) dbUpdates.color = updates.color;
+	if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
 	if (updates.status !== undefined) dbUpdates.status = updates.status;
 	if (updates.isFavorite !== undefined)
 		dbUpdates.isFavorite = updates.isFavorite;

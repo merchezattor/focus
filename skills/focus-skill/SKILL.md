@@ -508,6 +508,7 @@ Create a new project.
 |-------|------|----------|-------------|
 | `name` | `string` | **Yes** | 1–100 characters |
 | `color` | `string` | **Yes** | Hex `#RRGGBB` |
+| `priority` | `string` | No | `"p1"`, `"p2"`, `"p3"`, or `"p4"` (default: "p4") |
 | `description` | `string` | No | Project description |
 | `isFavorite` | `boolean` | No | Pin as favorite (default: false) |
 | `parentId` | `string` | No | Parent goal/project UUID |

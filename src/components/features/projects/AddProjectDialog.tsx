@@ -1,5 +1,6 @@
 "use client";
 
+import { Flag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -32,6 +33,7 @@ const createProjectSchema = z.object({
 	status: z
 		.enum(["working", "archived", "complete", "frozen"])
 		.default("working"),
+	priority: z.enum(["p1", "p2", "p3", "p4"]).default("p4"),
 });
 
 interface AddProjectDialogProps {
@@ -55,6 +57,13 @@ const colors = [
 	"#d946ef",
 	"#f43f5e",
 	"#6b7280",
+];
+
+const priorities = [
+	{ value: "p1", label: "Priority 1", color: "#ef4444" },
+	{ value: "p2", label: "Priority 2", color: "#f97316" },
+	{ value: "p3", label: "Priority 3", color: "#3b82f6" },
+	{ value: "p4", label: "Priority 4", color: "#6b7280" },
 ];
 
 /**
@@ -101,6 +110,7 @@ export function AddProjectDialog(
 	);
 	const [viewType, setViewType] = useState("list");
 	const [status, setStatus] = useState("working");
+	const [priority, setPriority] = useState("p4");
 	const [parentId, setParentId] = useState<string | undefined>(undefined);
 	const [parentType, setParentType] = useState<"goal" | "project" | undefined>(
 		undefined,
@@ -117,6 +127,7 @@ export function AddProjectDialog(
 				setColor(projectToEdit.color);
 				setViewType(projectToEdit.viewType || "list");
 				setStatus(projectToEdit.status || "working");
+				setPriority(projectToEdit.priority || "p4");
 				setParentId(projectToEdit.parentId || undefined);
 				setParentType(projectToEdit.parentType || undefined);
 			} else {
@@ -126,6 +137,7 @@ export function AddProjectDialog(
 				setColor(colors[Math.floor(Math.random() * colors.length)]);
 				setViewType("list");
 				setStatus("working");
+				setPriority("p4");
 				setParentId(undefined);
 				setParentType(undefined);
 			}
@@ -146,6 +158,7 @@ export function AddProjectDialog(
 			description,
 			viewType,
 			status,
+			priority,
 		});
 		if (!result.success) {
 			toast.error(result.error.issues[0].message);
@@ -188,6 +201,7 @@ export function AddProjectDialog(
 						color,
 						viewType,
 						status,
+						priority,
 						parentId: parentId || null,
 						parentType: parentType || null,
 						isFavorite: false,
@@ -232,7 +246,7 @@ export function AddProjectDialog(
 					</DialogTitle>
 				</DialogHeader>
 				<form onSubmit={handleSubmit} className="space-y-4">
-					<div className="space-y-2">
+					<div className="space-y-3">
 						<label className="text-sm font-medium">Name</label>
 						<Input
 							placeholder="Project name"
@@ -242,7 +256,7 @@ export function AddProjectDialog(
 						/>
 					</div>
 
-					<div className="space-y-2">
+					<div className="space-y-3">
 						<label className="text-sm font-medium">Description</label>
 						<Textarea
 							placeholder="Description (optional)"
@@ -251,82 +265,108 @@ export function AddProjectDialog(
 						/>
 					</div>
 
-					<div className="space-y-2">
-						<label className="text-sm font-medium">View</label>
-						<Select value={viewType} onValueChange={setViewType}>
-							<SelectTrigger>
-								<SelectValue placeholder="Select view" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="list">List</SelectItem>
-								<SelectItem value="board">Board (Kanban)</SelectItem>
-							</SelectContent>
-						</Select>
+					<div className="grid grid-cols-2 gap-4">
+						<div className="space-y-3">
+							<label className="text-sm font-medium">View</label>
+							<Select value={viewType} onValueChange={setViewType}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select view" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="list">List</SelectItem>
+									<SelectItem value="board">Board (Kanban)</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="space-y-3">
+							<label className="text-sm font-medium">Status</label>
+							<Select value={status} onValueChange={setStatus}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select status" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="working">Working</SelectItem>
+									<SelectItem value="archived">Archived</SelectItem>
+									<SelectItem value="complete">Complete</SelectItem>
+									<SelectItem value="frozen">Frozen</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
 					</div>
 
-					<div className="space-y-2">
-						<label className="text-sm font-medium">Status</label>
-						<Select value={status} onValueChange={setStatus}>
-							<SelectTrigger>
-								<SelectValue placeholder="Select status" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="working">Working</SelectItem>
-								<SelectItem value="archived">Archived</SelectItem>
-								<SelectItem value="complete">Complete</SelectItem>
-								<SelectItem value="frozen">Frozen</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
+					<div className="grid grid-cols-2 gap-4">
+						<div className="space-y-3">
+							<label className="text-sm font-medium">Priority</label>
+							<Select value={priority} onValueChange={setPriority}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select priority" />
+								</SelectTrigger>
+								<SelectContent>
+									{priorities.map((p) => (
+										<SelectItem key={p.value} value={p.value}>
+											<div className="flex items-center gap-2">
+												<Flag
+													className="mr-2 h-4 w-4"
+													style={{ color: p.color }}
+												/>
+												{p.label}
+											</div>
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
 
-					<div className="space-y-2">
-						<label className="text-sm font-medium">Parent</label>
-						<Select
-							value={encodeParentValue(parentId, parentType)}
-							onValueChange={handleParentChange}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder="Select parent (optional)" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="none">No Parent</SelectItem>
-								{props.goals && props.goals.length > 0 && (
-									<SelectGroup>
-										<SelectLabel>Goals</SelectLabel>
-										{props.goals.map((goal) => (
-											<SelectItem key={goal.id} value={`goal:${goal.id}`}>
-												<div className="flex items-center gap-2">
-													<span
-														className="w-2 h-2 rounded-full"
-														style={{ backgroundColor: goal.color }}
-													/>
-													{goal.name}
-												</div>
-											</SelectItem>
-										))}
-									</SelectGroup>
-								)}
-								{availableProjects.length > 0 && (
-									<SelectGroup>
-										<SelectLabel>Projects</SelectLabel>
-										{availableProjects.map((project) => (
-											<SelectItem
-												key={project.id}
-												value={`project:${project.id}`}
-											>
-												<div className="flex items-center gap-2">
-													<span
-														className="w-2 h-2 rounded-full"
-														style={{ backgroundColor: project.color }}
-													/>
-													{project.name}
-												</div>
-											</SelectItem>
-										))}
-									</SelectGroup>
-								)}
-							</SelectContent>
-						</Select>
+						<div className="space-y-3">
+							<label className="text-sm font-medium">Parent</label>
+							<Select
+								value={encodeParentValue(parentId, parentType)}
+								onValueChange={handleParentChange}
+							>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select parent (optional)" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="none">No Parent</SelectItem>
+									{props.goals && props.goals.length > 0 && (
+										<SelectGroup>
+											<SelectLabel>Goals</SelectLabel>
+											{props.goals.map((goal) => (
+												<SelectItem key={goal.id} value={`goal:${goal.id}`}>
+													<div className="flex items-center gap-2">
+														<span
+															className="w-2 h-2 rounded-full"
+															style={{ backgroundColor: goal.color }}
+														/>
+														{goal.name}
+													</div>
+												</SelectItem>
+											))}
+										</SelectGroup>
+									)}
+									{availableProjects.length > 0 && (
+										<SelectGroup>
+											<SelectLabel>Projects</SelectLabel>
+											{availableProjects.map((project) => (
+												<SelectItem
+													key={project.id}
+													value={`project:${project.id}`}
+												>
+													<div className="flex items-center gap-2">
+														<span
+															className="w-2 h-2 rounded-full"
+															style={{ backgroundColor: project.color }}
+														/>
+														{project.name}
+													</div>
+												</SelectItem>
+											))}
+										</SelectGroup>
+									)}
+								</SelectContent>
+							</Select>
+						</div>
 					</div>
 
 					<div className="space-y-2">

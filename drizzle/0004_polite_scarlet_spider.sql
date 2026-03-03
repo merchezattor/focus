@@ -1,0 +1,1 @@
+ALTER TABLE "projects" ADD COLUMN "priority" text DEFAULT 'p4' NOT NULL;

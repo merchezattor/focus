@@ -29,6 +29,13 @@
 			"when": 1772473259662,
 			"tag": "0003_living_gamora",
 			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "7",
+			"when": 1772515450732,
+			"tag": "0004_polite_scarlet_spider",
+			"breakpoints": true
 		}
 	]
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSetAtom } from "jotai";
-import { Pencil } from "lucide-react";
+import { Flag, Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,19 @@ export function ProjectItem({ project }: ProjectItemProps) {
 						<span className={cn("text-sm font-medium line-clamp-1")}>
 							{project.name}
 						</span>
+						{project.priority && project.priority !== "p4" && (
+							<Flag
+								className="h-3 w-3 shrink-0"
+								style={{
+									color:
+										project.priority === "p1"
+											? "#ef4444"
+											: project.priority === "p2"
+												? "#f97316"
+												: "#3b82f6",
+								}}
+							/>
+						)}
 						{project.isFavorite && (
 							<span className="text-yellow-500 text-xs">★</span>
 						)}

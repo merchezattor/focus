@@ -230,10 +230,21 @@ describe("Storage Layer", () => {
 						from: vi.fn(() => ({
 							where: vi.fn(() => [{ value: 3 }]),
 						})),
+					})
+					.mockReturnValueOnce({
+						from: vi.fn(() => ({
+							where: vi.fn(() => ({
+								groupBy: vi.fn(() => [{ projectId: "p1", value: 2 }]),
+							})),
+						})),
 					});
 
 				const result = await getTaskCounts("user-123");
-				expect(result).toEqual({ inboxCount: 5, todayCount: 3 });
+				expect(result).toEqual({
+					inboxCount: 5,
+					todayCount: 3,
+					projectCounts: { p1: 2 },
+				});
 			});
 		});
 	});
@@ -268,6 +279,7 @@ describe("Storage Layer", () => {
 					id: "project-1",
 					name: "Test Project",
 					color: "#3b82f6",
+					priority: "p4" as const,
 					status: "working" as const,
 					description: undefined,
 					isFavorite: false,
