@@ -10,6 +10,7 @@ import {
 	useEdgesState,
 	useNodesState,
 } from "@xyflow/react";
+import { Snowflake } from "lucide-react";
 import { useMemo } from "react";
 
 // Using require() instead of import because @dagrejs/dagre's ESM bundle
@@ -191,18 +192,40 @@ export function MapClient({
 			for (const project of allProjects) {
 				const nodeId = `proj-${project.id}`;
 				const isWorking = project.status === "working";
+				const isFrozen = project.status === "frozen";
+
+				const label = isFrozen ? (
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							gap: "6px",
+						}}
+					>
+						<Snowflake size={16} color="#0ea5e9" />
+						<span>{project.name}</span>
+					</div>
+				) : (
+					project.name
+				);
+
 				nodes.push({
 					id: nodeId,
-					data: { label: project.name },
+					data: { label },
 					style: {
-						background: isWorking ? "#fff" : "#f3f4f6",
+						background: isWorking ? "#fff" : isFrozen ? "#f0f9ff" : "#f3f4f6",
 						border: "1px solid",
 						borderRadius: "5px",
 						padding: "10px",
 						fontWeight: "bold",
-						borderColor: isWorking ? project.color || "#777" : "#d1d5db",
-						color: isWorking ? "inherit" : "#6b7280",
-						opacity: isWorking ? 1 : 0.6,
+						borderColor: isWorking
+							? project.color || "#777"
+							: isFrozen
+								? "#7dd3fc"
+								: "#d1d5db",
+						color: isWorking ? "inherit" : isFrozen ? "#0369a1" : "#6b7280",
+						opacity: isWorking ? 1 : isFrozen ? 0.9 : 0.6,
 						width: nodeWidth,
 					},
 				});
