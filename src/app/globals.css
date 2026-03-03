@@ -65,8 +65,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.64 0.22 27);
-  /* Focus Red #E44332 */
+  --primary: oklch(63.551% 0.12973 247.884);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -111,7 +110,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: #262626;
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.71 0.24 27);
+  --primary: oklch(0.713 0.143 254.6);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -131,7 +130,7 @@
   --sidebar: #262626;
   /* Slightly lighter sidebar ~#262626 */
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.71 0.24 27);
+  --sidebar-primary: oklch(0.713 0.143 254.6);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);

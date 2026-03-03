@@ -527,7 +527,7 @@ export function EditTaskDialog({
 							<Button
 								variant="ghost"
 								size="lg"
-								className="w-full justify-start bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 font-medium h-12 rounded-xl"
+								className="w-full justify-start bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary font-medium h-12 rounded-xl"
 								onClick={async () => {
 									try {
 										const res = await fetch(`/api/tasks/${task.id}`, {
