@@ -121,7 +121,11 @@ function getLayoutedElements(nodes: any[], edges: any[], direction = "TB") {
 	dagreGraph.setDefaultEdgeLabel(() => ({}));
 
 	const isHorizontal = direction === "LR";
-	dagreGraph.setGraph({ rankdir: direction });
+	dagreGraph.setGraph({
+		rankdir: direction,
+		nodesep: 150,
+		ranksep: 100,
+	});
 
 	nodes.forEach((node) => {
 		const width = node.type === "task-summary" ? summaryNodeWidth : nodeWidth;
