@@ -13,18 +13,19 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { Goal } from "@/types";
@@ -198,66 +199,58 @@ export function AddGoalDialog({
 						/>
 					</div>
 
-					<div className="space-y-2">
-						<label className="text-sm font-medium">Due Date</label>
-						<Popover>
-							<PopoverTrigger asChild>
-								<Button
-									variant="outline"
-									className={cn(
-										"w-full pl-3 text-left font-normal",
-										!dueDate && "text-muted-foreground",
-									)}
-								>
-									{dueDate ? (
-										format(dueDate, "PPP")
-									) : (
-										<span>Pick a due date</span>
-									)}
-									<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent className="w-auto p-0" align="start">
-								<Calendar
-									mode="single"
-									selected={dueDate}
-									onSelect={setDueDate}
-									initialFocus
-								/>
-							</PopoverContent>
-						</Popover>
-					</div>
-
-					<div className="space-y-2">
-						<label className="text-sm font-medium">Priority</label>
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="outline"
-									className="w-full justify-start font-normal"
-								>
-									<Flag
-										className="mr-2 h-4 w-4"
-										style={{
-											color: priorities.find((p) => p.value === priority)
-												?.color,
-										}}
-									/>
-									{priorities.find((p) => p.value === priority)?.label}
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
-								{priorities.map((p) => (
-									<DropdownMenuItem
-										key={p.value}
-										onClick={() => setPriority(p.value)}
+					<div className="grid grid-cols-2 gap-4">
+						<div className="space-y-2">
+							<label className="text-sm font-medium">Due Date</label>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										className={cn(
+											"w-full pl-3 text-left font-normal",
+											!dueDate && "text-muted-foreground",
+										)}
 									>
-										<Flag className="mr-2 h-4 w-4" style={{ color: p.color }} />
-										{p.label}
-									</DropdownMenuItem>
-								))}
-							</DropdownMenuContent>
-						</DropdownMenu>
+										{dueDate ? (
+											format(dueDate, "PPP")
+										) : (
+											<span>Pick a due date</span>
+										)}
+										<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-auto p-0" align="start">
+									<Calendar
+										mode="single"
+										selected={dueDate}
+										onSelect={setDueDate}
+										initialFocus
+									/>
+								</PopoverContent>
+							</Popover>
+						</div>
+
+						<div className="space-y-2">
+							<label className="text-sm font-medium">Priority</label>
+							<Select value={priority} onValueChange={setPriority}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select priority" />
+								</SelectTrigger>
+								<SelectContent>
+									{priorities.map((p) => (
+										<SelectItem key={p.value} value={p.value}>
+											<div className="flex items-center gap-2">
+												<Flag
+													className="mr-2 h-4 w-4"
+													style={{ color: p.color }}
+												/>
+												{p.label}
+											</div>
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
 					</div>
 
 					<div className="space-y-2">
