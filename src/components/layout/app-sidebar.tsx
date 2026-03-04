@@ -125,11 +125,11 @@ export function AppSidebar({
 	return (
 		<Sidebar variant={variant}>
 			<SidebarHeader className="flex flex-row items-center justify-between px-2 py-3">
-				<div className="flex items-center gap-2">
+				<div className="flex items-center gap-2 ml-1">
 					<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
 						F
 					</div>
-					<span className="font-semibold">Focus</span>
+					<span className="font-semibold text-lg">Focus</span>
 				</div>
 				<ModeToggle />
 			</SidebarHeader>
