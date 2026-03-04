@@ -180,6 +180,7 @@ export function AddProjectDialog(
 						color,
 						viewType,
 						status,
+						priority,
 						parentId: parentId || null,
 						parentType: parentType || null,
 					}),

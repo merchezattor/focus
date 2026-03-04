@@ -10,8 +10,15 @@ import {
 	useEdgesState,
 	useNodesState,
 } from "@xyflow/react";
-import { Snowflake } from "lucide-react";
+import { Flag, Snowflake } from "lucide-react";
 import { useMemo } from "react";
+
+const PRIORITY_COLORS: Record<string, string> = {
+	p1: "#ef4444", // Red
+	p2: "#f97316", // Orange
+	p3: "#3b82f6", // Blue
+	p4: "#6b7280", // Grey
+};
 
 // Using require() instead of import because @dagrejs/dagre's ESM bundle
 // contains a dynamic require shim that Turbopack rejects.
@@ -87,6 +94,9 @@ const GoalNode = ({ data }: NodeProps) => {
 };
 
 const ProjectNode = ({ data }: NodeProps) => {
+	const priority = data.priority as string | undefined;
+	const isFrozen = data.isFrozen as boolean;
+
 	return (
 		<div
 			className={data.className as string}
@@ -101,7 +111,20 @@ const ProjectNode = ({ data }: NodeProps) => {
 				position={Position.Top}
 				style={{ visibility: "hidden" }}
 			/>
-			{data.label as React.ReactNode}
+
+			<div className="flex items-center justify-between w-full min-w-0">
+				<div className="flex items-center justify-center gap-1.5 flex-1 min-w-0 truncate">
+					{isFrozen && <Snowflake className="w-4 h-4 text-sky-500 shrink-0" />}
+					<span className="truncate">{data.label as React.ReactNode}</span>
+				</div>
+				{priority && priority !== "p4" && (
+					<Flag
+						className="w-4 h-4 shrink-0 ml-1.5"
+						style={{ color: PRIORITY_COLORS[priority] }}
+					/>
+				)}
+			</div>
+
 			<Handle
 				type="source"
 				position={Position.Bottom}
@@ -188,14 +211,7 @@ export function MapClient({
 				const isWorking = project.status === "working";
 				const isFrozen = project.status === "frozen";
 
-				const label = isFrozen ? (
-					<div className="flex items-center justify-center gap-1.5">
-						<Snowflake className="w-4 h-4 text-sky-500" />
-						<span>{project.name}</span>
-					</div>
-				) : (
-					project.name
-				);
+				const label = project.name;
 
 				let className = "border rounded-md p-2.5 font-bold text-center";
 				if (isWorking) {
@@ -215,6 +231,8 @@ export function MapClient({
 					data: {
 						label,
 						className,
+						priority: project.priority,
+						isFrozen,
 						borderColor: isWorking ? project.color || "#777" : undefined,
 						opacity: isWorking ? 1 : isFrozen ? 0.9 : 0.6,
 					},
