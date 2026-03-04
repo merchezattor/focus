@@ -37,19 +37,8 @@ const TaskSummaryNode = ({ data }: NodeProps) => {
 
 	return (
 		<div
-			style={{
-				width: summaryNodeWidth,
-				padding: "10px",
-				borderRadius: "8px",
-				background: "#fff",
-				border: "1px solid #e5e7eb",
-				boxShadow:
-					"0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-				display: "flex",
-				flexDirection: "column",
-				gap: "4px",
-				fontSize: "12px",
-			}}
+			className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-md flex flex-col gap-1 text-xs"
+			style={{ width: summaryNodeWidth }}
 		>
 			<Handle
 				type="target"
@@ -57,63 +46,75 @@ const TaskSummaryNode = ({ data }: NodeProps) => {
 				style={{ visibility: "hidden" }}
 			/>
 
-			<div
-				style={{
-					fontWeight: 600,
-					borderBottom: "1px solid #f3f4f6",
-					paddingBottom: "4px",
-					marginBottom: "4px",
-				}}
-			>
+			<div className="font-semibold border-b border-gray-100 dark:border-zinc-800 pb-1 mb-1 text-zinc-900 dark:text-zinc-100">
 				Tasks Summary
 			</div>
 
-			<div
-				style={{
-					display: "flex",
-					justifyContent: "space-between",
-					color: "#ef4444",
-				}}
-			>
+			<div className="flex justify-between text-red-500 dark:text-red-400">
 				<span>High (P1)</span>
-				<span style={{ fontWeight: "bold" }}>{counts.p1 || 0}</span>
+				<span className="font-bold">{counts.p1 || 0}</span>
 			</div>
-			<div
-				style={{
-					display: "flex",
-					justifyContent: "space-between",
-					color: "#f97316",
-				}}
-			>
+			<div className="flex justify-between text-orange-500 dark:text-orange-400">
 				<span>Medium (P2)</span>
-				<span style={{ fontWeight: "bold" }}>{counts.p2 || 0}</span>
+				<span className="font-bold">{counts.p2 || 0}</span>
 			</div>
-			<div
-				style={{
-					display: "flex",
-					justifyContent: "space-between",
-					color: "#3b82f6",
-				}}
-			>
+			<div className="flex justify-between text-blue-500 dark:text-blue-400">
 				<span>Low (P3)</span>
-				<span style={{ fontWeight: "bold" }}>{counts.p3 || 0}</span>
+				<span className="font-bold">{counts.p3 || 0}</span>
 			</div>
-			<div
-				style={{
-					display: "flex",
-					justifyContent: "space-between",
-					color: "#6b7280",
-				}}
-			>
+			<div className="flex justify-between text-gray-500 dark:text-gray-400">
 				<span>None (P4)</span>
-				<span style={{ fontWeight: "bold" }}>{counts.p4 || 0}</span>
+				<span className="font-bold">{counts.p4 || 0}</span>
 			</div>
+		</div>
+	);
+};
+
+const GoalNode = ({ data }: NodeProps) => {
+	return (
+		<div
+			className="bg-white dark:bg-zinc-900 border-2 rounded-lg p-3 font-bold text-base text-center text-zinc-900 dark:text-zinc-100"
+			style={{ borderColor: data.color as string, width: nodeWidth }}
+		>
+			{data.label as React.ReactNode}
+			<Handle
+				type="source"
+				position={Position.Bottom}
+				style={{ visibility: "hidden" }}
+			/>
+		</div>
+	);
+};
+
+const ProjectNode = ({ data }: NodeProps) => {
+	return (
+		<div
+			className={data.className as string}
+			style={{
+				borderColor: data.borderColor as string | undefined,
+				opacity: data.opacity as number,
+				width: nodeWidth,
+			}}
+		>
+			<Handle
+				type="target"
+				position={Position.Top}
+				style={{ visibility: "hidden" }}
+			/>
+			{data.label as React.ReactNode}
+			<Handle
+				type="source"
+				position={Position.Bottom}
+				style={{ visibility: "hidden" }}
+			/>
 		</div>
 	);
 };
 
 const nodeTypes = {
 	"task-summary": TaskSummaryNode,
+	"goal-node": GoalNode,
+	"project-node": ProjectNode,
 };
 
 function getLayoutedElements(nodes: any[], edges: any[], direction = "TB") {
@@ -173,19 +174,8 @@ export function MapClient({
 			for (const goal of initialGoals) {
 				nodes.push({
 					id: `goal-${goal.id}`,
-					type: "input",
-					data: { label: goal.name },
-					style: {
-						background: "#fff",
-						border: "2px solid",
-						borderColor: goal.color,
-						borderRadius: "8px",
-						padding: "12px",
-						fontWeight: "bold",
-						fontSize: "16px",
-						width: nodeWidth,
-						textAlign: "center",
-					},
+					type: "goal-node",
+					data: { label: goal.name, color: goal.color },
 				});
 			}
 
@@ -199,38 +189,34 @@ export function MapClient({
 				const isFrozen = project.status === "frozen";
 
 				const label = isFrozen ? (
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-							gap: "6px",
-						}}
-					>
-						<Snowflake size={16} color="#0ea5e9" />
+					<div className="flex items-center justify-center gap-1.5">
+						<Snowflake className="w-4 h-4 text-sky-500" />
 						<span>{project.name}</span>
 					</div>
 				) : (
 					project.name
 				);
 
+				let className = "border rounded-md p-2.5 font-bold text-center";
+				if (isWorking) {
+					className +=
+						" bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100";
+				} else if (isFrozen) {
+					className +=
+						" bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-800";
+				} else {
+					className +=
+						" bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-zinc-700";
+				}
+
 				nodes.push({
 					id: nodeId,
-					data: { label },
-					style: {
-						background: isWorking ? "#fff" : isFrozen ? "#f0f9ff" : "#f3f4f6",
-						border: "1px solid",
-						borderRadius: "5px",
-						padding: "10px",
-						fontWeight: "bold",
-						borderColor: isWorking
-							? project.color || "#777"
-							: isFrozen
-								? "#7dd3fc"
-								: "#d1d5db",
-						color: isWorking ? "inherit" : isFrozen ? "#0369a1" : "#6b7280",
+					type: "project-node",
+					data: {
+						label,
+						className,
+						borderColor: isWorking ? project.color || "#777" : undefined,
 						opacity: isWorking ? 1 : isFrozen ? 0.9 : 0.6,
-						width: nodeWidth,
 					},
 				});
 

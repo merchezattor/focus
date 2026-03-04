@@ -148,6 +148,23 @@
   --kanban-board-circle-yellow: oklch(0.8601 0.1730 91.84);
 }
 
+.dark .react-flow__controls {
+  @apply shadow-lg border border-zinc-800 rounded shadow-black/50 overflow-hidden;
+}
+
+.dark .react-flow__controls-button {
+  @apply bg-zinc-900 border-b border-zinc-800 text-zinc-400;
+  fill: currentColor;
+}
+
+.dark .react-flow__controls-button:hover {
+  @apply bg-zinc-800 text-zinc-100;
+}
+
+.dark .react-flow__controls-button:last-child {
+  @apply border-b-0;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
