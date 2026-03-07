@@ -11,7 +11,7 @@ export const projectSchema = z.object({
 		.default("working"),
 	parentId: z.string().nullable().optional(),
 	parentType: z.enum(["goal", "project"]).nullable().optional(),
-	viewType: z.enum(["list", "board"]).default("list").optional(),
+	viewType: z.enum(["list", "board", "roadmap"]).default("list").optional(),
 	isFavorite: z.boolean(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),

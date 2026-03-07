@@ -88,7 +88,7 @@ export const projects = pgTable("projects", {
 	status: projectStatusEnum("status").default("working").notNull(),
 	parent_id: text("parent_id"), // UUID of parent Goal or Project
 	parent_type: text("parent_type"), // 'goal' | 'project'
-	view_type: text("view_type").default("list").notNull(), // 'list' | 'board'
+	view_type: text("view_type").default("list").notNull(), // 'list' | 'board' | 'roadmap'
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	userId: text("user_id").references(() => user.id), // Link project to user (nullable for migration)
@@ -109,6 +109,7 @@ export const tasks = pgTable("tasks", {
 	userId: text("user_id").references(() => user.id), // Link task to user (nullable for migration)
 	created_at: timestamp("created_at").defaultNow().notNull(),
 	updated_at: timestamp("updated_at").defaultNow().notNull(),
+	parent_id: text("parent_id"), // self-referential foreign key
 });
 
 export const comments = pgTable("comments", {

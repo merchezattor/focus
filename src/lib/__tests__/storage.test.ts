@@ -4,6 +4,7 @@ import {
 	createGoal,
 	createProject,
 	createTask,
+	createTasksBulk,
 	deleteComment,
 	deleteGoal,
 	deleteProject,
@@ -114,6 +115,52 @@ describe("Storage Layer", () => {
 
 				await createTask(task, "user-123", "user", undefined);
 				expect(mockDb.insert).toHaveBeenCalled();
+			});
+		});
+
+		describe("createTasksBulk", () => {
+			it("should be a function", () => {
+				expect(typeof createTasksBulk).toBe("function");
+			});
+
+			it("should accept tasksList, userId, actorType, and tokenName", async () => {
+				const task1 = {
+					id: "task-1",
+					title: "Test Task 1",
+					completed: false,
+					status: "todo" as const,
+					priority: "p2" as const,
+					projectId: "proj-1",
+					parentId: null,
+					dueDate: null,
+					planDate: null,
+					comments: [],
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				};
+				const task2 = {
+					id: "task-2",
+					title: "Test Task 2",
+					completed: false,
+					status: "todo" as const,
+					priority: "p2" as const,
+					projectId: "proj-1",
+					parentId: "task-1",
+					dueDate: null,
+					planDate: null,
+					comments: [],
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				};
+
+				mockDb.insert.mockReturnValue({
+					values: vi.fn(() => ({
+						returning: vi.fn(() => []),
+					})),
+				});
+
+				await createTasksBulk([task1, task2], "user-123", "user", undefined);
+				expect(mockDb.insert).toHaveBeenCalled(); // once for tasks
 			});
 		});
 

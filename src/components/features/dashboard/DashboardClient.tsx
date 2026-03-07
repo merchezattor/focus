@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { LinkKanban } from "@/components/features/projects/LinkKanban";
 import { AddTaskDialog } from "@/components/features/tasks/AddTaskDialog";
 import { EditTaskDialog } from "@/components/features/tasks/EditTaskDialog";
+import { RoadmapView } from "@/components/features/tasks/RoadmapView";
 import { TaskList } from "@/components/features/tasks/TaskList";
 import { SiteHeader } from "@/components/layout/site-header";
 import { tasksAtom } from "@/lib/atoms";
@@ -135,6 +136,7 @@ export function DashboardClient({
 
 	const activeProject = projects.find((p) => p.id === selectedProjectId);
 	const isBoardView = activeProject?.viewType === "board";
+	const isRoadmapView = activeProject?.viewType === "roadmap";
 
 	const handleBoardTaskUpdate = async (taskId: string, newStatus: string) => {
 		// Optimistic update
@@ -179,6 +181,14 @@ export function DashboardClient({
 							tasks={filteredTasks}
 							onTaskUpdate={handleBoardTaskUpdate}
 							onTaskClick={handleEdit}
+						/>
+					) : isRoadmapView && selectedProjectId ? (
+						<RoadmapView
+							tasks={filteredTasks}
+							projects={new Map(projects.map((p) => [p.id, p]))}
+							onToggle={handleToggle}
+							onEdit={handleEdit}
+							hideProjectName={true}
 						/>
 					) : (
 						<TaskList

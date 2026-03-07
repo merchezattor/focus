@@ -12,6 +12,7 @@ interface TaskItemProps {
 	projectColor?: string;
 	onToggle: (id: string, completed: boolean) => void;
 	onEdit: (task: Task) => void;
+	compact?: boolean;
 }
 
 export function TaskItem({
@@ -20,11 +21,13 @@ export function TaskItem({
 	projectColor,
 	onToggle,
 	onEdit,
+	compact,
 }: TaskItemProps) {
 	return (
 		<div
 			className={cn(
-				"group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-all text-left",
+				"group flex items-start gap-3 rounded-lg px-3 transition-all text-left",
+				compact ? "py-1" : "py-2.5",
 				"hover:bg-accent/50 cursor-pointer",
 				task.completed && "opacity-50",
 			)}
@@ -72,7 +75,12 @@ export function TaskItem({
 						</div>
 					)}
 				</div>
-				<div className="flex items-center gap-2 mt-0.5 min-h-[1.25rem]">
+				<div
+					className={cn(
+						"flex items-center gap-2 mt-0.5",
+						!compact && "min-h-[1.25rem]",
+					)}
+				>
 					{task.dueDate && (
 						<span className="text-xs text-muted-foreground">
 							Due {format(new Date(task.dueDate), "MMM d")}
@@ -80,7 +88,7 @@ export function TaskItem({
 					)}
 
 					{/* Spacer for height consistency if empty */}
-					{!task.dueDate && (
+					{!compact && !task.dueDate && (
 						<span className="text-xs text-muted-foreground invisible">
 							No date
 						</span>

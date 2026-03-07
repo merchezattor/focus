@@ -6,6 +6,7 @@ import {
 	CheckCircle,
 	Flag,
 	MoreHorizontal,
+	PlusCircle,
 	Send,
 	Trash2,
 } from "lucide-react";
@@ -279,6 +280,29 @@ export function EditTaskDialog({
 		}
 	};
 
+	const handleAddSubtask = async () => {
+		try {
+			const res = await fetch("/api/tasks", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					title: "New Subtask",
+					priority: "p4",
+					completed: false,
+					projectId: task.projectId,
+					parentId: task.id,
+				}),
+			});
+			if (!res.ok) throw new Error("Failed to create subtask");
+
+			onTaskUpdated();
+			router.refresh();
+			setOpen(false); // Close dialog to let user see or edit the newly created subtask
+		} catch (error) {
+			console.error("Failed to create subtask:", error);
+		}
+	};
+
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -524,6 +548,16 @@ export function EditTaskDialog({
 						</div>
 
 						<div className="pt-4 border-t space-y-4">
+							<Button
+								variant="ghost"
+								size="sm"
+								className="w-full justify-start font-medium"
+								onClick={handleAddSubtask}
+							>
+								<PlusCircle className="h-4 w-4 mr-2" />
+								Add subtask
+							</Button>
+
 							<Button
 								variant="ghost"
 								size="lg"

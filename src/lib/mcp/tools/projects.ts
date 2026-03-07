@@ -49,7 +49,7 @@ const createProjectInputSchema = z.object({
 			'Type of the parent entity. Required when parentId is set. "goal" or "project".',
 		),
 	viewType: z
-		.enum(["list", "board"])
+		.enum(["list", "board", "roadmap"])
 		.optional()
 		.describe('Display mode for the project. Defaults to "list".'),
 });
@@ -78,9 +78,9 @@ const updateProjectInputSchema = z.object({
 		.describe("Change project priority. 'p1', 'p2', 'p3', or 'p4'."),
 	isFavorite: z.boolean().optional().describe("Pin/unpin as favorite."),
 	viewType: z
-		.enum(["list", "board"])
+		.enum(["list", "board", "roadmap"])
 		.optional()
-		.describe('Change display mode. "list" or "board".'),
+		.describe('Change display mode. "list", "board", or "roadmap".'),
 });
 
 const deleteProjectInputSchema = z.object({

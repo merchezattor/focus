@@ -301,6 +301,45 @@ The Inbox is the default holding area for tasks that haven't been assigned to a 
 }
 ```
 
+### Workflow 8: Generate a Learning Map / Roadmap
+**When user asks**: "Create a roadmap for React" or "Make a plan to learn System Design"
+
+```text
+1. If the user wants this roadmap in a specific project, create the project first and optionally set `viewType: "roadmap"`.
+2. Break down the topic into major "Milestones" or "Sections".
+3. For each Milestone, create a list of actionable "Subtasks".
+4. Call `focus_create_project_roadmap` with the `projectId` and the entire nested array of milestones and subtasks.
+5. This creates a beautifully grouped Roadmap instantly where Top-level tasks act as section headers, and Subtasks form the timeline.
+```
+
+**Example**:
+```json
+// Step 1: Create the roadmap in one call
+{ 
+  "name": "focus_create_project_roadmap", 
+  "arguments": { 
+    "projectId": "project-uuid",
+    "milestones": [
+      {
+        "title": "Phase 1: Networking Basics",
+        "priority": "p2",
+        "subtasks": [
+          { "title": "Learn OSI Model", "priority": "p2" },
+          { "title": "Understand TCP/IP", "priority": "p2" }
+        ]
+      },
+      {
+        "title": "Phase 2: Advanced Protocols",
+        "priority": "p3",
+        "subtasks": [
+          { "title": "Study BGP", "priority": "p3" }
+        ]
+      }
+    ]
+  } 
+}
+```
+
 ---
 
 ## Constraints & Guardrails
@@ -693,3 +732,40 @@ Create a manual agentic action log entry for a task.
 ```
 
 **Response to user**: "Found 2 pending tasks matching 'report': [list tasks]"
+
+### Example 5: Bulk Create a Learning Map / Project Plan
+**User**: "Create a step-by-step roadmap for learning React"
+
+**Agent**:
+```json
+// Step 1: Get or Create Project ID (assuming user has a 'Learning' project)
+{ "name": "focus_list_projects", "arguments": { "search": "Learning" } }
+
+// Step 2: Use Bulk Roadmap Creation mapped out with sections and subtasks
+{
+  "name": "focus_create_project_roadmap",
+  "arguments": {
+    "projectId": "learning-project-uuid",
+    "sections": [
+      {
+        "title": "Phase 1: React Fundamentals",
+        "priority": "p1",
+        "subtasks": [
+          { "title": "Understand JSX", "priority": "p2" },
+          { "title": "Components and Props", "priority": "p2" }
+        ]
+      },
+      {
+        "title": "Phase 2: State and Hooks",
+        "priority": "p2",
+        "subtasks": [
+          { "title": "useState and useEffect", "priority": "p2" },
+          { "title": "Custom Hooks", "priority": "p3" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Response to user**: "I have created the React Learning Roadmap inside your Learning project! It contains 2 sections and 4 subtasks."

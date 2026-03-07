@@ -308,6 +308,7 @@ export async function getTaskById(id: string): Promise<Task | undefined> {
 		status: (result[0].status as "todo" | "in_progress" | "done") || "todo",
 		priority: result[0].priority as "p1" | "p2" | "p3" | "p4",
 		projectId: result[0].project_id,
+		parentId: result[0].parent_id,
 		dueDate: result[0].due_date,
 		planDate: result[0].plan_date,
 		createdAt: result[0].created_at,
@@ -341,6 +342,7 @@ export async function getTaskByIdForUser(
 		status: (result[0].status as "todo" | "in_progress" | "done") || "todo",
 		priority: result[0].priority as "p1" | "p2" | "p3" | "p4",
 		projectId: result[0].project_id,
+		parentId: result[0].parent_id,
 		dueDate: result[0].due_date,
 		planDate: result[0].plan_date,
 		createdAt: result[0].created_at,
@@ -360,6 +362,7 @@ export interface TaskFilters {
 	status?: ("todo" | "in_progress" | "done")[];
 	completed?: boolean;
 	projectId?: string;
+	parentId?: string | null; // UUID or null for top-level
 	dueDateStr?: string; // "today", "overdue", "upcoming", or ISO date
 	planDateStr?: string; // "today", "overdue", "upcoming", or ISO date
 	search?: string; // title/description search
@@ -397,7 +400,16 @@ export async function searchTasks(
 		}
 	}
 
-	// 5. Text Search (title or description)
+	// 5. Parent Task
+	if (filters.parentId !== undefined) {
+		if (filters.parentId === null) {
+			conditions.push(isNull(tasks.parent_id));
+		} else {
+			conditions.push(eq(tasks.parent_id, filters.parentId));
+		}
+	}
+
+	// 6. Text Search (title or description)
 	if (filters.search) {
 		const searchLower = `%${filters.search.toLowerCase()}%`;
 		conditions.push(
@@ -530,6 +542,7 @@ export async function searchTasks(
 		completed: t.completed,
 		status: (t.status as "todo" | "in_progress" | "done") || "todo",
 		projectId: t.project_id,
+		parentId: t.parent_id,
 		priority: t.priority as "p1" | "p2" | "p3" | "p4",
 		dueDate: t.due_date,
 		planDate: t.plan_date,
@@ -576,6 +589,7 @@ export async function readTasks(userId: string): Promise<Task[]> {
 		completed: t.completed,
 		status: (t.status as "todo" | "in_progress" | "done") || "todo",
 		projectId: t.project_id,
+		parentId: t.parent_id,
 		priority: t.priority as "p1" | "p2" | "p3" | "p4",
 		dueDate: t.due_date,
 		planDate: t.plan_date,
@@ -601,6 +615,7 @@ export async function createTask(
 			status: task.status,
 			priority: task.priority,
 			project_id: task.projectId || null,
+			parent_id: task.parentId || null,
 			due_date: task.dueDate,
 			plan_date: task.planDate,
 			created_at: task.createdAt,
@@ -625,6 +640,67 @@ export async function createTask(
 	});
 }
 
+export async function createTasksBulk(
+	tasksList: Task[],
+	userId: string,
+	actorType: ActorType = "user",
+	tokenName?: string,
+): Promise<void> {
+	if (tasksList.length === 0) return;
+
+	const values = tasksList.map((task) => ({
+		id: task.id,
+		content: task.title,
+		description: task.description || null,
+		completed: task.completed,
+		status: task.status,
+		priority: task.priority,
+		project_id: task.projectId || null,
+		parent_id: task.parentId || null,
+		due_date: task.dueDate,
+		plan_date: task.planDate,
+		created_at: task.createdAt,
+		updated_at: task.updatedAt,
+		userId: userId,
+	}));
+
+	await getDb().insert(tasks).values(values);
+
+	// Insert all comments if any
+	const allComments = tasksList.flatMap((task) =>
+		(task.comments || []).map((c) => ({
+			id: c.id,
+			content: c.content,
+			posted_at: c.postedAt,
+			task_id: task.id,
+		})),
+	);
+
+	if (allComments.length > 0) {
+		await getDb().insert(comments).values(allComments);
+	}
+
+	// Bulk log action (just one combined log for the operation to prevent spam, or one for the project)
+	const projectIds = [
+		...new Set(tasksList.map((t) => t.projectId).filter(Boolean)),
+	];
+	const targetEntityId = projectIds[0] || tasksList[0].id;
+	const targetEntityType = projectIds.length > 0 ? "project" : "task";
+
+	logAction({
+		entityId: targetEntityId,
+		entityType: targetEntityType,
+		actorId: userId,
+		actorType: actorType,
+		actionType: "update",
+		changes: { tasks: `Bulk created ${tasksList.length} tasks` },
+		metadata: {
+			tokenName,
+			message: `Created roadmap with ${tasksList.length} tasks`,
+		},
+	});
+}
+
 export async function updateTask(
 	id: string,
 	updates: Partial<Task>,
@@ -641,6 +717,7 @@ export async function updateTask(
 	if (updates.status !== undefined) dbUpdates.status = updates.status;
 	if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
 	if (updates.projectId !== undefined) dbUpdates.project_id = updates.projectId;
+	if (updates.parentId !== undefined) dbUpdates.parent_id = updates.parentId;
 	if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
 	if (updates.planDate !== undefined) dbUpdates.plan_date = updates.planDate;
 	if (updates.updatedAt !== undefined) dbUpdates.updated_at = updates.updatedAt;

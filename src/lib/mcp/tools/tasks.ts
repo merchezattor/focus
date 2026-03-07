@@ -5,6 +5,7 @@ import type { MCPServerContext } from "@/lib/mcp/types";
 import {
 	createComment,
 	createTask,
+	createTasksBulk,
 	deleteTask,
 	getTaskById,
 	getTaskByIdForUser,
@@ -39,6 +40,14 @@ const listTasksSchema = z.object({
 		.optional()
 		.describe(
 			"Filter to a specific project by UUID. Use focus_list_inbox instead for tasks without a project.",
+		),
+	parentId: z
+		.string()
+		.uuid()
+		.nullable()
+		.optional()
+		.describe(
+			"Filter to subtasks of a specific parent task (by UUID), or pass null to only get top-level tasks.",
 		),
 	dueDate: z
 		.union([z.enum(["today", "overdue", "upcoming"]), z.string()])
@@ -100,6 +109,11 @@ const createTaskSchema = z.object({
 		.uuid()
 		.optional()
 		.describe("UUID of the project to assign to. Omit to create in inbox."),
+	parentId: z
+		.string()
+		.uuid()
+		.optional()
+		.describe("UUID of the parent task, to create this as a subtask."),
 	dueDate: z
 		.string()
 		.datetime()
@@ -151,6 +165,14 @@ const updateTaskSchema = z.object({
 		.describe(
 			"Move to a project by UUID, or pass null to move to inbox (remove from project).",
 		),
+	parentId: z
+		.string()
+		.uuid()
+		.nullable()
+		.optional()
+		.describe(
+			"Move to a parent task by UUID, or pass null to become a top-level task.",
+		),
 	dueDate: z
 		.string()
 		.datetime()
@@ -167,6 +189,48 @@ const updateTaskSchema = z.object({
 		.describe(
 			"Set plan date in ISO 8601 UTC, or pass null to clear the plan date.",
 		),
+});
+
+const createProjectRoadmapSchema = z.object({
+	projectId: z
+		.string()
+		.uuid()
+		.describe(
+			"UUID of the project where this roadmap belongs. Omit only if strictly intended for Inbox, though Roadmaps typically belong in projects.",
+		),
+	sections: z
+		.array(
+			z.object({
+				title: z.string().min(1).max(200).describe("Section title"),
+				description: z
+					.string()
+					.max(1000)
+					.optional()
+					.describe("Optional description"),
+				priority: z
+					.enum(["p1", "p2", "p3", "p4"])
+					.optional()
+					.describe("Defaults to p4"),
+				subtasks: z
+					.array(
+						z.object({
+							title: z.string().min(1).max(200).describe("Subtask title"),
+							description: z
+								.string()
+								.max(1000)
+								.optional()
+								.describe("Optional description"),
+							priority: z
+								.enum(["p1", "p2", "p3", "p4"])
+								.optional()
+								.describe("Defaults to p4"),
+						}),
+					)
+					.describe("Subtasks belonging to this section"),
+			}),
+		)
+		.min(1)
+		.describe("List of sections"),
 });
 
 const deleteTaskSchema = z.object({
@@ -257,6 +321,7 @@ async function listTasks(
 			status: parsed.status,
 			completed: parsed.completed,
 			projectId: parsed.projectId,
+			parentId: parsed.parentId,
 			dueDateStr: parsed.dueDate,
 			planDateStr: parsed.planDate,
 			search: parsed.search,
@@ -344,6 +409,7 @@ async function createTaskTool(
 			status: parsed.status ?? "todo",
 			priority: parsed.priority,
 			projectId: parsed.projectId ?? null,
+			parentId: parsed.parentId ?? null,
 			dueDate: parsed.dueDate ? new Date(parsed.dueDate) : null,
 			planDate: parsed.planDate ? new Date(parsed.planDate) : null,
 			createdAt: now,
@@ -357,6 +423,89 @@ async function createTaskTool(
 		return {
 			content: [
 				{ type: "text", text: JSON.stringify({ success: true, data: task }) },
+			],
+		};
+	} catch (error) {
+		return {
+			content: [
+				{
+					type: "text",
+					text: error instanceof Error ? error.message : "Unknown error",
+				},
+			],
+			isError: true,
+		};
+	}
+}
+
+async function createProjectRoadmapTool(
+	args: unknown,
+	context: MCPServerContext,
+): Promise<{
+	content: Array<{ type: string; text: string }>;
+	isError?: boolean;
+}> {
+	try {
+		const parsed = createProjectRoadmapSchema.parse(args);
+		const tasksToInsert: Task[] = [];
+		const now = new Date();
+
+		for (const section of parsed.sections) {
+			const sectionId = randomUUID();
+
+			// 1. Create the section task
+			tasksToInsert.push({
+				id: sectionId,
+				title: section.title,
+				description: section.description,
+				completed: false,
+				status: "todo",
+				priority: section.priority ?? "p4",
+				projectId: parsed.projectId,
+				parentId: null, // Top-level
+				dueDate: null,
+				planDate: null,
+				createdAt: now,
+				updatedAt: now,
+				comments: [],
+			});
+
+			// 2. Create its subtasks
+			for (const sub of section.subtasks) {
+				tasksToInsert.push({
+					id: randomUUID(),
+					title: sub.title,
+					description: sub.description,
+					completed: false,
+					status: "todo",
+					priority: sub.priority ?? "p4",
+					projectId: parsed.projectId,
+					parentId: sectionId, // Link to section
+					dueDate: null,
+					planDate: null,
+					createdAt: now,
+					updatedAt: now,
+					comments: [],
+				});
+			}
+		}
+
+		await createTasksBulk(
+			tasksToInsert,
+			context.user.id,
+			"agent",
+			context.tokenName,
+		);
+
+		return {
+			content: [
+				{
+					type: "text",
+					text: JSON.stringify({
+						success: true,
+						message: `Successfully created ${tasksToInsert.length} roadmap items (sections and subtasks).`,
+					}),
+				},
 			],
 		};
 	} catch (error) {
@@ -391,6 +540,7 @@ async function updateTaskTool(
 		if (parsed.completed !== undefined) updates.completed = parsed.completed;
 		if (parsed.status !== undefined) updates.status = parsed.status;
 		if (parsed.projectId !== undefined) updates.projectId = parsed.projectId;
+		if (parsed.parentId !== undefined) updates.parentId = parsed.parentId;
 		if (parsed.dueDate !== undefined)
 			updates.dueDate = parsed.dueDate ? new Date(parsed.dueDate) : null;
 		if (parsed.planDate !== undefined)
@@ -598,6 +748,13 @@ export const taskTools = [
 			"Create a new task with title and priority. Returns: Complete Task with generated id, status defaults to 'todo'. Use focus_list_projects first to get valid projectId.",
 		schema: createTaskSchema,
 		handler: createTaskTool,
+	},
+	{
+		name: "focus_create_project_roadmap",
+		description:
+			"Bulk create a complete roadmap structure (Sections + Subtasks) in a single operation. Use this instead of focus_create_task in a loop when planning a project or learning path.",
+		schema: createProjectRoadmapSchema,
+		handler: createProjectRoadmapTool,
 	},
 	{
 		name: "focus_update_task",

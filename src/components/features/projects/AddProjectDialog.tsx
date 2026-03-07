@@ -29,7 +29,7 @@ import type { Goal, Project } from "@/types";
 const createProjectSchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	description: z.string().optional(),
-	viewType: z.enum(["list", "board"]).default("list"),
+	viewType: z.enum(["list", "board", "roadmap"]).default("list"),
 	status: z
 		.enum(["working", "archived", "complete", "frozen"])
 		.default("working"),
@@ -276,6 +276,7 @@ export function AddProjectDialog(
 								<SelectContent>
 									<SelectItem value="list">List</SelectItem>
 									<SelectItem value="board">Board (Kanban)</SelectItem>
+									<SelectItem value="roadmap">Roadmap</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
