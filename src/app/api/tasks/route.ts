@@ -58,10 +58,13 @@ export async function GET(request: NextRequest) {
 		const lastActionType = lastActionTypeParam
 			? (lastActionTypeParam.split(",") as any[])
 			: undefined;
+		const statusParam = searchParams.get("status");
+		const status = statusParam ? (statusParam.split(",") as any[]) : undefined;
 
 		let tasks = await searchTasks(user.id, {
 			dueDateStr,
 			lastActionType,
+			status,
 		});
 
 		// Filter by project if specified

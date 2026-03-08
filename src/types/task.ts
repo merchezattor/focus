@@ -20,7 +20,7 @@ export const taskSchema = z.object({
 	planDate: z.date().nullable().optional(),
 	priority: z.enum(["p1", "p2", "p3", "p4"]),
 	status: z
-		.enum(["todo", "in_progress", "review", "done"])
+		.enum(["todo", "in_progress", "review", "done", "cold"])
 		.optional()
 		.default("todo"),
 	comments: z.array(commentSchema).optional(),

@@ -104,8 +104,22 @@ function TableCaption({
 	);
 }
 
+function TableComponent({
+	className,
+	...props
+}: React.ComponentProps<"table">) {
+	return (
+		<table
+			data-slot="table"
+			className={cn("w-full caption-bottom text-sm", className)}
+			{...props}
+		/>
+	);
+}
+
 export {
 	Table,
+	TableComponent,
 	TableHeader,
 	TableBody,
 	TableFooter,

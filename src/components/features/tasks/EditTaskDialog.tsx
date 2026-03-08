@@ -2,6 +2,7 @@
 
 import { format } from "date-fns";
 import {
+	Archive,
 	Calendar as CalendarIcon,
 	CheckCircle,
 	Flag,
@@ -95,6 +96,7 @@ export function EditTaskDialog({
 		task.planDate ? new Date(task.planDate) : undefined,
 	);
 	const [priority, setPriority] = useState<string>(task.priority || "p4");
+	const [status, setStatus] = useState<string>(task.status || "todo");
 	const [comment, setComment] = useState("");
 	const [showAllComments, setShowAllComments] = useState(false);
 
@@ -112,6 +114,7 @@ export function EditTaskDialog({
 			setDueDate(task.dueDate ? new Date(task.dueDate) : undefined);
 			setPlanDate(task.planDate ? new Date(task.planDate) : undefined);
 			setPriority(task.priority || "p4");
+			setStatus(task.status || "todo");
 			setComment("");
 			setOptimisticComments(task.comments || []);
 			setShowAllComments(false);
@@ -126,6 +129,7 @@ export function EditTaskDialog({
 			dueDate?: string | null;
 			planDate?: string | null;
 			priority?: string;
+			status?: string;
 		} = {},
 	) => {
 		try {
@@ -156,6 +160,10 @@ export function EditTaskDialog({
 				updates.priority !== task.priority
 			) {
 				payload.priority = updates.priority;
+				hasChanges = true;
+			}
+			if (updates.status !== undefined && updates.status !== task.status) {
+				payload.status = updates.status;
 				hasChanges = true;
 			}
 
@@ -529,6 +537,30 @@ export function EditTaskDialog({
 
 							<div className="space-y-1">
 								<label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+									Status
+								</label>
+								<Select
+									value={status}
+									onValueChange={(val) => {
+										setStatus(val);
+										saveChanges({ status: val });
+									}}
+								>
+									<SelectTrigger className="border-none shadow-none hover:bg-muted/50 p-2 h-auto">
+										<SelectValue placeholder="Status" />
+									</SelectTrigger>
+									<SelectContent className="z-[100]" position="popper">
+										<SelectItem value="todo">Todo</SelectItem>
+										<SelectItem value="in_progress">In Progress</SelectItem>
+										<SelectItem value="review">Review</SelectItem>
+										<SelectItem value="cold">Cold (Backlog)</SelectItem>
+										<SelectItem value="done">Done</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+
+							<div className="space-y-1">
+								<label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
 									Priority
 								</label>
 								<Select
@@ -567,68 +599,102 @@ export function EditTaskDialog({
 							</div>
 						</div>
 
-						<div className="pt-4 border-t space-y-4">
-							<Button
-								variant="ghost"
-								size="sm"
-								className="w-full justify-start font-medium"
-								onClick={handleAddSubtask}
-							>
-								<PlusCircle className="h-4 w-4 mr-2" />
-								Add subtask
-							</Button>
+						<div className="pt-4 border-t">
+							<div className="flex items-center w-full rounded-md border shadow-sm">
+								<Button
+									variant="ghost"
+									size="sm"
+									className="flex-1 rounded-none rounded-l-md border-r font-medium text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-500 dark:hover:text-green-400 dark:hover:bg-green-500/10 h-8"
+									onClick={async () => {
+										try {
+											const res = await fetch(`/api/tasks/${task.id}`, {
+												method: "PATCH",
+												headers: { "Content-Type": "application/json" },
+												body: JSON.stringify({ status: "done" }),
+											});
+											if (!res.ok) throw new Error("Failed to complete task");
+											setOpen(false);
+											onTaskUpdated();
+											router.refresh();
+										} catch (error) {
+											console.error("Failed to complete task:", error);
+										}
+									}}
+								>
+									<CheckCircle className="h-4 w-4 mr-2" />
+									Complete
+								</Button>
 
-							<Button
-								variant="ghost"
-								size="lg"
-								className="w-full justify-start bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary font-medium h-12 rounded-xl"
-								onClick={async () => {
-									try {
-										const res = await fetch(`/api/tasks/${task.id}`, {
-											method: "PATCH",
-											headers: { "Content-Type": "application/json" },
-											body: JSON.stringify({ status: "done" }),
-										});
-										if (!res.ok) throw new Error("Failed to complete task");
-										setOpen(false);
-										onTaskUpdated();
-										router.refresh();
-									} catch (error) {
-										console.error("Failed to complete task:", error);
-									}
-								}}
-							>
-								<CheckCircle className="h-5 w-5 mr-3" />
-								Complete
-							</Button>
+								<Button
+									variant="ghost"
+									size="sm"
+									className="rounded-none border-r font-medium text-muted-foreground hover:text-foreground hover:bg-muted h-8"
+									onClick={async () => {
+										try {
+											const res = await fetch(`/api/tasks/${task.id}`, {
+												method: "PATCH",
+												headers: { "Content-Type": "application/json" },
+												body: JSON.stringify({ status: "cold" }),
+											});
+											if (!res.ok) throw new Error("Failed to send to backlog");
+											setOpen(false);
+											onTaskUpdated();
+											router.refresh();
+										} catch (error) {
+											console.error("Failed to send to backlog:", error);
+										}
+									}}
+								>
+									<Archive className="h-4 w-4 mr-2" />
+									Backlog
+								</Button>
 
-							<AlertDialog>
-								<AlertDialogTrigger asChild>
-									<Button
-										variant="ghost"
-										size="sm"
-										className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-									>
-										<Trash2 className="h-4 w-4 mr-2" />
-										Delete task
-									</Button>
-								</AlertDialogTrigger>
-								<AlertDialogContent>
-									<AlertDialogHeader>
-										<AlertDialogTitle>Delete Task</AlertDialogTitle>
-										<AlertDialogDescription>
-											Are you sure you want to delete this task? This action
-											cannot be undone.
-										</AlertDialogDescription>
-									</AlertDialogHeader>
-									<AlertDialogFooter>
-										<AlertDialogCancel>Cancel</AlertDialogCancel>
-										<AlertDialogAction onClick={handleDelete}>
-											Delete
-										</AlertDialogAction>
-									</AlertDialogFooter>
-								</AlertDialogContent>
-							</AlertDialog>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="ghost"
+											size="sm"
+											className="rounded-none rounded-r-md px-2 text-muted-foreground hover:text-foreground hover:bg-muted h-8"
+											aria-label="More options"
+										>
+											<MoreHorizontal className="h-4 w-4" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent align="end" className="w-48">
+										<DropdownMenuItem onClick={handleAddSubtask}>
+											<PlusCircle className="mr-2 h-4 w-4" />
+											Add subtask
+										</DropdownMenuItem>
+
+										<AlertDialog>
+											<AlertDialogTrigger asChild>
+												<DropdownMenuItem
+													onSelect={(e) => e.preventDefault()}
+													className="text-destructive focus:text-destructive w-full cursor-pointer"
+												>
+													<Trash2 className="mr-2 h-4 w-4 text-destructive" />
+													Delete task
+												</DropdownMenuItem>
+											</AlertDialogTrigger>
+											<AlertDialogContent>
+												<AlertDialogHeader>
+													<AlertDialogTitle>Delete Task</AlertDialogTitle>
+													<AlertDialogDescription>
+														Are you sure you want to delete this task? This
+														action cannot be undone.
+													</AlertDialogDescription>
+												</AlertDialogHeader>
+												<AlertDialogFooter>
+													<AlertDialogCancel>Cancel</AlertDialogCancel>
+													<AlertDialogAction onClick={handleDelete}>
+														Delete
+													</AlertDialogAction>
+												</AlertDialogFooter>
+											</AlertDialogContent>
+										</AlertDialog>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</div>
 						</div>
 					</div>
 				</div>

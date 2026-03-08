@@ -25,7 +25,7 @@ const listTasksSchema = z.object({
 			"Filter by priority. p1=High, p2=Medium, p3=Low, p4=None. Multiple values are OR'd.",
 		),
 	status: z
-		.array(z.enum(["todo", "in_progress", "done"]))
+		.array(z.enum(["todo", "in_progress", "done", "cold"]))
 		.optional()
 		.describe(
 			'Filter by status. NOTE: "review" is NOT valid here (only in create/update). Multiple values are OR\'d.',
@@ -124,7 +124,7 @@ const createTaskSchema = z.object({
 			"When you plan to work on this task. ISO 8601 UTC format, e.g. 2026-02-19T09:00:00Z.",
 		),
 	status: z
-		.enum(["todo", "in_progress", "review", "done"])
+		.enum(["todo", "in_progress", "review", "done", "cold"])
 		.optional()
 		.describe('Task status. Defaults to "todo" if omitted.'),
 });
@@ -148,7 +148,7 @@ const updateTaskSchema = z.object({
 		.describe("New description. Max 1000 characters."),
 
 	status: z
-		.enum(["todo", "in_progress", "review", "done"])
+		.enum(["todo", "in_progress", "review", "done", "cold"])
 		.optional()
 		.describe("New status."),
 	projectId: z
@@ -244,7 +244,7 @@ const listInboxSchema = z.object({
 			"Filter by priority. p1=High, p2=Medium, p3=Low, p4=None. Multiple values are OR'd.",
 		),
 	status: z
-		.array(z.enum(["todo", "in_progress", "done"]))
+		.array(z.enum(["todo", "in_progress", "done", "cold"]))
 		.optional()
 		.describe(
 			'Filter by status. NOTE: "review" is NOT valid here (only in create/update). Multiple values are OR\'d.',

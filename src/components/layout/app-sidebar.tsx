@@ -10,7 +10,7 @@ import {
 	IconSearch,
 } from "@tabler/icons-react";
 import { useSetAtom } from "jotai";
-import { Activity, Flag, MoreHorizontal } from "lucide-react";
+import { Activity, Archive, Flag, MoreHorizontal } from "lucide-react";
 import { isAddGoalOpenAtom } from "@/components/features/goals/GlobalAddGoalDialog";
 import { ModeToggle } from "@/components/layout/mode-toggle";
 import { NavUser } from "@/components/layout/nav-user";
@@ -54,6 +54,11 @@ const data = {
 			url: "/upcoming",
 			icon: IconCalendar,
 			count: 0,
+		},
+		{
+			title: "Backlog",
+			url: "/backlog",
+			icon: Archive,
 		},
 		{
 			title: "Map",

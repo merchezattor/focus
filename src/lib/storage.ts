@@ -11,6 +11,7 @@ import {
 	lt,
 	lte,
 	ne,
+	notInArray,
 	or,
 	sql,
 } from "drizzle-orm";
@@ -33,7 +34,7 @@ export async function getTaskCounts(userId: string): Promise<{
 		.where(
 			and(
 				eq(tasks.userId, userId),
-				ne(tasks.status, "done"),
+				notInArray(tasks.status, ["done", "cold"]),
 				isNull(tasks.project_id),
 			),
 		);
@@ -50,7 +51,7 @@ export async function getTaskCounts(userId: string): Promise<{
 		.where(
 			and(
 				eq(tasks.userId, userId),
-				ne(tasks.status, "done"),
+				notInArray(tasks.status, ["done", "cold"]),
 				gte(tasks.due_date, todayStart),
 				lte(tasks.due_date, todayEnd),
 			),
@@ -62,7 +63,7 @@ export async function getTaskCounts(userId: string): Promise<{
 		.where(
 			and(
 				eq(tasks.userId, userId),
-				ne(tasks.status, "done"),
+				notInArray(tasks.status, ["done", "cold"]),
 				sql`${tasks.project_id} IS NOT NULL`,
 			),
 		)
@@ -358,7 +359,7 @@ export async function getTaskByIdForUser(
 
 export interface TaskFilters {
 	priority?: ("p1" | "p2" | "p3" | "p4")[];
-	status?: ("todo" | "in_progress" | "done")[];
+	status?: ("todo" | "in_progress" | "review" | "done" | "cold")[];
 	projectId?: string;
 	parentId?: string | null; // UUID or null for top-level
 	dueDateStr?: string; // "today", "overdue", "upcoming", or ISO date
@@ -388,6 +389,9 @@ export async function searchTasks(
 		if (!filters.status.includes("done")) {
 			conditions.push(ne(tasks.status, "done"));
 		}
+	} else {
+		// Default behavior: exclude 'cold' tasks from generic searches
+		conditions.push(ne(tasks.status, "cold"));
 	}
 
 	// 3. Project
@@ -557,10 +561,56 @@ export async function readTasks(userId: string): Promise<Task[]> {
 	const dbTasks = await getDb()
 		.select()
 		.from(tasks)
-		.where(eq(tasks.userId, userId))
+		.where(and(eq(tasks.userId, userId), ne(tasks.status, "cold")))
 		.orderBy(tasks.priority, desc(tasks.created_at));
 
 	// Fetch comments scoped to the user's tasks
+	const taskIds = dbTasks.map((t) => t.id);
+	const dbComments =
+		taskIds.length > 0
+			? await getDb()
+					.select()
+					.from(comments)
+					.where(inArray(comments.task_id, taskIds))
+			: [];
+
+	const commentsByTaskId: Record<string, Comment[]> = {};
+	for (const c of dbComments) {
+		if (!commentsByTaskId[c.task_id]) {
+			commentsByTaskId[c.task_id] = [];
+		}
+		commentsByTaskId[c.task_id].push({
+			id: c.id,
+			content: c.content,
+			postedAt: c.posted_at,
+			userId: c.userId || undefined,
+			actorType: c.actorType || undefined,
+		});
+	}
+
+	return dbTasks.map((t) => ({
+		id: t.id,
+		title: t.title,
+		description: t.description || undefined,
+		status: t.status || "todo",
+		projectId: t.project_id,
+		parentId: t.parent_id,
+		priority: t.priority,
+		dueDate: t.due_date,
+		planDate: t.plan_date,
+		createdAt: t.created_at,
+		updatedAt: t.updated_at,
+		comments: commentsByTaskId[t.id] || [],
+	}));
+}
+
+export async function getBacklogTasks(userId: string): Promise<Task[]> {
+	const dbTasks = await getDb()
+		.select()
+		.from(tasks)
+		.where(and(eq(tasks.userId, userId), eq(tasks.status, "cold")))
+		.orderBy(desc(tasks.created_at));
+
 	const taskIds = dbTasks.map((t) => t.id);
 	const dbComments =
 		taskIds.length > 0
