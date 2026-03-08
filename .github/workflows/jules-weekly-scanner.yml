@@ -1,0 +1,30 @@
+name: Jules Weekly Security & Code Scanner
+
+on:
+  schedule:
+    - cron: '0 22 * * 6'
+  workflow_dispatch:
+
+jobs:
+  scan-and-fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Invoke Jules
+        uses: google-labs-code/jules-action@v1.0.0
+        with:
+          prompt: |
+            You are a senior code reviewer and security agent. Please review the entire repository for potential issues across the codebase.
+            Focus on identifying:
+            1. Bugs or edge cases
+            2. Performance bottlenecks
+            3. Security vulnerabilities (e.g., hardcoded secrets, injection flaws)
+            4. Code quality and naming improvements
+
+            If you find any issues, please create a pull request with the necessary fixes. Keep your fixes minimal and targeted to the identified issues.
+            If no issues are found, do nothing.
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
