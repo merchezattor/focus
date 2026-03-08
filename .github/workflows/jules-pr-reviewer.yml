@@ -1,0 +1,32 @@
+name: Jules PR Review and Fix
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review-and-fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Invoke Jules
+        # SECURITY: Only allow trusted users to trigger Jules
+        if: ${{ contains(fromJSON('["merchezattor", "trusted-collaborator"]'), github.actor) }}
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          prompt: |
+            You are a senior code reviewer. Please review the recent changes in this repository.
+            Focus on identifying:
+            1. Bugs or edge cases
+            2. Performance bottlenecks
+            3. Security vulnerabilities
+            4. Code quality and naming improvements
+
+            If you find any issues, please implement the necessary fixes directly. Keep your fixes minimal and targeted to the identified issues.
+            If no issues are found, do nothing.
+          include_last_commit: true
+          starting_branch: ${{ github.head_ref }}
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
