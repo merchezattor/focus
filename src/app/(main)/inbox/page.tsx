@@ -5,7 +5,15 @@ import { DashboardClient } from "@/components/features/dashboard/DashboardClient
 import { auth } from "@/lib/auth";
 import { readProjects, readTasks } from "@/lib/storage";
 
-export default async function TodayPage() {
+interface PageProps {
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function InboxPage(props: PageProps) {
+	const searchParams = await props.searchParams;
+	const projectId =
+		typeof searchParams.project === "string" ? searchParams.project : undefined;
+
 	const session = await auth.api.getSession({
 		headers: await headers(),
 	});
@@ -14,20 +22,24 @@ export default async function TodayPage() {
 		redirect("/login");
 	}
 
-	const [tasks, projects] = await Promise.all([
+	const [allTasks, projects] = await Promise.all([
 		readTasks(session.user.id),
 		readProjects(session.user.id),
 	]);
 
+	const tasks = allTasks.filter((task) => {
+		if (projectId) {
+			return task.projectId === projectId;
+		}
+		return true;
+	});
+
 	return (
-		<Suspense
-			fallback={<div className="flex-1 p-6">Loading today's tasks...</div>}
-		>
+		<Suspense fallback={<div className="flex-1 p-6">Loading tasks...</div>}>
 			<DashboardClient
 				initialTasks={tasks}
 				initialProjects={projects}
-				title="Today"
-				filterType="today"
+				title="Inbox"
 			/>
 		</Suspense>
 	);

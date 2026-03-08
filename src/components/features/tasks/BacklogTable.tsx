@@ -174,7 +174,7 @@ export function BacklogTable({ tasks, projects, onEdit }: BacklogTableProps) {
 				),
 			},
 		],
-		[onEdit, priorityOptions, projectOptions, projects],
+		[onEdit, projectOptions, projects],
 	);
 
 	return (

@@ -39,7 +39,7 @@ export async function getTaskCounts(userId: string): Promise<{
 			),
 		);
 
-	// Today: dueDate is today
+	// Today: planDate is today
 	const todayStart = new Date();
 	todayStart.setHours(0, 0, 0, 0);
 	const todayEnd = new Date();
@@ -52,8 +52,8 @@ export async function getTaskCounts(userId: string): Promise<{
 			and(
 				eq(tasks.userId, userId),
 				notInArray(tasks.status, ["done", "cold"]),
-				gte(tasks.due_date, todayStart),
-				lte(tasks.due_date, todayEnd),
+				gte(tasks.plan_date, todayStart),
+				lte(tasks.plan_date, todayEnd),
 			),
 		);
 

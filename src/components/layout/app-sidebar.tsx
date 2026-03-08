@@ -38,16 +38,16 @@ import type { Goal, Project } from "@/types";
 const data = {
 	navMain: [
 		{
-			title: "Inbox",
-			url: "/",
-			icon: IconInbox,
-			count: 12,
-		},
-		{
 			title: "Today",
-			url: "/today",
+			url: "/",
 			icon: IconClock,
 			count: 5,
+		},
+		{
+			title: "Inbox",
+			url: "/inbox",
+			icon: IconInbox,
+			count: 12,
 		},
 		{
 			title: "Upcoming",

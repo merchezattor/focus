@@ -128,8 +128,8 @@ export function DashboardClient({
 		filteredTasks = tasks.filter((t) => t.projectId === selectedProjectId);
 	} else if (filterType === "today") {
 		filteredTasks = tasks.filter((t) => {
-			if (!t.dueDate) return false;
-			const date = new Date(t.dueDate);
+			if (!t.planDate) return false;
+			const date = new Date(t.planDate);
 			return isToday(date);
 		});
 	} else {
