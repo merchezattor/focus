@@ -122,8 +122,8 @@ describe("TaskList", () => {
 
 	it("filters out completed tasks from display", () => {
 		const tasks: Task[] = [
-			createTask({ id: "1", title: "Incomplete Task", completed: false }),
-			createTask({ id: "2", title: "Completed Task", completed: true }),
+			createTask({ id: "1", title: "Incomplete Task", status: "todo" }),
+			createTask({ id: "2", title: "Completed Task", status: "done" }),
 		];
 
 		render(

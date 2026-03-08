@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -70,23 +71,30 @@ const priorities = [
  * Encode parentId + parentType into a single select value.
  * Format: "goal:<uuid>" or "project:<uuid>" or "none"
  */
-function encodeParentValue(parentId?: string, parentType?: string): string {
-	if (!parentId || !parentType) return "none";
-	return `${parentType}:${parentId}`;
+function encodeParentValue(
+	goalId?: string | null,
+	parentProjectId?: string | null,
+): string {
+	if (goalId) return `goal:${goalId}`;
+	if (parentProjectId) return `project:${parentProjectId}`;
+	return "none";
 }
 
 /**
  * Decode a composite select value back into parentId + parentType.
  */
 function decodeParentValue(value: string): {
-	parentId?: string;
-	parentType?: "goal" | "project";
+	goalId?: string;
+	parentProjectId?: string;
 } {
 	if (value === "none") return {};
 	const [type, ...idParts] = value.split(":");
 	const id = idParts.join(":"); // handle UUIDs safely
-	if (type === "goal" || type === "project") {
-		return { parentId: id, parentType: type };
+	if (type === "goal") {
+		return { goalId: id };
+	}
+	if (type === "project") {
+		return { parentProjectId: id };
 	}
 	return {};
 }
@@ -111,8 +119,8 @@ export function AddProjectDialog(
 	const [viewType, setViewType] = useState("list");
 	const [status, setStatus] = useState("working");
 	const [priority, setPriority] = useState("p4");
-	const [parentId, setParentId] = useState<string | undefined>(undefined);
-	const [parentType, setParentType] = useState<"goal" | "project" | undefined>(
+	const [goalId, setGoalId] = useState<string | undefined>(undefined);
+	const [parentProjectId, setParentProjectId] = useState<string | undefined>(
 		undefined,
 	);
 	const [isLoading, setIsLoading] = useState(false);
@@ -128,8 +136,8 @@ export function AddProjectDialog(
 				setViewType(projectToEdit.viewType || "list");
 				setStatus(projectToEdit.status || "working");
 				setPriority(projectToEdit.priority || "p4");
-				setParentId(projectToEdit.parentId || undefined);
-				setParentType(projectToEdit.parentType || undefined);
+				setGoalId(projectToEdit.goalId || undefined);
+				setParentProjectId(projectToEdit.parentProjectId || undefined);
 			} else {
 				// Reset for Add mode
 				setName("");
@@ -138,16 +146,16 @@ export function AddProjectDialog(
 				setViewType("list");
 				setStatus("working");
 				setPriority("p4");
-				setParentId(undefined);
-				setParentType(undefined);
+				setGoalId(undefined);
+				setParentProjectId(undefined);
 			}
 		}
 	}, [open, projectToEdit]);
 
 	const handleParentChange = (value: string) => {
 		const decoded = decodeParentValue(value);
-		setParentId(decoded.parentId);
-		setParentType(decoded.parentType);
+		setGoalId(decoded.goalId);
+		setParentProjectId(decoded.parentProjectId);
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -181,8 +189,8 @@ export function AddProjectDialog(
 						viewType,
 						status,
 						priority,
-						parentId: parentId || null,
-						parentType: parentType || null,
+						goalId: goalId || null,
+						parentProjectId: parentProjectId || null,
 					}),
 				});
 
@@ -203,8 +211,8 @@ export function AddProjectDialog(
 						viewType,
 						status,
 						priority,
-						parentId: parentId || null,
-						parentType: parentType || null,
+						goalId: goalId || null,
+						parentProjectId: parentProjectId || null,
 						isFavorite: false,
 					}),
 				});
@@ -245,6 +253,11 @@ export function AddProjectDialog(
 					<DialogTitle>
 						{projectToEdit ? "Edit Project" : "Add Project"}
 					</DialogTitle>
+					<DialogDescription className="sr-only">
+						{projectToEdit
+							? "Edit an existing project"
+							: "Create a new project"}
+					</DialogDescription>
 				</DialogHeader>
 				<form onSubmit={handleSubmit} className="space-y-4">
 					<div className="space-y-3">
@@ -323,7 +336,7 @@ export function AddProjectDialog(
 						<div className="space-y-3">
 							<label className="text-sm font-medium">Parent</label>
 							<Select
-								value={encodeParentValue(parentId, parentType)}
+								value={encodeParentValue(goalId, parentProjectId)}
 								onValueChange={handleParentChange}
 							>
 								<SelectTrigger className="w-full">

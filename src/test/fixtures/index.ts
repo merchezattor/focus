@@ -18,7 +18,6 @@ export function createTask(overrides?: Partial<Task>): Task {
 		id,
 		title: "Test Task",
 		description: undefined,
-		completed: false,
 		projectId: null,
 		dueDate: null,
 		planDate: null,
@@ -43,8 +42,8 @@ export function createProject(overrides?: Partial<Project>): Project {
 		priority: "p4",
 		description: undefined,
 		status: "working",
-		parentId: null,
-		parentType: null,
+		goalId: null,
+		parentProjectId: null,
 		viewType: "list",
 		isFavorite: false,
 		createdAt: now,
@@ -102,7 +101,6 @@ export const mockTasks: Task[] = [
 		title: "Update dependencies",
 		priority: "p4",
 		status: "done",
-		completed: true,
 	}),
 ];
 

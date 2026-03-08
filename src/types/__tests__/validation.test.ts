@@ -311,8 +311,8 @@ describe("projectSchema Validation", () => {
 		name: "Test Project",
 		color: "#FF5733",
 		description: "Test description",
-		parentId: null,
-		parentType: null,
+		goalId: null,
+		parentProjectId: null,
 		viewType: "list" as const,
 		isFavorite: false,
 		createdAt: new Date(),
@@ -458,29 +458,35 @@ describe("projectSchema Validation", () => {
 		});
 	});
 
-	describe("Validates parentType", () => {
-		it("should accept 'goal' as parentType", () => {
+	describe("Validates parent associations", () => {
+		it("should accept valid UUID for goalId", () => {
 			const result = projectSchema.safeParse({
 				...validProject,
-				parentType: "goal",
-				parentId: "550e8400-e29b-41d4-a716-446655440000",
+				goalId: "550e8400-e29b-41d4-a716-446655440000",
 			});
 			expect(result.success).toBe(true);
 		});
 
-		it("should accept 'project' as parentType", () => {
+		it("should accept valid UUID for parentProjectId", () => {
 			const result = projectSchema.safeParse({
 				...validProject,
-				parentType: "project",
-				parentId: "550e8400-e29b-41d4-a716-446655440000",
+				parentProjectId: "550e8400-e29b-41d4-a716-446655440000",
 			});
 			expect(result.success).toBe(true);
 		});
 
-		it("should reject invalid parentType", () => {
+		it("should reject invalid UUID for goalId", () => {
 			const result = projectSchema.safeParse({
 				...validProject,
-				parentType: "invalid",
+				goalId: "invalid-uuid",
+			});
+			expect(result.success).toBe(false);
+		});
+
+		it("should reject invalid UUID for parentProjectId", () => {
+			const result = projectSchema.safeParse({
+				...validProject,
+				parentProjectId: "invalid-uuid",
 			});
 			expect(result.success).toBe(false);
 		});

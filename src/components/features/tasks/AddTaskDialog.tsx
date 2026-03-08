@@ -18,6 +18,7 @@ import { Calendar } from "@/components/ui/calendar";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
@@ -119,7 +120,7 @@ export function AddTaskDialog({
 				projectId: projectId && projectId !== "inbox" ? projectId : null,
 				priority,
 				dueDate: dueDate?.toISOString(),
-				completed: false,
+				status: "todo",
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
 				planDate: null,
@@ -144,7 +145,6 @@ export function AddTaskDialog({
 					description: description || undefined,
 					projectId: projectId && projectId !== "inbox" ? projectId : null,
 					dueDate: dueDate?.toISOString(),
-					completed: false,
 					priority,
 				}),
 			});
@@ -208,6 +208,9 @@ export function AddTaskDialog({
 				className="sm:max-w-[550px] p-0 gap-0 overflow-hidden border-none shadow-xl"
 			>
 				<DialogTitle className="sr-only">Add New Task</DialogTitle>
+				<DialogDescription className="sr-only">
+					Create a new task with details.
+				</DialogDescription>
 				<form onSubmit={handleSubmit} className="flex flex-col">
 					<div className="p-4 space-y-2">
 						<Input

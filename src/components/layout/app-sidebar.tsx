@@ -10,15 +10,10 @@ import {
 	IconSearch,
 } from "@tabler/icons-react";
 import { useSetAtom } from "jotai";
-import { Activity, ChevronDown, Flag, MoreHorizontal } from "lucide-react";
+import { Activity, Flag, MoreHorizontal } from "lucide-react";
 import { isAddGoalOpenAtom } from "@/components/features/goals/GlobalAddGoalDialog";
 import { ModeToggle } from "@/components/layout/mode-toggle";
 import { NavUser } from "@/components/layout/nav-user";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
 	Sidebar,
 	SidebarContent,
@@ -168,63 +163,46 @@ export function AppSidebar({
 					</SidebarGroupContent>
 				</SidebarGroup>
 
-				<Collapsible defaultOpen className="group/collapsible">
-					<SidebarGroup>
-						<SidebarGroupLabel
-							asChild
-							className="flex items-center justify-between px-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:opacity-0"
-						>
-							<CollapsibleTrigger>
-								<span>Goals</span>
-								<ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-							</CollapsibleTrigger>
-						</SidebarGroupLabel>
-						<CollapsibleContent>
-							<SidebarGroupContent>
-								<SidebarMenu>
-									{goals.map((goal) => (
-										<SidebarMenuItem key={goal.id}>
-											<SidebarMenuButton
-												asChild
-												className="w-full justify-start"
-											>
-												<a href={`/map`} className="flex items-center gap-2">
-													{/* For now link to map, or maybe filtering by goal later? User said displayed same way as projects list. */}
-													{/* But what happens when you click? "Goal -> Project (s) -> Task (s)" hierarchy. */}
-													{/* Maybe filter tasks by goal? Currently no page for Goal details. Map is the view. */}
-													<Flag
-														className="h-4 w-4"
-														style={{ color: goal.color }}
-													/>
-													<span>{goal.name}</span>
-												</a>
-											</SidebarMenuButton>
-											<SidebarMenuAction
-												showOnHover
-												onClick={() => setGoalToEdit(goal)}
-											>
-												<MoreHorizontal className="h-4 w-4" />
-												<span className="sr-only">Edit Goal</span>
-											</SidebarMenuAction>
-										</SidebarMenuItem>
-									))}
-									<SidebarMenuItem>
-										<SidebarMenuButton
-											asChild
-											className="w-full justify-start text-muted-foreground cursor-pointer"
-											onClick={() => setAddGoalOpen(true)}
-										>
-											<span className="flex items-center gap-2">
-												<IconPlus className="h-4 w-4" />
-												<span>Add goal</span>
-											</span>
-										</SidebarMenuButton>
-									</SidebarMenuItem>
-								</SidebarMenu>
-							</SidebarGroupContent>
-						</CollapsibleContent>
-					</SidebarGroup>
-				</Collapsible>
+				<SidebarGroup>
+					<SidebarGroupLabel className="flex items-center justify-between px-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer">
+						<a href="/map" className="flex items-center w-full">
+							<span>Goals</span>
+						</a>
+					</SidebarGroupLabel>
+					<SidebarGroupContent>
+						<SidebarMenu>
+							{goals.map((goal) => (
+								<SidebarMenuItem key={goal.id}>
+									<SidebarMenuButton asChild className="w-full justify-start">
+										<a href={`/map`} className="flex items-center gap-2">
+											<Flag className="h-4 w-4" style={{ color: goal.color }} />
+											<span>{goal.name}</span>
+										</a>
+									</SidebarMenuButton>
+									<SidebarMenuAction
+										showOnHover
+										onClick={() => setGoalToEdit(goal)}
+									>
+										<MoreHorizontal className="h-4 w-4" />
+										<span className="sr-only">Edit Goal</span>
+									</SidebarMenuAction>
+								</SidebarMenuItem>
+							))}
+							<SidebarMenuItem>
+								<SidebarMenuButton
+									asChild
+									className="w-full justify-start text-muted-foreground cursor-pointer"
+									onClick={() => setAddGoalOpen(true)}
+								>
+									<span className="flex items-center gap-2">
+										<IconPlus className="h-4 w-4" />
+										<span>Add goal</span>
+									</span>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
+						</SidebarMenu>
+					</SidebarGroupContent>
+				</SidebarGroup>
 
 				<SidebarGroup>
 					<SidebarGroupLabel

@@ -238,14 +238,18 @@ export function MapClient({
 					},
 				});
 
-				if (project.parentId && project.parentType) {
-					const sourceId =
-						project.parentType === "goal"
-							? `goal-${project.parentId}`
-							: `proj-${project.parentId}`;
+				if (project.goalId) {
 					edges.push({
-						id: `e-parent-${project.parentId}-proj-${project.id}`,
-						source: sourceId,
+						id: `e-goal-${project.goalId}-proj-${project.id}`,
+						source: `goal-${project.goalId}`,
+						target: nodeId,
+						animated: true,
+						style: { stroke: "#999", strokeWidth: 2 },
+					});
+				} else if (project.parentProjectId) {
+					edges.push({
+						id: `e-parent-${project.parentProjectId}-proj-${project.id}`,
+						source: `proj-${project.parentProjectId}`,
 						target: nodeId,
 						animated: true,
 						style: { stroke: "#999", strokeWidth: 2 },

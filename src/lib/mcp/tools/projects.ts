@@ -35,18 +35,17 @@ const createProjectInputSchema = z.object({
 		.boolean()
 		.optional()
 		.describe("Pin as favorite. Defaults to false."),
-	parentId: z
+	goalId: z
+		.string()
+		.uuid()
+		.optional()
+		.describe("UUID of a parent goal. Use focus_list_goals to find valid IDs."),
+	parentProjectId: z
 		.string()
 		.uuid()
 		.optional()
 		.describe(
-			"UUID of a parent goal or project. Must set parentType if provided. UUID from focus_list_goals or focus_list_projects.",
-		),
-	parentType: z
-		.enum(["goal", "project"])
-		.optional()
-		.describe(
-			'Type of the parent entity. Required when parentId is set. "goal" or "project".',
+			"UUID of a parent project. Use focus_list_projects to find valid IDs.",
 		),
 	viewType: z
 		.enum(["list", "board", "roadmap"])
@@ -134,8 +133,8 @@ export const focusCreateProject: MCPToolHandler<
 			status: args.status ?? "working",
 			priority: args.priority ?? "p4",
 			isFavorite: args.isFavorite ?? false,
-			parentId: args.parentId,
-			parentType: args.parentType,
+			goalId: args.goalId,
+			parentProjectId: args.parentProjectId,
 			viewType: args.viewType ?? "list",
 			createdAt: now,
 			updatedAt: now,

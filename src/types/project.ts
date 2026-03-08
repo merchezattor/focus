@@ -9,8 +9,8 @@ export const projectSchema = z.object({
 	status: z
 		.enum(["working", "archived", "complete", "frozen"])
 		.default("working"),
-	parentId: z.string().nullable().optional(),
-	parentType: z.enum(["goal", "project"]).nullable().optional(),
+	goalId: z.string().uuid().nullable().optional(),
+	parentProjectId: z.string().uuid().nullable().optional(),
 	viewType: z.enum(["list", "board", "roadmap"]).default("list").optional(),
 	isFavorite: z.boolean(),
 	createdAt: z.date().optional(),

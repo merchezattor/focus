@@ -27,11 +27,12 @@ interface LogActionParams {
 	changes?: Record<string, any>;
 	metadata?: Record<string, any>;
 	comment?: string;
+	userId?: string; // Owner of the entity being acted upon
 }
 
 /**
  * Logs an action to the database asynchronously.
- * Uses Next.js `after` if available, otherwise just triggers the promise without awaiting.
+ * Uses fire-and-forget to not block the main flow.
  */
 export function logAction(params: LogActionParams) {
 	const {
@@ -43,22 +44,26 @@ export function logAction(params: LogActionParams) {
 		changes,
 		metadata,
 		comment,
+		userId,
 	} = params;
 
 	const performLog = async () => {
 		try {
-			await getDb().insert(actions).values({
-				id: uuidv4(),
-				entityId,
-				entityType,
-				actorId,
-				actorType,
-				actionType,
-				changes,
-				metadata,
-				comment,
-				isRead: false, // Default to unread
-			});
+			await getDb()
+				.insert(actions)
+				.values({
+					id: uuidv4(),
+					entityId,
+					entityType,
+					actorId,
+					actorType,
+					actionType,
+					changes,
+					metadata,
+					comment,
+					isRead: false,
+					userId: userId || actorId,
+				});
 		} catch (error) {
 			console.error("Failed to log action:", error);
 			// Fail silently to not impact main flow
@@ -80,7 +85,7 @@ export async function getActions(params: {
 	entityId?: string;
 	limit?: number;
 	includeOwn?: boolean;
-	actorType?: ActorType; // New filter
+	actorType?: ActorType;
 }) {
 	const {
 		userId,
@@ -92,20 +97,15 @@ export async function getActions(params: {
 		actorType,
 	} = params;
 
-	// Conditions
-	const filters = [];
+	// Conditions — always scope by user
+	const filters = [eq(actions.userId, userId)];
 
-	// Filter logic:
-	// 1. If actorType is specified, filter by it explicitly.
+	// Filter by actorType if specified
 	if (actorType) {
 		filters.push(eq(actions.actorType, actorType));
 	}
 
-	// 2. Exclusion logic (includeOwn defaults to false)
-	// If !includeOwn, we want to hide "User's own manual actions".
-	// But we DO want to see "Agent actions" done on behalf of the user.
-	// So we filter out: actorId == userId AND actorType == 'user'.
-	// In SQL: NOT (actor_id = userId AND actor_type = 'user')
+	// Exclusion logic (includeOwn defaults to false)
 	if (!includeOwn) {
 		const ownUserAction = and(
 			eq(actions.actorId, userId),
@@ -149,7 +149,7 @@ export async function markAllActionsRead(userId: string) {
 	await getDb()
 		.update(actions)
 		.set({ isRead: true })
-		.where(eq(actions.isRead, false));
+		.where(and(eq(actions.userId, userId), eq(actions.isRead, false)));
 }
 
 export async function getUnreadActionsCount(userId: string): Promise<number> {
@@ -163,6 +163,7 @@ export async function getUnreadActionsCount(userId: string): Promise<number> {
 		.from(actions)
 		.where(
 			and(
+				eq(actions.userId, userId),
 				eq(actions.isRead, false),
 				ownUserAction ? not(ownUserAction) : undefined,
 			),

@@ -10,6 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
@@ -179,6 +180,9 @@ export function AddGoalDialog({
 			)}
 			<DialogContent>
 				<DialogTitle>{goalToEdit ? "Edit Goal" : "Add Goal"}</DialogTitle>
+				<DialogDescription className="sr-only">
+					{goalToEdit ? "Edit an existing goal" : "Create a new goal"}
+				</DialogDescription>
 				<form onSubmit={handleSubmit} className="space-y-4">
 					<div className="space-y-2">
 						<label className="text-sm font-medium">Name</label>

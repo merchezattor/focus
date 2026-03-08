@@ -8,7 +8,7 @@ import { TaskItem } from "./TaskItem";
 interface RoadmapViewProps {
 	tasks: Task[];
 	projects: Map<string, { name: string; color: string }>;
-	onToggle: (id: string, completed: boolean) => void;
+	onToggle: (id: string, done: boolean) => void;
 	onEdit: (task: Task) => void;
 	hideProjectName?: boolean;
 }
@@ -78,7 +78,9 @@ export function RoadmapView({
 							<div
 								className={cn(
 									"w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm",
-									milestone.completed ? "bg-primary" : "bg-muted-foreground",
+									milestone.status === "done"
+										? "bg-primary"
+										: "bg-muted-foreground",
 								)}
 							>
 								{mIndex + 1}
@@ -88,7 +90,7 @@ export function RoadmapView({
 									type="button"
 									className={cn(
 										"text-left cursor-pointer hover:text-primary transition-colors focus-visible:outline-none focus-visible:underline",
-										milestone.completed &&
+										milestone.status === "done" &&
 											"line-through text-muted-foreground hover:text-muted-foreground",
 									)}
 									onClick={() => onEdit(milestone)}
@@ -102,10 +104,10 @@ export function RoadmapView({
 						{subtasks.length > 0 && (
 							<div className="relative border-l border-muted ml-4 pl-8 py-0 space-y-1 mt-2">
 								{subtasks.map((task, index) => {
-									const isCompleted = task.completed;
+									const isCompleted = task.status === "done";
 									const isNext =
 										!isCompleted &&
-										index === subtasks.findIndex((t) => !t.completed);
+										index === subtasks.findIndex((t) => t.status !== "done");
 									const isLast = index === subtasks.length - 1;
 
 									return (

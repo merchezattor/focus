@@ -30,10 +30,7 @@ const listTasksSchema = z.object({
 		.describe(
 			'Filter by status. NOTE: "review" is NOT valid here (only in create/update). Multiple values are OR\'d.',
 		),
-	completed: z
-		.boolean()
-		.optional()
-		.describe("Filter by completion flag. true=completed, false=active."),
+
 	projectId: z
 		.string()
 		.uuid()
@@ -149,10 +146,7 @@ const updateTaskSchema = z.object({
 		.max(1000)
 		.optional()
 		.describe("New description. Max 1000 characters."),
-	completed: z
-		.boolean()
-		.optional()
-		.describe("Set to true to complete or false to uncomplete."),
+
 	status: z
 		.enum(["todo", "in_progress", "review", "done"])
 		.optional()
@@ -255,10 +249,7 @@ const listInboxSchema = z.object({
 		.describe(
 			'Filter by status. NOTE: "review" is NOT valid here (only in create/update). Multiple values are OR\'d.',
 		),
-	completed: z
-		.boolean()
-		.optional()
-		.describe("Filter by completion flag. true=completed, false=active."),
+
 	dueDate: z
 		.union([z.enum(["today", "overdue", "upcoming"]), z.string()])
 		.optional()
@@ -319,7 +310,6 @@ async function listTasks(
 		const tasks = await searchTasks(context.user.id, {
 			priority: parsed.priority,
 			status: parsed.status,
-			completed: parsed.completed,
 			projectId: parsed.projectId,
 			parentId: parsed.parentId,
 			dueDateStr: parsed.dueDate,
@@ -360,7 +350,6 @@ async function listInbox(
 		const inboxTasks = await searchTasks(context.user.id, {
 			priority: parsed.priority,
 			status: parsed.status,
-			completed: parsed.completed,
 			projectId: "inbox",
 			dueDateStr: parsed.dueDate,
 			planDateStr: parsed.planDate,
@@ -405,7 +394,6 @@ async function createTaskTool(
 			id: randomUUID(),
 			title: parsed.title,
 			description: parsed.description,
-			completed: false,
 			status: parsed.status ?? "todo",
 			priority: parsed.priority,
 			projectId: parsed.projectId ?? null,
@@ -458,7 +446,6 @@ async function createProjectRoadmapTool(
 				id: sectionId,
 				title: section.title,
 				description: section.description,
-				completed: false,
 				status: "todo",
 				priority: section.priority ?? "p4",
 				projectId: parsed.projectId,
@@ -476,7 +463,6 @@ async function createProjectRoadmapTool(
 					id: randomUUID(),
 					title: sub.title,
 					description: sub.description,
-					completed: false,
 					status: "todo",
 					priority: sub.priority ?? "p4",
 					projectId: parsed.projectId,
@@ -537,7 +523,7 @@ async function updateTaskTool(
 		if (parsed.description !== undefined)
 			updates.description = parsed.description;
 		if (parsed.priority !== undefined) updates.priority = parsed.priority;
-		if (parsed.completed !== undefined) updates.completed = parsed.completed;
+
 		if (parsed.status !== undefined) updates.status = parsed.status;
 		if (parsed.projectId !== undefined) updates.projectId = parsed.projectId;
 		if (parsed.parentId !== undefined) updates.parentId = parsed.parentId;
@@ -627,7 +613,7 @@ async function addCommentTool(
 			postedAt: new Date(),
 		});
 
-		await createComment(parsed.taskId, comment);
+		await createComment(parsed.taskId, comment, context.user.id, "agent");
 
 		const task = await getTaskById(parsed.taskId);
 
@@ -643,6 +629,7 @@ async function addCommentTool(
 				title: task?.title,
 				tokenName: context.tokenName,
 			},
+			userId: context.user.id,
 		});
 
 		return {

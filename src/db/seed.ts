@@ -47,9 +47,9 @@ async function seed() {
 			.insert(tasks)
 			.values({
 				id: t.id,
-				content: t.title,
+				title: t.title,
 				description: t.description || null,
-				completed: t.completed,
+				status: t.status || (t.completed ? "done" : "todo"),
 				priority: t.priority,
 				project_id: t.projectId || null,
 				due_date: t.dueDate ? new Date(t.dueDate) : null,

@@ -28,6 +28,7 @@ import { Calendar } from "@/components/ui/calendar";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
@@ -288,7 +289,6 @@ export function EditTaskDialog({
 				body: JSON.stringify({
 					title: "New Subtask",
 					priority: "p4",
-					completed: false,
 					projectId: task.projectId,
 					parentId: task.id,
 				}),
@@ -308,6 +308,9 @@ export function EditTaskDialog({
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
 			<DialogContent className="sm:max-w-4xl h-[600px] flex flex-col p-0 gap-0">
 				<DialogTitle className="sr-only">Edit Task</DialogTitle>
+				<DialogDescription className="sr-only">
+					Edit the details of the selected task.
+				</DialogDescription>
 				<div className="flex flex-1 h-full overflow-hidden">
 					{/* Left Column: Main Content */}
 					<div className="flex-1 flex flex-col p-6 border-r overflow-y-auto">
@@ -567,7 +570,7 @@ export function EditTaskDialog({
 										const res = await fetch(`/api/tasks/${task.id}`, {
 											method: "PATCH",
 											headers: { "Content-Type": "application/json" },
-											body: JSON.stringify({ completed: true }),
+											body: JSON.stringify({ status: "done" }),
 										});
 										if (!res.ok) throw new Error("Failed to complete task");
 										setOpen(false);

@@ -28,7 +28,6 @@ async function verify() {
 		{
 			id: taskId,
 			title: "Verification Task",
-			completed: false,
 			status: "todo",
 			priority: "p1",
 			projectId: null,

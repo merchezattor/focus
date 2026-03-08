@@ -92,17 +92,20 @@ export function DashboardClient({
 		}
 	}, [setTasks]);
 
-	const handleToggle = async (taskId: string, completed: boolean) => {
+	const handleToggle = async (taskId: string, done: boolean) => {
+		const newStatus = done ? "done" : "todo";
 		try {
 			// Optimistic update
 			setTasks((prev) =>
-				prev.map((t) => (t.id === taskId ? { ...t, completed } : t)),
+				prev.map((t) =>
+					t.id === taskId ? { ...t, status: newStatus as Task["status"] } : t,
+				),
 			);
 
 			const res = await fetch(`/api/tasks/${taskId}`, {
 				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ completed }),
+				body: JSON.stringify({ status: newStatus }),
 			});
 
 			if (!res.ok) {

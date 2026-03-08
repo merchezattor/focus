@@ -1,5 +1,6 @@
 import {
 	boolean,
+	index,
 	jsonb,
 	pgEnum,
 	pgTable,
@@ -57,7 +58,16 @@ export const verification = pgTable("verification", {
 	updatedAt: timestamp("updated_at"),
 });
 
+// --- Enums ---
+
 export const priorityEnum = pgEnum("priority", ["p1", "p2", "p3", "p4"]);
+
+export const taskStatusEnum = pgEnum("task_status", [
+	"todo",
+	"in_progress",
+	"review",
+	"done",
+]);
 
 export const projectStatusEnum = pgEnum("project_status", [
 	"working",
@@ -65,71 +75,6 @@ export const projectStatusEnum = pgEnum("project_status", [
 	"complete",
 	"frozen",
 ]);
-
-export const goals = pgTable("goals", {
-	id: text("id").primaryKey(),
-	name: text("name").notNull(),
-	description: text("description"),
-	priority: text("priority").notNull(),
-	due_date: timestamp("due_date"),
-	color: text("color").notNull(), // Goals should have color too? User didn't specify but it's good for UI. Or maybe not? User said "displayed same way as projects list". Projects have color. So assume yes.
-	userId: text("user_id").references(() => user.id),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-export const projects = pgTable("projects", {
-	id: text("id").primaryKey(), // using UUID string
-	name: text("name").notNull(),
-	color: text("color").notNull(),
-	priority: text("priority").notNull().default("p4"),
-	description: text("description"),
-	isFavorite: boolean("is_favorite").default(false).notNull(),
-	status: projectStatusEnum("status").default("working").notNull(),
-	parent_id: text("parent_id"), // UUID of parent Goal or Project
-	parent_type: text("parent_type"), // 'goal' | 'project'
-	view_type: text("view_type").default("list").notNull(), // 'list' | 'board' | 'roadmap'
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-	userId: text("user_id").references(() => user.id), // Link project to user (nullable for migration)
-});
-
-export const tasks = pgTable("tasks", {
-	id: text("id").primaryKey(),
-	content: text("content").notNull(), // maps to 'title' in app
-	description: text("description"),
-	completed: boolean("completed").default(false).notNull(),
-	status: text("status").default("todo").notNull(), // 'todo' | 'in_progress' | 'review' | 'done'
-	priority: text("priority").notNull(), // Storing as text to be safe, or use enum if strictly enforced
-	due_date: timestamp("due_date"),
-	plan_date: timestamp("plan_date"),
-	project_id: text("project_id").references(() => projects.id, {
-		onDelete: "cascade",
-	}),
-	userId: text("user_id").references(() => user.id), // Link task to user (nullable for migration)
-	created_at: timestamp("created_at").defaultNow().notNull(),
-	updated_at: timestamp("updated_at").defaultNow().notNull(),
-	parent_id: text("parent_id"), // self-referential foreign key
-});
-
-export const comments = pgTable("comments", {
-	id: text("id").primaryKey(),
-	content: text("content").notNull(),
-	posted_at: timestamp("posted_at").defaultNow().notNull(),
-	task_id: text("task_id")
-		.references(() => tasks.id, { onDelete: "cascade" })
-		.notNull(),
-});
-
-export const apiTokens = pgTable("api_tokens", {
-	id: text("id").primaryKey(),
-	token: text("token").notNull().unique(),
-	userId: text("user_id")
-		.references(() => user.id, { onDelete: "cascade" })
-		.notNull(),
-	name: text("name").notNull().default("Default Token"),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
 
 export const actionTypeEnum = pgEnum("action_type", [
 	"create",
@@ -151,29 +96,146 @@ export const entityTypeEnum = pgEnum("entity_type", [
 
 export const actorTypeEnum = pgEnum("actor_type", ["user", "agent", "system"]);
 
-export const actions = pgTable("actions", {
+// --- Core Entities ---
+
+export const goals = pgTable(
+	"goals",
+	{
+		id: text("id").primaryKey(),
+		name: text("name").notNull(),
+		description: text("description"),
+		priority: priorityEnum("priority").notNull(),
+		due_date: timestamp("due_date"),
+		color: text("color").notNull(),
+		userId: text("user_id").references(() => user.id),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	},
+	(table) => [index("goals_user_id_idx").on(table.userId)],
+);
+
+export const projects = pgTable(
+	"projects",
+	{
+		id: text("id").primaryKey(),
+		name: text("name").notNull(),
+		color: text("color").notNull(),
+		priority: priorityEnum("priority").notNull().default("p4"),
+		description: text("description"),
+		isFavorite: boolean("is_favorite").default(false).notNull(),
+		status: projectStatusEnum("status").default("working").notNull(),
+		goalId: text("goal_id").references(() => goals.id, {
+			onDelete: "set null",
+		}),
+		parentProjectId: text("parent_project_id"),
+		view_type: text("view_type").default("list").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+		userId: text("user_id").references(() => user.id),
+	},
+	(table) => [index("projects_user_id_idx").on(table.userId)],
+);
+
+export const tasks = pgTable(
+	"tasks",
+	{
+		id: text("id").primaryKey(),
+		title: text("title").notNull(),
+		description: text("description"),
+		status: taskStatusEnum("status").default("todo").notNull(),
+		priority: priorityEnum("priority").notNull(),
+		due_date: timestamp("due_date"),
+		plan_date: timestamp("plan_date"),
+		project_id: text("project_id").references(() => projects.id, {
+			onDelete: "cascade",
+		}),
+		userId: text("user_id").references(() => user.id),
+		created_at: timestamp("created_at").defaultNow().notNull(),
+		updated_at: timestamp("updated_at").defaultNow().notNull(),
+		parent_id: text("parent_id").references((): any => tasks.id, {
+			onDelete: "cascade",
+		}),
+	},
+	(table) => [
+		index("tasks_user_id_project_id_idx").on(table.userId, table.project_id),
+		index("tasks_user_id_priority_created_at_idx").on(
+			table.userId,
+			table.priority,
+			table.created_at,
+		),
+		index("tasks_user_id_due_date_idx").on(table.userId, table.due_date),
+		index("tasks_user_id_status_idx").on(table.userId, table.status),
+	],
+);
+
+export const comments = pgTable(
+	"comments",
+	{
+		id: text("id").primaryKey(),
+		content: text("content").notNull(),
+		posted_at: timestamp("posted_at").defaultNow().notNull(),
+		task_id: text("task_id")
+			.references(() => tasks.id, { onDelete: "cascade" })
+			.notNull(),
+		userId: text("user_id").references(() => user.id),
+		actorType: actorTypeEnum("actor_type").default("user"),
+	},
+	(table) => [index("comments_task_id_idx").on(table.task_id)],
+);
+
+export const apiTokens = pgTable("api_tokens", {
 	id: text("id").primaryKey(),
-	entityId: text("entity_id").notNull(),
-	entityType: entityTypeEnum("entity_type").notNull(),
-
-	actorId: text("actor_id").notNull(),
-	actorType: actorTypeEnum("actor_type").notNull().default("user"),
-
-	actionType: actionTypeEnum("action_type").notNull(),
-
-	// JSON object storing NEW values only: { "title": "New Title" }
-	changes: jsonb("changes"),
-
-	// Metadata for pure "events"
-	metadata: jsonb("metadata"),
-
-	// Optional comment for agentic actions
-	comment: text("comment"),
-
+	token: text("token").notNull().unique(),
+	userId: text("user_id")
+		.references(() => user.id, { onDelete: "cascade" })
+		.notNull(),
+	name: text("name").notNull().default("Default Token"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-
-	// Single isRead field.
-	// - If Actor=User, this tracks if Agent has read it.
-	// - If Actor=Agent, this tracks if User has read it.
-	isRead: boolean("is_read").default(false).notNull(),
 });
+
+// --- Activity Log ---
+
+export const actions = pgTable(
+	"actions",
+	{
+		id: text("id").primaryKey(),
+		entityId: text("entity_id").notNull(),
+		entityType: entityTypeEnum("entity_type").notNull(),
+
+		actorId: text("actor_id").notNull(),
+		actorType: actorTypeEnum("actor_type").notNull().default("user"),
+
+		actionType: actionTypeEnum("action_type").notNull(),
+
+		// JSON object storing NEW values only: { "title": "New Title" }
+		changes: jsonb("changes"),
+
+		// Metadata for pure "events"
+		metadata: jsonb("metadata"),
+
+		// Optional comment for agentic actions
+		comment: text("comment"),
+
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+
+		// Single isRead field.
+		// - If Actor=User, this tracks if Agent has read it.
+		// - If Actor=Agent, this tracks if User has read it.
+		isRead: boolean("is_read").default(false).notNull(),
+
+		// Owner of the entity being acted upon (for user-scoped queries)
+		userId: text("user_id").references(() => user.id),
+	},
+	(table) => [
+		index("actions_entity_id_entity_type_created_at_idx").on(
+			table.entityId,
+			table.entityType,
+			table.createdAt,
+		),
+		index("actions_user_id_is_read_created_at_idx").on(
+			table.userId,
+			table.isRead,
+			table.createdAt,
+		),
+	],
+);

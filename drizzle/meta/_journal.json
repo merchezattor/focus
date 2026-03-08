@@ -43,6 +43,13 @@
       "when": 1772896318081,
       "tag": "0005_sloppy_professor_monster",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772947798675,
+      "tag": "0006_outgoing_sunspot",
+      "breakpoints": true
     }
   ]
 }
