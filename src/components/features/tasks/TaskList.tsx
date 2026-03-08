@@ -6,7 +6,7 @@ import { TaskItem } from "./TaskItem";
 interface TaskListProps {
 	tasks: Task[];
 	projects: Map<string, { name: string; color: string }>;
-	onToggle: (id: string, completed: boolean) => void;
+	onToggle: (id: string, done: boolean) => void;
 	onEdit: (task: Task) => void;
 	hideProjectName?: boolean;
 }
@@ -23,7 +23,7 @@ export function TaskList({
 		const noDate: Task[] = [];
 
 		tasks
-			.filter((t) => !t.completed)
+			.filter((t) => t.status !== "done")
 			.forEach((task) => {
 				if (!task.planDate) {
 					noDate.push(task);

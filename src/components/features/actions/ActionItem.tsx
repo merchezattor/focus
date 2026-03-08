@@ -7,13 +7,17 @@ import {
 	Calendar,
 	CheckCircle2,
 	Circle,
+	Clock,
+	Cpu,
 	Edit,
 	FilePlus,
 	Flag,
 	MessageSquare,
+	Search,
 	Trash2,
 	Type,
 	User,
+	Wrench,
 } from "lucide-react";
 import Link from "next/link";
 import type { ActionType, ActorType, EntityType } from "@/lib/actions";
@@ -77,6 +81,14 @@ export function ActionItem({ action }: ActionItemProps) {
 				return <CheckCircle2 className="h-4 w-4 text-green-600" />;
 			case "uncomplete":
 				return <Circle className="h-4 w-4 text-gray-500" />;
+			case "reviewed":
+				return <Search className="h-4 w-4 text-purple-500" />;
+			case "groomed":
+				return <Wrench className="h-4 w-4 text-amber-500" />;
+			case "processed":
+				return <Cpu className="h-4 w-4 text-indigo-500" />;
+			case "pending":
+				return <Clock className="h-4 w-4 text-yellow-500" />;
 			default:
 				return <Activity className="h-4 w-4 text-gray-400" />;
 		}
@@ -172,6 +184,14 @@ export function ActionItem({ action }: ActionItemProps) {
 					return <>Completed {wrapLink(entityLabel)}</>;
 				case "uncomplete":
 					return <>Uncompleted {wrapLink(entityLabel)}</>;
+				case "reviewed":
+					return <>Reviewed {wrapLink(entityLabel)}</>;
+				case "groomed":
+					return <>Groomed {wrapLink(entityLabel)}</>;
+				case "processed":
+					return <>Processed {wrapLink(entityLabel)}</>;
+				case "pending":
+					return <>Marked {wrapLink(entityLabel)} as pending</>;
 				default:
 					return <>Acted on {wrapLink(entityLabel)}</>;
 			}

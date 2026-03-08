@@ -11,7 +11,7 @@ describe("TaskItem", () => {
 		task: createTask({
 			id: "test-task-id",
 			title: "Test Task Title",
-			completed: false,
+			status: "todo",
 			priority: "p2",
 			dueDate: null,
 			comments: [],
@@ -42,7 +42,7 @@ describe("TaskItem", () => {
 	describe("completed state", () => {
 		it("applies strikethrough and opacity when task is completed", () => {
 			const completedTask = createTask({
-				completed: true,
+				status: "done",
 				title: "Test Task Title",
 			});
 			render(<TaskItem {...defaultProps} task={completedTask} />);
@@ -54,7 +54,7 @@ describe("TaskItem", () => {
 
 		it("does not apply strikethrough when task is not completed", () => {
 			const incompleteTask = createTask({
-				completed: false,
+				status: "todo",
 				title: "Test Task Title",
 			});
 			render(<TaskItem {...defaultProps} task={incompleteTask} />);

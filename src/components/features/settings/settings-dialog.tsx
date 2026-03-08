@@ -59,6 +59,9 @@ export function SettingsDialog({
 			{trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
 			<DialogContent className="sm:max-w-5xl p-0 overflow-hidden h-[80vh] flex gap-0">
 				<DialogTitle className="sr-only">Settings</DialogTitle>
+				<DialogDescription className="sr-only">
+					Configure your application settings.
+				</DialogDescription>
 
 				{/* Sidebar */}
 				<div className="w-64 bg-muted/30 border-r flex flex-col">
@@ -361,9 +364,13 @@ function CreateTokenDialog({
 					<DialogTitle>
 						{newToken ? "API Token Created" : "Create API Token"}
 					</DialogTitle>
-					{!newToken && (
+					{!newToken ? (
 						<DialogDescription>
 							Enter a name for your API token.
+						</DialogDescription>
+					) : (
+						<DialogDescription className="sr-only">
+							API Token successfully created.
 						</DialogDescription>
 					)}
 				</DialogHeader>

@@ -68,6 +68,7 @@
 		"@types/react-dom": "^19",
 		"@types/uuid": "^10.0.0",
 		"@vitejs/plugin-react": "^5.1.4",
+		"@vitest/coverage-v8": "4.0.18",
 		"drizzle-kit": "^0.31.8",
 		"jsdom": "^28.1.0",
 		"msw": "^2.12.10",

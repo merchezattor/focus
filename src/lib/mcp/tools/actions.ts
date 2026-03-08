@@ -185,6 +185,8 @@ export const focus_create_agentic_action: MCPToolHandler<
 
 		const { entityId, entityType, actionType, comment } = parsed.data;
 
+		let entityTitle: string | undefined;
+
 		if (entityType === "task") {
 			const task = await getTaskByIdForUser(entityId, context.user.id);
 			if (!task) {
@@ -201,6 +203,7 @@ export const focus_create_agentic_action: MCPToolHandler<
 					isError: true,
 				};
 			}
+			entityTitle = task.title;
 		}
 
 		const trimmedComment = comment?.trim();
@@ -226,7 +229,7 @@ export const focus_create_agentic_action: MCPToolHandler<
 			actorId: context.user.id,
 			actorType: "agent",
 			actionType,
-			metadata: { tokenName: context.tokenName },
+			metadata: { tokenName: context.tokenName, title: entityTitle },
 			comment: trimmedComment,
 		});
 

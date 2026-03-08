@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST, PUT } from "../route";
 
 const mockGetAuthenticatedUser = vi.fn();
-const mockReadTasks = vi.fn();
+const mockSearchTasks = vi.fn();
 const mockCreateTask = vi.fn();
 const mockUpdateTask = vi.fn();
 
@@ -13,7 +13,7 @@ vi.mock("@/lib/api-auth", () => ({
 }));
 
 vi.mock("@/lib/storage", () => ({
-	readTasks: (...args: unknown[]) => mockReadTasks(...args),
+	searchTasks: (...args: unknown[]) => mockSearchTasks(...args),
 	createTask: (...args: unknown[]) => mockCreateTask(...args),
 	updateTask: (...args: unknown[]) => mockUpdateTask(...args),
 }));
@@ -40,7 +40,7 @@ describe("Tasks API", () => {
 				user: { id: "user-123" },
 				actorType: "user",
 			});
-			mockReadTasks.mockResolvedValueOnce([
+			mockSearchTasks.mockResolvedValueOnce([
 				{ id: "task-1", title: "Task 1" },
 				{ id: "task-2", title: "Task 2" },
 			]);
@@ -51,7 +51,10 @@ describe("Tasks API", () => {
 
 			expect(response.status).toBe(200);
 			expect(data.tasks).toHaveLength(2);
-			expect(mockReadTasks).toHaveBeenCalledWith("user-123");
+			expect(mockSearchTasks).toHaveBeenCalledWith("user-123", {
+				dueDateStr: undefined,
+				lastActionType: undefined,
+			});
 		});
 
 		it("should filter tasks by projectId", async () => {
@@ -59,7 +62,7 @@ describe("Tasks API", () => {
 				user: { id: "user-123" },
 				actorType: "user",
 			});
-			mockReadTasks.mockResolvedValueOnce([
+			mockSearchTasks.mockResolvedValueOnce([
 				{ id: "task-1", title: "Task 1", projectId: "project-1" },
 				{ id: "task-2", title: "Task 2", projectId: "project-2" },
 			]);

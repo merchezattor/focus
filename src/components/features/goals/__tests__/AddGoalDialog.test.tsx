@@ -7,6 +7,12 @@ describe("AddGoalDialog", () => {
 
 	beforeEach(() => {
 		mockOnGoalCreated.mockClear();
+		if (typeof window !== "undefined") {
+			HTMLElement.prototype.hasPointerCapture = vi.fn().mockReturnValue(false);
+			HTMLElement.prototype.setPointerCapture = vi.fn();
+			HTMLElement.prototype.releasePointerCapture = vi.fn();
+			HTMLElement.prototype.scrollIntoView = vi.fn();
+		}
 	});
 
 	it("renders dialog with trigger button", async () => {
@@ -86,9 +92,7 @@ describe("AddGoalDialog", () => {
 	it("has priority dropdown", () => {
 		render(<AddGoalDialog open={true} onOpenChange={() => {}} />);
 
-		expect(
-			screen.getByRole("button", { name: /priority 1/i }),
-		).toBeInTheDocument();
+		expect(screen.getByRole("combobox")).toHaveTextContent(/priority 1/i);
 	});
 
 	it("has color picker with color options", () => {
@@ -147,17 +151,15 @@ describe("AddGoalDialog", () => {
 			<AddGoalDialog open={true} onOpenChange={() => {}} />,
 		);
 
-		const priorityButton = screen.getByRole("button", { name: /priority 1/i });
+		const priorityButton = screen.getByRole("combobox");
 		await user.click(priorityButton);
 
-		const priority2Option = screen.getByRole("menuitem", {
+		const priority2Option = screen.getByRole("option", {
 			name: /priority 2/i,
 		});
 		await user.click(priority2Option);
 
-		expect(
-			screen.getByRole("button", { name: /priority 2/i }),
-		).toBeInTheDocument();
+		expect(screen.getByRole("combobox")).toHaveTextContent(/priority 2/i);
 	});
 
 	it("selects color when clicking color button", async () => {

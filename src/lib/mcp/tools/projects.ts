@@ -23,25 +23,32 @@ const createProjectInputSchema = z.object({
 		.regex(/^#[0-9A-Fa-f]{6}$/)
 		.describe('Hex color code in #RRGGBB format, e.g. "#E44332".'),
 	description: z.string().optional().describe("Project description."),
+	status: z
+		.enum(["working", "archived", "complete", "frozen"])
+		.optional()
+		.describe('Project status. Defaults to "working".'),
+	priority: z
+		.enum(["p1", "p2", "p3", "p4"])
+		.optional()
+		.describe("Project priority. Defaults to 'p4'."),
 	isFavorite: z
 		.boolean()
 		.optional()
 		.describe("Pin as favorite. Defaults to false."),
-	parentId: z
+	goalId: z
+		.string()
+		.uuid()
+		.optional()
+		.describe("UUID of a parent goal. Use focus_list_goals to find valid IDs."),
+	parentProjectId: z
 		.string()
 		.uuid()
 		.optional()
 		.describe(
-			"UUID of a parent goal or project. Must set parentType if provided. UUID from focus_list_goals or focus_list_projects.",
-		),
-	parentType: z
-		.enum(["goal", "project"])
-		.optional()
-		.describe(
-			'Type of the parent entity. Required when parentId is set. "goal" or "project".',
+			"UUID of a parent project. Use focus_list_projects to find valid IDs.",
 		),
 	viewType: z
-		.enum(["list", "board"])
+		.enum(["list", "board", "roadmap"])
 		.optional()
 		.describe('Display mode for the project. Defaults to "list".'),
 });
@@ -60,11 +67,19 @@ const updateProjectInputSchema = z.object({
 		.optional()
 		.describe('New hex color code in #RRGGBB format, e.g. "#10B981".'),
 	description: z.string().optional().describe("New project description."),
+	status: z
+		.enum(["working", "archived", "complete", "frozen"])
+		.optional()
+		.describe("Change project status."),
+	priority: z
+		.enum(["p1", "p2", "p3", "p4"])
+		.optional()
+		.describe("Change project priority. 'p1', 'p2', 'p3', or 'p4'."),
 	isFavorite: z.boolean().optional().describe("Pin/unpin as favorite."),
 	viewType: z
-		.enum(["list", "board"])
+		.enum(["list", "board", "roadmap"])
 		.optional()
-		.describe('Change display mode. "list" or "board".'),
+		.describe('Change display mode. "list", "board", or "roadmap".'),
 });
 
 const deleteProjectInputSchema = z.object({
@@ -115,9 +130,11 @@ export const focusCreateProject: MCPToolHandler<
 			name: args.name,
 			color: args.color,
 			description: args.description,
+			status: args.status ?? "working",
+			priority: args.priority ?? "p4",
 			isFavorite: args.isFavorite ?? false,
-			parentId: args.parentId,
-			parentType: args.parentType,
+			goalId: args.goalId,
+			parentProjectId: args.parentProjectId,
 			viewType: args.viewType ?? "list",
 			createdAt: now,
 			updatedAt: now,
@@ -164,6 +181,8 @@ export const focusUpdateProject: MCPToolHandler<
 		if (args.name !== undefined) updates.name = args.name;
 		if (args.color !== undefined) updates.color = args.color;
 		if (args.description !== undefined) updates.description = args.description;
+		if (args.status !== undefined) updates.status = args.status;
+		if (args.priority !== undefined) updates.priority = args.priority;
 		if (args.isFavorite !== undefined) updates.isFavorite = args.isFavorite;
 		if (args.viewType !== undefined) updates.viewType = args.viewType;
 

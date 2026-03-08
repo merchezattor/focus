@@ -6,6 +6,7 @@ import {
 	CheckCircle,
 	Flag,
 	MoreHorizontal,
+	PlusCircle,
 	Send,
 	Trash2,
 } from "lucide-react";
@@ -27,6 +28,7 @@ import { Calendar } from "@/components/ui/calendar";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
@@ -279,11 +281,36 @@ export function EditTaskDialog({
 		}
 	};
 
+	const handleAddSubtask = async () => {
+		try {
+			const res = await fetch("/api/tasks", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					title: "New Subtask",
+					priority: "p4",
+					projectId: task.projectId,
+					parentId: task.id,
+				}),
+			});
+			if (!res.ok) throw new Error("Failed to create subtask");
+
+			onTaskUpdated();
+			router.refresh();
+			setOpen(false); // Close dialog to let user see or edit the newly created subtask
+		} catch (error) {
+			console.error("Failed to create subtask:", error);
+		}
+	};
+
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
 			<DialogContent className="sm:max-w-4xl h-[600px] flex flex-col p-0 gap-0">
 				<DialogTitle className="sr-only">Edit Task</DialogTitle>
+				<DialogDescription className="sr-only">
+					Edit the details of the selected task.
+				</DialogDescription>
 				<div className="flex flex-1 h-full overflow-hidden">
 					{/* Left Column: Main Content */}
 					<div className="flex-1 flex flex-col p-6 border-r overflow-y-auto">
@@ -533,14 +560,24 @@ export function EditTaskDialog({
 						<div className="pt-4 border-t space-y-4">
 							<Button
 								variant="ghost"
+								size="sm"
+								className="w-full justify-start font-medium"
+								onClick={handleAddSubtask}
+							>
+								<PlusCircle className="h-4 w-4 mr-2" />
+								Add subtask
+							</Button>
+
+							<Button
+								variant="ghost"
 								size="lg"
-								className="w-full justify-start bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 font-medium h-12 rounded-xl"
+								className="w-full justify-start bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary font-medium h-12 rounded-xl"
 								onClick={async () => {
 									try {
 										const res = await fetch(`/api/tasks/${task.id}`, {
 											method: "PATCH",
 											headers: { "Content-Type": "application/json" },
-											body: JSON.stringify({ completed: true }),
+											body: JSON.stringify({ status: "done" }),
 										});
 										if (!res.ok) throw new Error("Failed to complete task");
 										setOpen(false);

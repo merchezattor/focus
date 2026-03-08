@@ -28,11 +28,7 @@ export async function GET(request: NextRequest) {
 			filters.status = statusParam.split(",") as any[];
 		}
 
-		// Completed (true/false)
-		const completedParam = searchParams.get("completed");
-		if (completedParam !== null) {
-			filters.completed = completedParam === "true";
-		}
+		// (completed filter removed — use status instead)
 
 		// Project
 		const projectIdParam = searchParams.get("projectId");

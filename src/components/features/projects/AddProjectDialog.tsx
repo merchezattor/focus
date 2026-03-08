@@ -1,5 +1,6 @@
 "use client";
 
+import { Flag } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -28,7 +30,11 @@ import type { Goal, Project } from "@/types";
 const createProjectSchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	description: z.string().optional(),
-	viewType: z.enum(["list", "board"]).default("list"),
+	viewType: z.enum(["list", "board", "roadmap"]).default("list"),
+	status: z
+		.enum(["working", "archived", "complete", "frozen"])
+		.default("working"),
+	priority: z.enum(["p1", "p2", "p3", "p4"]).default("p4"),
 });
 
 interface AddProjectDialogProps {
@@ -54,27 +60,41 @@ const colors = [
 	"#6b7280",
 ];
 
+const priorities = [
+	{ value: "p1", label: "Priority 1", color: "#ef4444" },
+	{ value: "p2", label: "Priority 2", color: "#f97316" },
+	{ value: "p3", label: "Priority 3", color: "#3b82f6" },
+	{ value: "p4", label: "Priority 4", color: "#6b7280" },
+];
+
 /**
  * Encode parentId + parentType into a single select value.
  * Format: "goal:<uuid>" or "project:<uuid>" or "none"
  */
-function encodeParentValue(parentId?: string, parentType?: string): string {
-	if (!parentId || !parentType) return "none";
-	return `${parentType}:${parentId}`;
+function encodeParentValue(
+	goalId?: string | null,
+	parentProjectId?: string | null,
+): string {
+	if (goalId) return `goal:${goalId}`;
+	if (parentProjectId) return `project:${parentProjectId}`;
+	return "none";
 }
 
 /**
  * Decode a composite select value back into parentId + parentType.
  */
 function decodeParentValue(value: string): {
-	parentId?: string;
-	parentType?: "goal" | "project";
+	goalId?: string;
+	parentProjectId?: string;
 } {
 	if (value === "none") return {};
 	const [type, ...idParts] = value.split(":");
 	const id = idParts.join(":"); // handle UUIDs safely
-	if (type === "goal" || type === "project") {
-		return { parentId: id, parentType: type };
+	if (type === "goal") {
+		return { goalId: id };
+	}
+	if (type === "project") {
+		return { parentProjectId: id };
 	}
 	return {};
 }
@@ -97,8 +117,10 @@ export function AddProjectDialog(
 		colors[Math.floor(Math.random() * colors.length)],
 	);
 	const [viewType, setViewType] = useState("list");
-	const [parentId, setParentId] = useState<string | undefined>(undefined);
-	const [parentType, setParentType] = useState<"goal" | "project" | undefined>(
+	const [status, setStatus] = useState("working");
+	const [priority, setPriority] = useState("p4");
+	const [goalId, setGoalId] = useState<string | undefined>(undefined);
+	const [parentProjectId, setParentProjectId] = useState<string | undefined>(
 		undefined,
 	);
 	const [isLoading, setIsLoading] = useState(false);
@@ -112,24 +134,28 @@ export function AddProjectDialog(
 				setDescription(projectToEdit.description || "");
 				setColor(projectToEdit.color);
 				setViewType(projectToEdit.viewType || "list");
-				setParentId(projectToEdit.parentId || undefined);
-				setParentType(projectToEdit.parentType || undefined);
+				setStatus(projectToEdit.status || "working");
+				setPriority(projectToEdit.priority || "p4");
+				setGoalId(projectToEdit.goalId || undefined);
+				setParentProjectId(projectToEdit.parentProjectId || undefined);
 			} else {
 				// Reset for Add mode
 				setName("");
 				setDescription("");
 				setColor(colors[Math.floor(Math.random() * colors.length)]);
 				setViewType("list");
-				setParentId(undefined);
-				setParentType(undefined);
+				setStatus("working");
+				setPriority("p4");
+				setGoalId(undefined);
+				setParentProjectId(undefined);
 			}
 		}
 	}, [open, projectToEdit]);
 
 	const handleParentChange = (value: string) => {
 		const decoded = decodeParentValue(value);
-		setParentId(decoded.parentId);
-		setParentType(decoded.parentType);
+		setGoalId(decoded.goalId);
+		setParentProjectId(decoded.parentProjectId);
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -139,6 +165,8 @@ export function AddProjectDialog(
 			name,
 			description,
 			viewType,
+			status,
+			priority,
 		});
 		if (!result.success) {
 			toast.error(result.error.issues[0].message);
@@ -159,8 +187,10 @@ export function AddProjectDialog(
 						description,
 						color,
 						viewType,
-						parentId: parentId || null,
-						parentType: parentType || null,
+						status,
+						priority,
+						goalId: goalId || null,
+						parentProjectId: parentProjectId || null,
 					}),
 				});
 
@@ -179,8 +209,10 @@ export function AddProjectDialog(
 						description,
 						color,
 						viewType,
-						parentId: parentId || null,
-						parentType: parentType || null,
+						status,
+						priority,
+						goalId: goalId || null,
+						parentProjectId: parentProjectId || null,
 						isFavorite: false,
 					}),
 				});
@@ -221,9 +253,14 @@ export function AddProjectDialog(
 					<DialogTitle>
 						{projectToEdit ? "Edit Project" : "Add Project"}
 					</DialogTitle>
+					<DialogDescription className="sr-only">
+						{projectToEdit
+							? "Edit an existing project"
+							: "Create a new project"}
+					</DialogDescription>
 				</DialogHeader>
 				<form onSubmit={handleSubmit} className="space-y-4">
-					<div className="space-y-2">
+					<div className="space-y-3">
 						<label className="text-sm font-medium">Name</label>
 						<Input
 							placeholder="Project name"
@@ -233,7 +270,7 @@ export function AddProjectDialog(
 						/>
 					</div>
 
-					<div className="space-y-2">
+					<div className="space-y-3">
 						<label className="text-sm font-medium">Description</label>
 						<Textarea
 							placeholder="Description (optional)"
@@ -242,67 +279,109 @@ export function AddProjectDialog(
 						/>
 					</div>
 
-					<div className="space-y-2">
-						<label className="text-sm font-medium">View</label>
-						<Select value={viewType} onValueChange={setViewType}>
-							<SelectTrigger>
-								<SelectValue placeholder="Select view" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="list">List</SelectItem>
-								<SelectItem value="board">Board (Kanban)</SelectItem>
-							</SelectContent>
-						</Select>
+					<div className="grid grid-cols-2 gap-4">
+						<div className="space-y-3">
+							<label className="text-sm font-medium">View</label>
+							<Select value={viewType} onValueChange={setViewType}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select view" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="list">List</SelectItem>
+									<SelectItem value="board">Board (Kanban)</SelectItem>
+									<SelectItem value="roadmap">Roadmap</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="space-y-3">
+							<label className="text-sm font-medium">Status</label>
+							<Select value={status} onValueChange={setStatus}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select status" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="working">Working</SelectItem>
+									<SelectItem value="archived">Archived</SelectItem>
+									<SelectItem value="complete">Complete</SelectItem>
+									<SelectItem value="frozen">Frozen</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
 					</div>
 
-					<div className="space-y-2">
-						<label className="text-sm font-medium">Parent</label>
-						<Select
-							value={encodeParentValue(parentId, parentType)}
-							onValueChange={handleParentChange}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder="Select parent (optional)" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="none">No Parent</SelectItem>
-								{props.goals && props.goals.length > 0 && (
-									<SelectGroup>
-										<SelectLabel>Goals</SelectLabel>
-										{props.goals.map((goal) => (
-											<SelectItem key={goal.id} value={`goal:${goal.id}`}>
-												<div className="flex items-center gap-2">
-													<span
-														className="w-2 h-2 rounded-full"
-														style={{ backgroundColor: goal.color }}
-													/>
-													{goal.name}
-												</div>
-											</SelectItem>
-										))}
-									</SelectGroup>
-								)}
-								{availableProjects.length > 0 && (
-									<SelectGroup>
-										<SelectLabel>Projects</SelectLabel>
-										{availableProjects.map((project) => (
-											<SelectItem
-												key={project.id}
-												value={`project:${project.id}`}
-											>
-												<div className="flex items-center gap-2">
-													<span
-														className="w-2 h-2 rounded-full"
-														style={{ backgroundColor: project.color }}
-													/>
-													{project.name}
-												</div>
-											</SelectItem>
-										))}
-									</SelectGroup>
-								)}
-							</SelectContent>
-						</Select>
+					<div className="grid grid-cols-2 gap-4">
+						<div className="space-y-3">
+							<label className="text-sm font-medium">Priority</label>
+							<Select value={priority} onValueChange={setPriority}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select priority" />
+								</SelectTrigger>
+								<SelectContent>
+									{priorities.map((p) => (
+										<SelectItem key={p.value} value={p.value}>
+											<div className="flex items-center gap-2">
+												<Flag
+													className="mr-2 h-4 w-4"
+													style={{ color: p.color }}
+												/>
+												{p.label}
+											</div>
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="space-y-3">
+							<label className="text-sm font-medium">Parent</label>
+							<Select
+								value={encodeParentValue(goalId, parentProjectId)}
+								onValueChange={handleParentChange}
+							>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select parent (optional)" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="none">No Parent</SelectItem>
+									{props.goals && props.goals.length > 0 && (
+										<SelectGroup>
+											<SelectLabel>Goals</SelectLabel>
+											{props.goals.map((goal) => (
+												<SelectItem key={goal.id} value={`goal:${goal.id}`}>
+													<div className="flex items-center gap-2">
+														<span
+															className="w-2 h-2 rounded-full"
+															style={{ backgroundColor: goal.color }}
+														/>
+														{goal.name}
+													</div>
+												</SelectItem>
+											))}
+										</SelectGroup>
+									)}
+									{availableProjects.length > 0 && (
+										<SelectGroup>
+											<SelectLabel>Projects</SelectLabel>
+											{availableProjects.map((project) => (
+												<SelectItem
+													key={project.id}
+													value={`project:${project.id}`}
+												>
+													<div className="flex items-center gap-2">
+														<span
+															className="w-2 h-2 rounded-full"
+															style={{ backgroundColor: project.color }}
+														/>
+														{project.name}
+													</div>
+												</SelectItem>
+											))}
+										</SelectGroup>
+									)}
+								</SelectContent>
+							</Select>
+						</div>
 					</div>
 
 					<div className="space-y-2">

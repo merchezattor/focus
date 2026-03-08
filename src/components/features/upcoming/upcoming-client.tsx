@@ -49,7 +49,7 @@ export function UpcomingClient({
 
 	const features: Feature[] = useMemo(() => {
 		return tasks
-			.filter((t) => !t.completed && (t.planDate || t.dueDate))
+			.filter((t) => t.status !== "done" && (t.planDate || t.dueDate))
 			.map((t) => ({
 				id: t.id,
 				name: t.title,
@@ -81,7 +81,7 @@ export function UpcomingClient({
 			await fetch(`/api/tasks/${taskId}`, {
 				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ completed: true }),
+				body: JSON.stringify({ status: "done" }),
 			});
 			router.refresh();
 		} catch (error) {

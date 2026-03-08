@@ -10,8 +10,9 @@ interface TaskItemProps {
 	task: Task;
 	projectName?: string;
 	projectColor?: string;
-	onToggle: (id: string, completed: boolean) => void;
+	onToggle: (id: string, done: boolean) => void;
 	onEdit: (task: Task) => void;
+	compact?: boolean;
 }
 
 export function TaskItem({
@@ -20,18 +21,20 @@ export function TaskItem({
 	projectColor,
 	onToggle,
 	onEdit,
+	compact,
 }: TaskItemProps) {
 	return (
 		<div
 			className={cn(
-				"group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-all text-left",
+				"group flex items-start gap-3 rounded-lg px-3 transition-all text-left",
+				compact ? "py-1" : "py-2.5",
 				"hover:bg-accent/50 cursor-pointer",
-				task.completed && "opacity-50",
+				task.status === "done" && "opacity-50",
 			)}
 			onClick={() => onEdit(task)}
 		>
 			<Checkbox
-				checked={task.completed}
+				checked={task.status === "done"}
 				onCheckedChange={(checked) => onToggle(task.id, !!checked)}
 				onClick={(e) => e.stopPropagation()}
 				className="rounded-full w-5 h-5 border-2 transition-colors data-[state=checked]:border-none data-[state=checked]:text-white"
@@ -44,15 +47,16 @@ export function TaskItem({
 								: task.priority === "p3"
 									? "#3b82f6"
 									: "#6b7280",
-					backgroundColor: task.completed
-						? task.priority === "p1"
-							? "#ef4444"
-							: task.priority === "p2"
-								? "#f97316"
-								: task.priority === "p3"
-									? "#3b82f6"
-									: "#6b7280"
-						: "transparent",
+					backgroundColor:
+						task.status === "done"
+							? task.priority === "p1"
+								? "#ef4444"
+								: task.priority === "p2"
+									? "#f97316"
+									: task.priority === "p3"
+										? "#3b82f6"
+										: "#6b7280"
+							: "transparent",
 				}}
 			/>
 			<div className="flex-1 min-w-0">
@@ -60,7 +64,7 @@ export function TaskItem({
 					<span
 						className={cn(
 							"text-sm font-medium line-clamp-1",
-							task.completed && "line-through text-muted-foreground",
+							task.status === "done" && "line-through text-muted-foreground",
 						)}
 					>
 						{task.title}
@@ -72,7 +76,12 @@ export function TaskItem({
 						</div>
 					)}
 				</div>
-				<div className="flex items-center gap-2 mt-0.5 min-h-[1.25rem]">
+				<div
+					className={cn(
+						"flex items-center gap-2 mt-0.5",
+						!compact && "min-h-[1.25rem]",
+					)}
+				>
 					{task.dueDate && (
 						<span className="text-xs text-muted-foreground">
 							Due {format(new Date(task.dueDate), "MMM d")}
@@ -80,7 +89,7 @@ export function TaskItem({
 					)}
 
 					{/* Spacer for height consistency if empty */}
-					{!task.dueDate && (
+					{!compact && !task.dueDate && (
 						<span className="text-xs text-muted-foreground invisible">
 							No date
 						</span>

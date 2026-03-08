@@ -105,16 +105,22 @@ export async function PUT(request: NextRequest) {
 			);
 		}
 
-		// result.data.parentType can be null, which is not compatible with string literal type in updateProject
-		// We need to cast it or ensure it matches.
-		// updateProject expects { parentType?: "goal" | "project" }
-		// result.data has { parentType?: "goal" | "project" | null }
-		// We need to strip null or convert to undefined if null
-		const cleanData = {
-			...result.data,
-			parentType:
-				result.data.parentType === null ? undefined : result.data.parentType,
-		};
+		// Map parentId/parentType from client to goalId/parentProjectId if present
+		const cleanData: Record<string, any> = { ...result.data };
+		if ("parentId" in cleanData && "parentType" in cleanData) {
+			if (cleanData.parentType === "goal") {
+				cleanData.goalId = cleanData.parentId;
+				cleanData.parentProjectId = null;
+			} else if (cleanData.parentType === "project") {
+				cleanData.parentProjectId = cleanData.parentId;
+				cleanData.goalId = null;
+			} else {
+				cleanData.goalId = null;
+				cleanData.parentProjectId = null;
+			}
+			delete cleanData.parentId;
+			delete cleanData.parentType;
+		}
 
 		await updateProject(id, cleanData, user.id, actorType, auth.tokenName);
 

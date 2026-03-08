@@ -4,6 +4,7 @@ import {
 	createGoal,
 	createProject,
 	createTask,
+	createTasksBulk,
 	deleteComment,
 	deleteGoal,
 	deleteProject,
@@ -34,6 +35,7 @@ vi.mock("@/db", () => ({
 
 vi.mock("../actions", () => ({
 	logAction: vi.fn(),
+	getUnreadActionsCount: vi.fn(() => Promise.resolve(0)),
 }));
 
 describe("Storage Layer", () => {
@@ -113,6 +115,52 @@ describe("Storage Layer", () => {
 
 				await createTask(task, "user-123", "user", undefined);
 				expect(mockDb.insert).toHaveBeenCalled();
+			});
+		});
+
+		describe("createTasksBulk", () => {
+			it("should be a function", () => {
+				expect(typeof createTasksBulk).toBe("function");
+			});
+
+			it("should accept tasksList, userId, actorType, and tokenName", async () => {
+				const task1 = {
+					id: "task-1",
+					title: "Test Task 1",
+					completed: false,
+					status: "todo" as const,
+					priority: "p2" as const,
+					projectId: "proj-1",
+					parentId: null,
+					dueDate: null,
+					planDate: null,
+					comments: [],
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				};
+				const task2 = {
+					id: "task-2",
+					title: "Test Task 2",
+					completed: false,
+					status: "todo" as const,
+					priority: "p2" as const,
+					projectId: "proj-1",
+					parentId: "task-1",
+					dueDate: null,
+					planDate: null,
+					comments: [],
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				};
+
+				mockDb.insert.mockReturnValue({
+					values: vi.fn(() => ({
+						returning: vi.fn(() => []),
+					})),
+				});
+
+				await createTasksBulk([task1, task2], "user-123", "user", undefined);
+				expect(mockDb.insert).toHaveBeenCalled(); // once for tasks
 			});
 		});
 
@@ -229,10 +277,21 @@ describe("Storage Layer", () => {
 						from: vi.fn(() => ({
 							where: vi.fn(() => [{ value: 3 }]),
 						})),
+					})
+					.mockReturnValueOnce({
+						from: vi.fn(() => ({
+							where: vi.fn(() => ({
+								groupBy: vi.fn(() => [{ projectId: "p1", value: 2 }]),
+							})),
+						})),
 					});
 
 				const result = await getTaskCounts("user-123");
-				expect(result).toEqual({ inboxCount: 5, todayCount: 3 });
+				expect(result).toEqual({
+					inboxCount: 5,
+					todayCount: 3,
+					projectCounts: { p1: 2 },
+				});
 			});
 		});
 	});
@@ -267,6 +326,8 @@ describe("Storage Layer", () => {
 					id: "project-1",
 					name: "Test Project",
 					color: "#3b82f6",
+					priority: "p4" as const,
+					status: "working" as const,
 					description: undefined,
 					isFavorite: false,
 					parentId: undefined,
@@ -470,15 +531,37 @@ describe("Storage Layer", () => {
 				expect(typeof syncComments).toBe("function");
 			});
 
-			it("should accept taskId, newComments, actorId, actorType, and tokenName", async () => {
+			it("should accept taskId, newComments, actorId, actorType, and tokenName and add/delete correctly", async () => {
+				// Mock what's already in the DB
 				mockDb.select.mockReturnValueOnce({
 					from: vi.fn(() => ({
-						where: vi.fn(() => []),
+						where: vi.fn(() => [{ id: "comment-delete" }]), // This one will be deleted
 					})),
 				});
 
-				await syncComments("task-1", [], "user-123", "user", undefined);
-				expect(mockDb.select).toHaveBeenCalled();
+				// Mock getting task for the logAction
+				mockDb.select.mockReturnValueOnce({
+					from: vi.fn(() => ({
+						where: vi.fn(() => [{ title: "Test task" }]),
+					})),
+				});
+
+				const newComments = [
+					{ id: "comment-add", content: "New comment", postedAt: new Date() },
+				];
+
+				await syncComments(
+					"task-1",
+					newComments,
+					"user-123",
+					"user",
+					undefined,
+				);
+
+				// Assert delete was called for 'comment-delete'
+				expect(mockDb.delete).toHaveBeenCalled();
+				// Assert insert was called for 'comment-add'
+				expect(mockDb.insert).toHaveBeenCalled();
 			});
 		});
 	});

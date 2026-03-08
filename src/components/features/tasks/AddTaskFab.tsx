@@ -11,7 +11,7 @@ export function AddTaskFab() {
 	return (
 		<Button
 			onClick={() => setAddTaskOpen(true)}
-			className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-[#db4c3f] shadow-lg hover:bg-[#b03d32] text-white p-0 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+			className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary shadow-lg hover:bg-primary/90 text-primary-foreground p-0 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
 			size="icon"
 			aria-label="Add task"
 		>
