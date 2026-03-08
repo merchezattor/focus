@@ -531,15 +531,37 @@ describe("Storage Layer", () => {
 				expect(typeof syncComments).toBe("function");
 			});
 
-			it("should accept taskId, newComments, actorId, actorType, and tokenName", async () => {
+			it("should accept taskId, newComments, actorId, actorType, and tokenName and add/delete correctly", async () => {
+				// Mock what's already in the DB
 				mockDb.select.mockReturnValueOnce({
 					from: vi.fn(() => ({
-						where: vi.fn(() => []),
+						where: vi.fn(() => [{ id: "comment-delete" }]), // This one will be deleted
 					})),
 				});
 
-				await syncComments("task-1", [], "user-123", "user", undefined);
-				expect(mockDb.select).toHaveBeenCalled();
+				// Mock getting task for the logAction
+				mockDb.select.mockReturnValueOnce({
+					from: vi.fn(() => ({
+						where: vi.fn(() => [{ title: "Test task" }]),
+					})),
+				});
+
+				const newComments = [
+					{ id: "comment-add", content: "New comment", postedAt: new Date() },
+				];
+
+				await syncComments(
+					"task-1",
+					newComments,
+					"user-123",
+					"user",
+					undefined,
+				);
+
+				// Assert delete was called for 'comment-delete'
+				expect(mockDb.delete).toHaveBeenCalled();
+				// Assert insert was called for 'comment-add'
+				expect(mockDb.insert).toHaveBeenCalled();
 			});
 		});
 	});
