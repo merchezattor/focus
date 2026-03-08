@@ -36,7 +36,7 @@ describe("Agentic Actions", () => {
 	};
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	describe("logAction with comment", () => {
@@ -257,7 +257,7 @@ describe("Agentic Actions", () => {
 		});
 
 		describe("ownership enforcement", () => {
-			it.skip("should reject when task not found (ownership check fails)", async () => {
+			it("should reject when task not found (ownership check fails)", async () => {
 				vi.spyOn(storage, "getTaskByIdForUser").mockResolvedValue(null as any);
 
 				const result = await focus_create_agentic_action(
