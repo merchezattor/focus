@@ -546,7 +546,6 @@ async function updateTaskTool(
 		if (parsed.planDate !== undefined)
 			updates.planDate = parsed.planDate ? new Date(parsed.planDate) : null;
 		updates.updatedAt = new Date();
-
 		await updateTask(
 			parsed.id,
 			updates,

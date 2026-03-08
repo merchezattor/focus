@@ -384,6 +384,12 @@ export async function searchTasks(
 	// 2. Status (Array)
 	if (filters.status && filters.status.length > 0) {
 		conditions.push(inArray(tasks.status, filters.status));
+
+		// Automagical enhancement: If they explicitly ask for active statuses but NOT "done",
+		// and didn't specify 'completed' flag, append completed = false
+		if (filters.completed === undefined && !filters.status.includes("done")) {
+			conditions.push(eq(tasks.completed, false));
+		}
 	}
 
 	// 3. Completed (Boolean) - overrides status if present, or works alongside
@@ -713,8 +719,22 @@ export async function updateTask(
 	if (updates.title !== undefined) dbUpdates.content = updates.title;
 	if (updates.description !== undefined)
 		dbUpdates.description = updates.description;
-	if (updates.completed !== undefined) dbUpdates.completed = updates.completed;
-	if (updates.status !== undefined) dbUpdates.status = updates.status;
+
+	if (updates.completed !== undefined) {
+		dbUpdates.completed = updates.completed;
+		// Auto-sync status if only completed is provided
+		if (updates.status === undefined) {
+			dbUpdates.status = updates.completed ? "done" : "todo";
+		}
+	}
+
+	if (updates.status !== undefined) {
+		dbUpdates.status = updates.status;
+		// Auto-sync completed if only status is provided
+		if (updates.completed === undefined) {
+			dbUpdates.completed = updates.status === "done";
+		}
+	}
 	if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
 	if (updates.projectId !== undefined) dbUpdates.project_id = updates.projectId;
 	if (updates.parentId !== undefined) dbUpdates.parent_id = updates.parentId;
