@@ -23,7 +23,7 @@ describe("Agentic Actions", () => {
 	};
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.resetAllMocks();
 	});
 
 	describe("logAction with comment", () => {
@@ -244,7 +244,7 @@ describe("Agentic Actions", () => {
 		});
 
 		describe("ownership enforcement", () => {
-			it.skip("should reject when task not found (ownership check fails)", async () => {
+			it("should reject when task not found (ownership check fails)", async () => {
 				vi.spyOn(storage, "getTaskByIdForUser").mockResolvedValue(null as any);
 
 				const result = await focus_create_agentic_action(
@@ -255,8 +255,7 @@ describe("Agentic Actions", () => {
 					},
 					mockContext,
 				);
-
-				expect(result.isError).toBe(true);
+				expect(result.isError).toEqual(true);
 				expect(result.content[0].text).toContain("Access denied");
 			});
 

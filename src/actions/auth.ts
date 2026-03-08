@@ -66,7 +66,13 @@ export async function listUserTokens(): Promise<
 	});
 	if (!session) throw new Error("Unauthorized");
 
-	return listApiTokens(session.user.id);
+	const tokens = await listApiTokens(session.user.id);
+	// return plain objects to avoid Next.js serialization errors with Drizzle proxies
+	return tokens.map((t) => ({
+		id: t.id,
+		name: t.name,
+		createdAt: new Date(t.createdAt),
+	}));
 }
 
 export async function createUserToken(name: string): Promise<{
@@ -80,7 +86,13 @@ export async function createUserToken(name: string): Promise<{
 	});
 	if (!session) throw new Error("Unauthorized");
 
-	return createApiToken(session.user.id, name);
+	const result = await createApiToken(session.user.id, name);
+	return {
+		id: result.id,
+		name: result.name,
+		token: result.token,
+		createdAt: new Date(result.createdAt),
+	};
 }
 
 export async function deleteUserToken(id: string): Promise<void> {
