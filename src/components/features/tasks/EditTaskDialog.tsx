@@ -96,6 +96,7 @@ export function EditTaskDialog({
 	);
 	const [priority, setPriority] = useState<string>(task.priority || "p4");
 	const [comment, setComment] = useState("");
+	const [showAllComments, setShowAllComments] = useState(false);
 
 	// Optimistic state for comments
 	const [optimisticComments, setOptimisticComments] = useState<Comment[]>(
@@ -113,6 +114,7 @@ export function EditTaskDialog({
 			setPriority(task.priority || "p4");
 			setComment("");
 			setOptimisticComments(task.comments || []);
+			setShowAllComments(false);
 		}
 	}, [open, task]);
 
@@ -342,7 +344,20 @@ export function EditTaskDialog({
 							</h3>
 
 							<div className="max-h-[180px] overflow-y-auto space-y-4 mb-4">
-								{optimisticComments.slice(0, 3).map((comment) => (
+								{!showAllComments && optimisticComments.length > 3 && (
+									<Button
+										variant="ghost"
+										size="sm"
+										className="w-full h-8 text-xs text-muted-foreground mb-2"
+										onClick={() => setShowAllComments(true)}
+									>
+										View {optimisticComments.length - 3} previous comments
+									</Button>
+								)}
+								{(showAllComments
+									? optimisticComments
+									: optimisticComments.slice(-3)
+								).map((comment) => (
 									<div key={comment.id} className="flex gap-3 text-sm group">
 										<div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs shrink-0">
 											U
@@ -379,11 +394,6 @@ export function EditTaskDialog({
 										</div>
 									</div>
 								))}
-								{optimisticComments.length > 3 && (
-									<p className="text-xs text-muted-foreground text-center py-2">
-										+{optimisticComments.length - 3} more comments
-									</p>
-								)}
 							</div>
 
 							<div className="flex gap-2">
