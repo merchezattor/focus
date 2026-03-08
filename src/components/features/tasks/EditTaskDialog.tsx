@@ -108,7 +108,6 @@ export function EditTaskDialog({
 			setTitle(task.title);
 			setDescription(task.description || "");
 			setProjectId(task.projectId || "");
-			setProjectId(task.projectId || "");
 			setDueDate(task.dueDate ? new Date(task.dueDate) : undefined);
 			setPlanDate(task.planDate ? new Date(task.planDate) : undefined);
 			setPriority(task.priority || "p4");
@@ -344,14 +343,16 @@ export function EditTaskDialog({
 							</h3>
 
 							<div className="max-h-[180px] overflow-y-auto space-y-4 mb-4">
-								{!showAllComments && optimisticComments.length > 3 && (
+								{optimisticComments.length > 3 && (
 									<Button
 										variant="ghost"
 										size="sm"
 										className="w-full h-8 text-xs text-muted-foreground mb-2"
-										onClick={() => setShowAllComments(true)}
+										onClick={() => setShowAllComments(!showAllComments)}
 									>
-										View {optimisticComments.length - 3} previous comments
+										{showAllComments
+											? "Hide previous comments"
+											: `View ${optimisticComments.length - 3} previous comments`}
 									</Button>
 								)}
 								{(showAllComments
