@@ -4,7 +4,6 @@ import {
 	IconCalendar,
 	IconCheck,
 	IconClock,
-	IconInbox,
 	IconMap,
 	IconPlus,
 	IconSearch,
@@ -44,12 +43,6 @@ const data = {
 			count: 5,
 		},
 		{
-			title: "Inbox",
-			url: "/inbox",
-			icon: IconInbox,
-			count: 12,
-		},
-		{
 			title: "Upcoming",
 			url: "/upcoming",
 			icon: IconCalendar,
@@ -59,6 +52,7 @@ const data = {
 			title: "Backlog",
 			url: "/backlog",
 			icon: Archive,
+			count: 0,
 		},
 		{
 			title: "Map",
@@ -113,7 +107,7 @@ export function AppSidebar({
 	const setGoalToEdit = useSetAtom(goalToEditAtom);
 
 	const navMainWithCounts = data.navMain.map((item) => {
-		if (item.title === "Inbox")
+		if (item.title === "Backlog")
 			return { ...item, count: counts?.inboxCount ?? 0 };
 		if (item.title === "Today")
 			return { ...item, count: counts?.todayCount ?? 0 };

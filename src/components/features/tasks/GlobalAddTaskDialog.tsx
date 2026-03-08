@@ -3,12 +3,13 @@
 import { useAtom, useSetAtom } from "jotai";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AddTaskDialog } from "@/components/features/tasks/AddTaskDialog";
-import { isAddTaskOpenAtom, tasksAtom } from "@/lib/atoms";
+import { isAddTaskOpenAtom, refreshBacklogAtom, tasksAtom } from "@/lib/atoms";
 import type { Project } from "@/types";
 
 export function GlobalAddTaskDialog({ projects }: { projects: Project[] }) {
 	const [isOpen, setIsOpen] = useAtom(isAddTaskOpenAtom);
 	const setTasks = useSetAtom(tasksAtom);
+	const triggerRefresh = useSetAtom(refreshBacklogAtom);
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
@@ -24,6 +25,7 @@ export function GlobalAddTaskDialog({ projects }: { projects: Project[] }) {
 			onOptimisticAdd={(task) => setTasks((prev) => [task, ...prev])}
 			onTaskCreated={() => {
 				router.refresh();
+				triggerRefresh((prev) => prev + 1);
 			}}
 			trigger={null}
 		/>

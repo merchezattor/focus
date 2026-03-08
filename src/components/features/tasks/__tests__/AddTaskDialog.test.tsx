@@ -116,11 +116,11 @@ describe("AddTaskDialog", () => {
 			).toBeInTheDocument();
 		});
 
-		it("renders project selector with inbox default", () => {
+		it("renders project selector with no project default", () => {
 			render(<AddTaskDialog {...defaultProps} open={true} />);
 
 			expect(
-				screen.getByRole("button", { name: /inbox/i }),
+				screen.getByRole("button", { name: /no project/i }),
 			).toBeInTheDocument();
 		});
 

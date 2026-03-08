@@ -70,7 +70,11 @@ export async function GET(request: NextRequest) {
 
 		// Filter by project if specified
 		if (projectId) {
-			tasks = tasks.filter((task: Task) => task.projectId === projectId);
+			if (projectId === "inbox") {
+				tasks = tasks.filter((task: Task) => task.projectId === null);
+			} else {
+				tasks = tasks.filter((task: Task) => task.projectId === projectId);
+			}
 		}
 
 		return NextResponse.json({ tasks });
@@ -104,8 +108,11 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Check if this is a backlog task
-		const isBacklog = result.data.projectId === "backlog";
+		// Check if this is an inbox task (null projectId or "inbox")
+		const isInbox =
+			result.data.projectId === "inbox" ||
+			result.data.projectId === null ||
+			result.data.projectId === "";
 
 		// Add new task with generated id and timestamps
 		const newTask: Task = {
@@ -114,13 +121,11 @@ export async function POST(request: NextRequest) {
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			comments: [],
-			// Set status to "cold" for backlog tasks, "todo" otherwise
-			status: isBacklog ? "cold" : "todo",
+			// Set status to "cold" for inbox tasks, "todo" otherwise
+			status: isInbox ? "cold" : "todo",
 			// Convert special project IDs to null
 			projectId:
-				result.data.projectId === "inbox" ||
-				result.data.projectId === "backlog" ||
-				result.data.projectId === ""
+				result.data.projectId === "inbox" || result.data.projectId === ""
 					? null
 					: result.data.projectId,
 		};

@@ -3,10 +3,8 @@
 import { format } from "date-fns";
 import {
 	AlarmClock,
-	Archive,
 	Calendar as CalendarIcon,
 	Flag,
-	Inbox,
 	MoreHorizontal,
 	Plus,
 } from "lucide-react";
@@ -26,9 +24,7 @@ import {
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuGroup,
 	DropdownMenuItem,
-	DropdownMenuLabel,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -114,14 +110,15 @@ export function AddTaskDialog({
 
 		// Optimistic Update
 		if (onOptimisticAdd) {
+			const hasProject = projectId && projectId !== "";
 			const tempTask = {
 				id: `temp-${Date.now()}`,
 				title,
 				description: description || undefined,
-				projectId: projectId && projectId !== "inbox" ? projectId : null,
+				projectId: hasProject ? projectId : null,
 				priority,
 				dueDate: dueDate?.toISOString(),
-				status: "todo",
+				status: hasProject ? "todo" : "cold",
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
 				planDate: null,
@@ -138,13 +135,14 @@ export function AddTaskDialog({
 		}
 
 		try {
+			const hasProject = projectId && projectId !== "";
 			const res = await fetch("/api/tasks", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					title,
 					description: description || undefined,
-					projectId: projectId && projectId !== "inbox" ? projectId : null,
+					projectId: hasProject ? projectId : null,
 					dueDate: dueDate?.toISOString(),
 					priority,
 				}),
@@ -339,74 +337,35 @@ export function AddTaskDialog({
 											/>
 											{selectedProject.name}
 										</>
-									) : projectId === "backlog" ? (
-										<>
-											<Archive className="h-3.5 w-3.5" />
-											Backlog
-										</>
 									) : (
 										<>
-											<Inbox className="h-3.5 w-3.5" />
-											Inbox
+											<span className="w-2 h-2 rounded-full bg-black dark:bg-white" />
+											No project
 										</>
 									)}
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="start" className="z-[100]">
-								<DropdownMenuItem onClick={() => setProjectId("inbox")}>
+								<DropdownMenuItem onClick={() => setProjectId("")}>
 									<div className="flex items-center gap-2">
-										<Inbox className="h-4 w-4 text-muted-foreground" />
-										Inbox
+										<span className="w-2 h-2 rounded-full bg-black dark:bg-white" />
+										No project
 									</div>
 								</DropdownMenuItem>
-								<DropdownMenuItem onClick={() => setProjectId("backlog")}>
-									<div className="flex items-center gap-2">
-										<Archive className="h-4 w-4 text-muted-foreground" />
-										Backlog
-									</div>
-								</DropdownMenuItem>
-
-								{projects.some((p) => p.isFavorite) && (
-									<DropdownMenuGroup>
-										<DropdownMenuLabel>Favorites</DropdownMenuLabel>
-										{projects
-											.filter((p) => p.isFavorite)
-											.map((project) => (
-												<DropdownMenuItem
-													key={project.id}
-													onClick={() => setProjectId(project.id)}
-												>
-													<div className="flex items-center gap-2">
-														<span
-															className="w-2 h-2 rounded-full"
-															style={{ backgroundColor: project.color }}
-														/>
-														{project.name}
-													</div>
-												</DropdownMenuItem>
-											))}
-									</DropdownMenuGroup>
-								)}
-
-								<DropdownMenuGroup>
-									<DropdownMenuLabel>My Projects</DropdownMenuLabel>
-									{projects
-										.filter((p) => !p.isFavorite)
-										.map((project) => (
-											<DropdownMenuItem
-												key={project.id}
-												onClick={() => setProjectId(project.id)}
-											>
-												<div className="flex items-center gap-2">
-													<span
-														className="w-2 h-2 rounded-full"
-														style={{ backgroundColor: project.color }}
-													/>
-													{project.name}
-												</div>
-											</DropdownMenuItem>
-										))}
-								</DropdownMenuGroup>
+								{projects.map((project) => (
+									<DropdownMenuItem
+										key={project.id}
+										onClick={() => setProjectId(project.id)}
+									>
+										<div className="flex items-center gap-2">
+											<span
+												className="w-2 h-2 rounded-full"
+												style={{ backgroundColor: project.color }}
+											/>
+											{project.name}
+										</div>
+									</DropdownMenuItem>
+								))}
 							</DropdownMenuContent>
 						</DropdownMenu>
 

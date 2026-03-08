@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useAtomValue } from "jotai";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BacklogTable } from "@/components/features/tasks/BacklogTable";
 import { EditTaskDialog } from "@/components/features/tasks/EditTaskDialog";
+import { refreshBacklogAtom } from "@/lib/atoms";
 import type { Project, Task } from "@/types";
 
 interface BacklogClientProps {
@@ -17,8 +19,9 @@ export function BacklogClient({
 	const [tasks, setTasks] = useState<Task[]>(initialTasks);
 	const [projects, setProjects] = useState<Project[]>(initialProjects);
 	const [editingTask, setEditingTask] = useState<Task | null>(null);
+	const refreshTrigger = useAtomValue(refreshBacklogAtom);
 
-	const fetchData = async () => {
+	const fetchData = useCallback(async () => {
 		try {
 			const [tasksRes, projectsRes] = await Promise.all([
 				fetch("/api/tasks?status=cold"),
@@ -36,7 +39,13 @@ export function BacklogClient({
 		} catch (err) {
 			console.error("Failed to refresh backlog data:", err);
 		}
-	};
+	}, []);
+
+	useEffect(() => {
+		if (refreshTrigger > 0) {
+			fetchData();
+		}
+	}, [refreshTrigger, fetchData]);
 
 	const handleEdit = (task: Task) => {
 		setEditingTask(task);
@@ -53,7 +62,12 @@ export function BacklogClient({
 
 	return (
 		<div className="@container/main flex flex-1 flex-col gap-4 h-full">
-			<BacklogTable tasks={tasks} projects={projectsMap} onEdit={handleEdit} />
+			<BacklogTable
+				tasks={tasks}
+				projects={projectsMap}
+				onEdit={handleEdit}
+				onTaskUpdated={handleTaskUpdated}
+			/>
 
 			{editingTask && (
 				<EditTaskDialog
