@@ -96,6 +96,7 @@ export function EditTaskDialog({
 	);
 	const [priority, setPriority] = useState<string>(task.priority || "p4");
 	const [comment, setComment] = useState("");
+	const [showAllComments, setShowAllComments] = useState(false);
 
 	// Optimistic state for comments
 	const [optimisticComments, setOptimisticComments] = useState<Comment[]>(
@@ -113,6 +114,7 @@ export function EditTaskDialog({
 			setPriority(task.priority || "p4");
 			setComment("");
 			setOptimisticComments(task.comments || []);
+			setShowAllComments(false);
 		}
 	}, [open, task]);
 
@@ -314,7 +316,7 @@ export function EditTaskDialog({
 				<div className="flex flex-1 h-full overflow-hidden">
 					{/* Left Column: Main Content */}
 					<div className="flex-1 flex flex-col p-6 border-r overflow-y-auto">
-						<div className="space-y-4 flex-1">
+						<div className="space-y-4 flex-1 min-h-0">
 							<Input
 								value={title}
 								onChange={(e) => setTitle(e.target.value)}
@@ -322,25 +324,40 @@ export function EditTaskDialog({
 								className="text-xl font-bold border-none px-0 focus-visible:ring-0 shadow-none"
 								placeholder="Task title"
 							/>
-							<Textarea
-								value={description}
-								onChange={(e) => setDescription(e.target.value)}
-								onBlur={() => saveChanges({ description })}
-								className="min-h-[100px] resize-none border-none px-0 focus-visible:ring-0 shadow-none text-muted-foreground"
-								placeholder="Description..."
-							/>
+							<div className="flex-1 min-h-[120px]">
+								<Textarea
+									value={description}
+									onChange={(e) => setDescription(e.target.value)}
+									onBlur={() => saveChanges({ description })}
+									className="h-full min-h-[120px] resize-none border-none px-0 focus-visible:ring-0 shadow-none text-muted-foreground"
+									placeholder="Description..."
+								/>
+							</div>
 						</div>
 
-						<div className="mt-8">
-							<h3 className="text-sm font-medium mb-4 flex items-center gap-2 text-muted-foreground">
+						<div className="mt-4 pt-4 border-t shrink-0">
+							<h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-muted-foreground">
 								Comments{" "}
 								{optimisticComments.length
 									? `(${optimisticComments.length})`
 									: ""}
 							</h3>
 
-							<div className="space-y-6 mb-8">
-								{optimisticComments.map((comment) => (
+							<div className="max-h-[180px] overflow-y-auto space-y-4 mb-4">
+								{!showAllComments && optimisticComments.length > 3 && (
+									<Button
+										variant="ghost"
+										size="sm"
+										className="w-full h-8 text-xs text-muted-foreground mb-2"
+										onClick={() => setShowAllComments(true)}
+									>
+										View {optimisticComments.length - 3} previous comments
+									</Button>
+								)}
+								{(showAllComments
+									? optimisticComments
+									: optimisticComments.slice(-3)
+								).map((comment) => (
 									<div key={comment.id} className="flex gap-3 text-sm group">
 										<div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs shrink-0">
 											U
