@@ -17,6 +17,7 @@ const createTaskSchema = taskSchema
 			.string()
 			.uuid()
 			.or(z.literal("inbox"))
+			.or(z.literal("backlog"))
 			.nullable()
 			.or(z.literal("")),
 		// Accept string or null for dueDate (client sends ISO string)
@@ -103,6 +104,9 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		// Check if this is a backlog task
+		const isBacklog = result.data.projectId === "backlog";
+
 		// Add new task with generated id and timestamps
 		const newTask: Task = {
 			...result.data,
@@ -110,6 +114,15 @@ export async function POST(request: NextRequest) {
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			comments: [],
+			// Set status to "cold" for backlog tasks, "todo" otherwise
+			status: isBacklog ? "cold" : "todo",
+			// Convert special project IDs to null
+			projectId:
+				result.data.projectId === "inbox" ||
+				result.data.projectId === "backlog" ||
+				result.data.projectId === ""
+					? null
+					: result.data.projectId,
 		};
 
 		await createTask(newTask, user.id, actorType, auth.tokenName);

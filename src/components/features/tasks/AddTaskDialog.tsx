@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import {
 	AlarmClock,
+	Archive,
 	Calendar as CalendarIcon,
 	Flag,
 	Inbox,
@@ -338,6 +339,11 @@ export function AddTaskDialog({
 											/>
 											{selectedProject.name}
 										</>
+									) : projectId === "backlog" ? (
+										<>
+											<Archive className="h-3.5 w-3.5" />
+											Backlog
+										</>
 									) : (
 										<>
 											<Inbox className="h-3.5 w-3.5" />
@@ -351,6 +357,12 @@ export function AddTaskDialog({
 									<div className="flex items-center gap-2">
 										<Inbox className="h-4 w-4 text-muted-foreground" />
 										Inbox
+									</div>
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => setProjectId("backlog")}>
+									<div className="flex items-center gap-2">
+										<Archive className="h-4 w-4 text-muted-foreground" />
+										Backlog
 									</div>
 								</DropdownMenuItem>
 

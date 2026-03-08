@@ -201,76 +201,10 @@ export function detectFeaturesFromChildren(
 		}
 	};
 
-	// Check columns for header components (like TableColumnHeader, TableColumnSortMenu)
 	if (columns && Array.isArray(columns)) {
 		for (const column of columns) {
-			// Check if column has enableColumnFilter set
 			if (column.enableColumnFilter) {
 				requirements.enableFilters = true;
-			}
-
-			if (column.header && typeof column.header === "function") {
-				try {
-					// Try to call the header function with mock context to get the rendered component
-					// Using unknown for the context type since we're creating a minimal mock
-					const headerFn = column.header as (context: {
-						column: Record<string, unknown>;
-					}) => ReactNode;
-					const headerResult = headerFn({
-						column: {
-							getCanSort: () => true,
-							getIsSorted: () => false,
-							toggleSorting: () => {},
-							clearSorting: () => {},
-							getCanHide: () => true,
-							getIsVisible: () => true,
-							toggleVisibility: () => {},
-							getCanPin: () => true,
-							getIsPinned: () => false,
-							pin: () => {},
-							columnDef: { meta: {} },
-							id: "mock",
-						},
-					});
-
-					// Recursively check the header result and all its children for feature components
-					const checkElementForFeatures = (element: ReactNode) => {
-						if (!isValidElement(element)) return;
-
-						if (typeof element.type === "function") {
-							const componentType = element.type as ComponentType<unknown> & {
-								displayName?: string;
-							};
-							const displayName = componentType.displayName;
-							const componentFeatures = displayName
-								? COMPONENT_FEATURES[displayName]
-								: undefined;
-
-							if (componentFeatures) {
-								Object.keys(componentFeatures).forEach((key) => {
-									const featureKey = key as keyof FeatureRequirements;
-									if (componentFeatures[featureKey]) {
-										(requirements as Record<string, unknown>)[featureKey] =
-											true;
-									}
-								});
-							}
-						}
-
-						// Recursively check children
-						const propsWithChildren =
-							element.props as PropsWithChildren<unknown>;
-						if (propsWithChildren?.children) {
-							Children.toArray(propsWithChildren.children).forEach(
-								checkElementForFeatures,
-							);
-						}
-					};
-
-					checkElementForFeatures(headerResult);
-				} catch {
-					// Ignore errors from calling header function
-				}
 			}
 		}
 	}

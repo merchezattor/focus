@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { useMemo } from "react";
 import { DataTableColumnHeader } from "@/components/niko-table/components/data-table-column-header";
 import { DataTableColumnSortMenu } from "@/components/niko-table/components/data-table-column-sort";
 import { DataTableColumnTitle } from "@/components/niko-table/components/data-table-column-title";
@@ -44,126 +45,137 @@ const priorityStyles: Record<string, { label: string; color: string }> = {
 
 export function BacklogTable({ tasks, projects, onEdit }: BacklogTableProps) {
 	// Build project options for filter from current data
-	const projectOptions = Array.from(projects.values()).map((p) => ({
-		label: p.name,
-		value: p.id,
-	}));
+	const projectOptions = useMemo(
+		() =>
+			Array.from(projects.values()).map((p) => ({
+				label: p.name,
+				value: p.id,
+			})),
+		[projects],
+	);
 
 	// Flatten tasks so projectId is filterable and augment with projectName for display
-	const data = tasks.map((t) => ({
-		...t,
-		projectName: t.projectId
-			? (projects.get(t.projectId)?.name ?? "Unknown")
-			: "Inbox",
-	}));
+	const data = useMemo(
+		() =>
+			tasks.map((t) => ({
+				...t,
+				projectName: t.projectId
+					? (projects.get(t.projectId)?.name ?? "Unknown")
+					: "Inbox",
+			})),
+		[tasks, projects],
+	);
 
 	type BacklogRow = (typeof data)[number];
 
-	const columns: DataTableColumnDef<BacklogRow>[] = [
-		{
-			accessorKey: "title",
-			header: () => (
-				<DataTableColumnHeader>
-					<DataTableColumnTitle />
-					<DataTableColumnSortMenu />
-				</DataTableColumnHeader>
-			),
-			meta: {
-				label: "Title",
-				variant: "text",
+	const columns: DataTableColumnDef<BacklogRow>[] = useMemo(
+		() => [
+			{
+				accessorKey: "title",
+				header: () => (
+					<DataTableColumnHeader>
+						<DataTableColumnTitle />
+						<DataTableColumnSortMenu />
+					</DataTableColumnHeader>
+				),
+				meta: {
+					label: "Title",
+					variant: "text",
+				},
+				enableColumnFilter: true,
+				cell: ({ row }) => (
+					<button
+						type="button"
+						className="text-left cursor-pointer hover:underline text-sm font-medium w-full"
+						onClick={() => onEdit(row.original)}
+					>
+						{row.original.title}
+					</button>
+				),
 			},
-			enableColumnFilter: true,
-			cell: ({ row }) => (
-				<button
-					type="button"
-					className="text-left cursor-pointer hover:underline text-sm font-medium w-full"
-					onClick={() => onEdit(row.original)}
-				>
-					{row.original.title}
-				</button>
-			),
-		},
-		{
-			accessorKey: "projectId",
-			header: () => (
-				<DataTableColumnHeader>
-					<DataTableColumnTitle />
-					<DataTableColumnSortMenu />
-				</DataTableColumnHeader>
-			),
-			meta: {
-				label: "Project",
-				variant: "select",
-				options: projectOptions,
-				mergeStrategy: "augment",
-				dynamicCounts: true,
-				showCounts: true,
+			{
+				accessorKey: "projectId",
+				header: () => (
+					<DataTableColumnHeader>
+						<DataTableColumnTitle />
+						<DataTableColumnSortMenu />
+					</DataTableColumnHeader>
+				),
+				meta: {
+					label: "Project",
+					variant: "select",
+					options: projectOptions,
+					mergeStrategy: "augment",
+					dynamicCounts: true,
+					showCounts: true,
+				},
+				enableColumnFilter: true,
+				cell: ({ row }) => {
+					const projectId = row.original.projectId;
+					if (!projectId)
+						return <span className="text-muted-foreground text-xs">Inbox</span>;
+					const project = projects.get(projectId);
+					if (!project) return null;
+					return (
+						<div className="flex items-center gap-2">
+							<span
+								className="w-2 h-2 rounded-full shrink-0"
+								style={{ backgroundColor: project.color || "#ccc" }}
+							/>
+							<span className="text-xs truncate max-w-[120px]">
+								{project.name}
+							</span>
+						</div>
+					);
+				},
 			},
-			enableColumnFilter: true,
-			cell: ({ row }) => {
-				const projectId = row.original.projectId;
-				if (!projectId)
-					return <span className="text-muted-foreground text-xs">Inbox</span>;
-				const project = projects.get(projectId);
-				if (!project) return null;
-				return (
-					<div className="flex items-center gap-2">
-						<span
-							className="w-2 h-2 rounded-full shrink-0"
-							style={{ backgroundColor: project.color || "#ccc" }}
-						/>
-						<span className="text-xs truncate max-w-[120px]">
-							{project.name}
-						</span>
-					</div>
-				);
+			{
+				accessorKey: "priority",
+				header: () => (
+					<DataTableColumnHeader>
+						<DataTableColumnTitle />
+						<DataTableColumnSortMenu />
+					</DataTableColumnHeader>
+				),
+				meta: {
+					label: "Priority",
+					variant: "select",
+					options: priorityOptions,
+					dynamicCounts: true,
+					showCounts: true,
+				},
+				enableColumnFilter: true,
+				cell: ({ row }) => {
+					const p = priorityStyles[row.original.priority] || priorityStyles.p4;
+					return (
+						<Badge variant="outline" className={`border-none ${p.color}`}>
+							{p.label}
+						</Badge>
+					);
+				},
 			},
-		},
-		{
-			accessorKey: "priority",
-			header: () => (
-				<DataTableColumnHeader>
-					<DataTableColumnTitle />
-					<DataTableColumnSortMenu />
-				</DataTableColumnHeader>
-			),
-			meta: {
-				label: "Priority",
-				variant: "select",
-				options: priorityOptions,
-				dynamicCounts: true,
-				showCounts: true,
+			{
+				accessorKey: "createdAt",
+				header: () => (
+					<DataTableColumnHeader>
+						<DataTableColumnTitle />
+						<DataTableColumnSortMenu />
+					</DataTableColumnHeader>
+				),
+				meta: {
+					label: "Added",
+					variant: "date",
+				},
+				enableColumnFilter: true,
+				cell: ({ row }) => (
+					<span className="text-xs text-muted-foreground">
+						{format(new Date(row.original.createdAt), "MMM d, yyyy")}
+					</span>
+				),
 			},
-			enableColumnFilter: true,
-			cell: ({ row }) => {
-				const p = priorityStyles[row.original.priority] || priorityStyles.p4;
-				return (
-					<Badge variant="outline" className={`border-none ${p.color}`}>
-						{p.label}
-					</Badge>
-				);
-			},
-		},
-		{
-			accessorKey: "createdAt",
-			header: () => (
-				<DataTableColumnHeader>
-					<DataTableColumnTitle />
-					<DataTableColumnSortMenu />
-				</DataTableColumnHeader>
-			),
-			meta: {
-				label: "Added",
-				variant: "date",
-			},
-			enableColumnFilter: true,
-			cell: ({ row }) => (
-				<span className="text-xs text-muted-foreground">
-					{format(new Date(row.original.createdAt), "MMM d, yyyy")}
-				</span>
-			),
-		},
-	];
+		],
+		[onEdit, priorityOptions, projectOptions, projects],
+	);
 
 	return (
 		<DataTableRoot

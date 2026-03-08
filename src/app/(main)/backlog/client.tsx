@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { BacklogTable } from "@/components/features/tasks/BacklogTable";
 import { EditTaskDialog } from "@/components/features/tasks/EditTaskDialog";
 import type { Project, Task } from "@/types";
@@ -21,7 +21,7 @@ export function BacklogClient({
 	const fetchData = async () => {
 		try {
 			const [tasksRes, projectsRes] = await Promise.all([
-				fetch("/api/tasks?status=cold"), // We need an API endpoint to fetch cold tasks
+				fetch("/api/tasks?status=cold"),
 				fetch("/api/projects"),
 			]);
 
@@ -42,18 +42,18 @@ export function BacklogClient({
 		setEditingTask(task);
 	};
 
-	// When a task is marked as something else, we might want to reload or optimistic remove
 	const handleTaskUpdated = () => {
 		fetchData();
 	};
 
+	const projectsMap = useMemo(
+		() => new Map(projects.map((p) => [p.id, p])),
+		[projects],
+	);
+
 	return (
 		<div className="@container/main flex flex-1 flex-col gap-4 h-full">
-			<BacklogTable
-				tasks={tasks}
-				projects={new Map(projects.map((p) => [p.id, p]))}
-				onEdit={handleEdit}
-			/>
+			<BacklogTable tasks={tasks} projects={projectsMap} onEdit={handleEdit} />
 
 			{editingTask && (
 				<EditTaskDialog
