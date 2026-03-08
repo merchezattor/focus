@@ -4,6 +4,19 @@ import { focus_create_agentic_action } from "@/lib/mcp/tools/actions";
 import type { MCPServerContext } from "@/lib/mcp/types";
 import * as storage from "@/lib/storage";
 
+const mockDb = vi.hoisted(() => ({
+	select: vi.fn(),
+	insert: vi.fn(() => ({
+		values: vi.fn(),
+	})),
+	update: vi.fn(),
+	delete: vi.fn(),
+}));
+
+vi.mock("@/db", () => ({
+	getDb: vi.fn(() => mockDb),
+}));
+
 describe("Agentic Actions", () => {
 	const validTaskId = "550e8400-e29b-41d4-a716-446655440000";
 	const validUserId = "550e8400-e29b-41d4-a716-446655440001";
