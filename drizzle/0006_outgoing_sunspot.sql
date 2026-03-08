@@ -10,7 +10,7 @@ ALTER TABLE "comments" ADD COLUMN "user_id" text;--> statement-breakpoint
 ALTER TABLE "comments" ADD COLUMN "actor_type" "actor_type" DEFAULT 'user';--> statement-breakpoint
 ALTER TABLE "projects" ADD COLUMN "goal_id" text;--> statement-breakpoint
 ALTER TABLE "projects" ADD COLUMN "parent_project_id" text;--> statement-breakpoint
-ALTER TABLE "tasks" ADD COLUMN "title" text NOT NULL;--> statement-breakpoint
+ALTER TABLE "tasks" RENAME COLUMN "content" TO "title";--> statement-breakpoint
 ALTER TABLE "actions" ADD CONSTRAINT "actions_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comments" ADD CONSTRAINT "comments_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "projects" ADD CONSTRAINT "projects_goal_id_goals_id_fk" FOREIGN KEY ("goal_id") REFERENCES "public"."goals"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
@@ -26,5 +26,4 @@ CREATE INDEX "tasks_user_id_due_date_idx" ON "tasks" USING btree ("user_id","due
 CREATE INDEX "tasks_user_id_status_idx" ON "tasks" USING btree ("user_id","status");--> statement-breakpoint
 ALTER TABLE "projects" DROP COLUMN "parent_id";--> statement-breakpoint
 ALTER TABLE "projects" DROP COLUMN "parent_type";--> statement-breakpoint
-ALTER TABLE "tasks" DROP COLUMN "content";--> statement-breakpoint
 ALTER TABLE "tasks" DROP COLUMN "completed";
