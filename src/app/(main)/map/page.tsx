@@ -29,7 +29,7 @@ export default async function MapPage() {
 			</div>
 			<div className="flex-1 bg-muted/10">
 				<MapClient
-					initialProjects={projects.filter((p) => p.name !== "Inbox")}
+					initialProjects={projects}
 					initialTasks={tasks}
 					initialGoals={goals}
 				/>

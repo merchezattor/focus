@@ -85,7 +85,7 @@ interface AppSidebarProps {
 		image?: string | null;
 	};
 	counts: {
-		inboxCount: number;
+		backlogCount: number;
 		todayCount: number;
 		eventsCount?: number;
 		projectCounts?: Record<string, number>;
@@ -108,7 +108,7 @@ export function AppSidebar({
 
 	const navMainWithCounts = data.navMain.map((item) => {
 		if (item.title === "Backlog")
-			return { ...item, count: counts?.inboxCount ?? 0 };
+			return { ...item, count: counts?.backlogCount ?? 0 };
 		if (item.title === "Today")
 			return { ...item, count: counts?.todayCount ?? 0 };
 		if (item.title === "Events")

@@ -9,7 +9,7 @@ List and search tasks with server-side filtering. **ALWAYS use filters** — nev
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `priority` | `string[]` | No | Filter by priority: `["p1", "p2", "p3", "p4"]` |
-| `status` | `string[]` | No | Filter by status: `["todo", "in_progress", "done"]` (review NOT valid) |
+| `status` | `string[]` | No | Filter by status: `["todo", "in_progress", "done", "cold"]` (review NOT valid in filters) |
 | `completed` | `boolean` | No | Filter by completion flag |
 | `projectId` | `string` | No | Filter to specific project UUID |
 | `dueDate` | `string` | No | `"today"`, `"overdue"`, `"upcoming"`, or ISO date |
@@ -17,11 +17,6 @@ List and search tasks with server-side filtering. **ALWAYS use filters** — nev
 | `search` | `string` | No | Case-insensitive text search in title/description |
 | `lastActionType` | `string[]` | No | Filter by most recent action: `["create", "update", "reviewed", "groomed", "processed", "pending"]` |
 | `limit` | `number` | No | Max results to return (1–100, default: 10) |
-
-**Returns**: `{ success: true, data: Task[] }`
-
-#### `focus_list_inbox`
-List tasks without a project (inbox). Same filters as `focus_list_tasks` including `limit`.
 
 **Returns**: `{ success: true, data: Task[] }`
 
@@ -44,10 +39,10 @@ Create a new task. Returns complete Task with generated ID.
 | `title` | `string` | **Yes** | 1–200 characters |
 | `priority` | `string` | **Yes** | `"p1"`, `"p2"`, `"p3"`, or `"p4"` |
 | `description` | `string` | No | Max 1000 characters |
-| `projectId` | `string` | No | UUID. Omit for inbox |
+| `projectId` | `string` | No | UUID of project to assign to (optional) |
 | `dueDate` | `string` | No | ISO 8601 UTC |
 | `planDate` | `string` | No | ISO 8601 UTC |
-| `status` | `string` | No | `"todo"`, `"in_progress"`, `"review"`, `"done"` (default: "todo") |
+| `status` | `string` | No | `"todo"`, `"in_progress"`, `"review"`, `"done"`, `"cold"` (default: "cold" → backlog) |
 
 **Returns**: `{ success: true, data: Task }`
 
@@ -62,8 +57,8 @@ Update existing task by ID. **Partial update** — only include changed fields.
 | `priority` | `string` | No | New priority |
 | `description` | `string` | No | New description |
 | `completed` | `boolean` | No | Mark complete/uncomplete |
-| `status` | `string` | No | New status (review IS valid here) |
-| `projectId` | `string \| null` | No | Move to project, or `null` for inbox |
+| `status` | `string` | No | New status: `"todo"`, `"in_progress"`, `"review"`, `"done"`, `"cold"` |
+| `projectId` | `string \| null` | No | Move to project, or `null` to unassign |
 | `dueDate` | `string \| null` | No | Set/clear due date |
 | `planDate` | `string \| null` | No | Set/clear plan date |
 

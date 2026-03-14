@@ -126,7 +126,7 @@ const createTaskSchema = z.object({
 	status: z
 		.enum(["todo", "in_progress", "review", "done", "cold"])
 		.optional()
-		.describe('Task status. Defaults to "todo" if omitted.'),
+		.describe('Task status. Defaults to "cold" (backlog) if omitted.'),
 });
 
 const updateTaskSchema = z.object({
@@ -394,7 +394,7 @@ async function createTaskTool(
 			id: randomUUID(),
 			title: parsed.title,
 			description: parsed.description,
-			status: parsed.status ?? "todo",
+			status: parsed.status ?? "cold", // Default to "cold" so agent-created tasks land in backlog
 			priority: parsed.priority,
 			projectId: parsed.projectId ?? null,
 			parentId: parsed.parentId ?? null,

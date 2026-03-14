@@ -24,20 +24,15 @@ import { type ActionType, type ActorType, logAction } from "./actions";
 // ... existing code ...
 
 export async function getTaskCounts(userId: string): Promise<{
-	inboxCount: number;
+	backlogCount: number;
 	todayCount: number;
 	projectCounts: Record<string, number>;
 }> {
-	const inboxResult = await getDb()
+	// Backlog: tasks with status "cold"
+	const backlogResult = await getDb()
 		.select({ value: count() })
 		.from(tasks)
-		.where(
-			and(
-				eq(tasks.userId, userId),
-				notInArray(tasks.status, ["done", "cold"]),
-				isNull(tasks.project_id),
-			),
-		);
+		.where(and(eq(tasks.userId, userId), eq(tasks.status, "cold")));
 
 	// Today: planDate is today
 	const todayStart = new Date();
@@ -77,7 +72,7 @@ export async function getTaskCounts(userId: string): Promise<{
 	}
 
 	return {
-		inboxCount: Number(inboxResult[0]?.value || 0),
+		backlogCount: Number(backlogResult[0]?.value || 0),
 		todayCount: Number(todayResult[0]?.value || 0),
 		projectCounts,
 	};

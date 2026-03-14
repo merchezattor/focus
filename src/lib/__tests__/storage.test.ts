@@ -288,7 +288,7 @@ describe("Storage Layer", () => {
 
 				const result = await getTaskCounts("user-123");
 				expect(result).toEqual({
-					inboxCount: 5,
+					backlogCount: 5,
 					todayCount: 3,
 					projectCounts: { p1: 2 },
 				});
