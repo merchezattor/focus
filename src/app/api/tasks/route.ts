@@ -121,8 +121,8 @@ export async function POST(request: NextRequest) {
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			comments: [],
-			// Set status to "cold" for inbox tasks, "todo" otherwise
-			status: isInbox ? "cold" : "todo",
+			// If status is provided in data, use it; otherwise, default to "cold" for inbox tasks, "todo" for others
+			status: result.data.status ?? (isInbox ? "cold" : "todo"),
 			// Convert special project IDs to null
 			projectId:
 				result.data.projectId === "inbox" || result.data.projectId === ""
