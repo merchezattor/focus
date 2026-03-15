@@ -187,6 +187,12 @@ const updateTaskSchema = z.object({
 		.describe(
 			"Set plan date in ISO 8601 UTC, or pass null to clear the plan date.",
 		),
+	orderNum: z
+		.number()
+		.optional()
+		.describe(
+			"Set order number for subtask ordering (lower numbers appear first).",
+		),
 });
 
 const createProjectRoadmapSchema = z.object({
@@ -222,6 +228,12 @@ const createProjectRoadmapSchema = z.object({
 								.enum(["p1", "p2", "p3", "p4"])
 								.optional()
 								.describe("Defaults to p4"),
+							orderNum: z
+								.number()
+								.optional()
+								.describe(
+									"Order number for subtask ordering (lower numbers appear first).",
+								),
 						}),
 					)
 					.describe("Subtasks belonging to this section"),

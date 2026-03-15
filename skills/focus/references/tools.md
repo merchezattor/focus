@@ -43,6 +43,7 @@ Create a new task. Returns complete Task with generated ID.
 | `dueDate` | `string` | No | ISO 8601 UTC |
 | `planDate` | `string` | No | ISO 8601 UTC |
 | `status` | `string` | No | `"todo"`, `"in_progress"`, `"review"`, `"done"`, `"cold"` (default: "cold" → backlog) |
+| `orderNum` | `number` | No | Order number for subtask ordering (lower numbers appear first, default: 0) |
 
 **Returns**: `{ success: true, data: Task }`
 
@@ -61,6 +62,7 @@ Update existing task by ID. **Partial update** — only include changed fields.
 | `projectId` | `string \| null` | No | Move to project, or `null` to unassign |
 | `dueDate` | `string \| null` | No | Set/clear due date |
 | `planDate` | `string \| null` | No | Set/clear plan date |
+| `orderNum` | `number` | No | Set order number for subtask ordering (lower numbers appear first) |
 
 **Returns**: `{ success: true, data: { id, ...updates } }`
 

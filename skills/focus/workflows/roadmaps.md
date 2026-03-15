@@ -9,6 +9,17 @@
 5. This creates a beautifully grouped Roadmap instantly where Top-level tasks act as section headers, and Subtasks form the timeline.
 ```
 
+**Ordering Subtasks**: Subtasks are displayed in the Roadmap view sorted by `orderNum` (ascending), then by creation date. Use `orderNum` to control the display order:
+
+```json
+// Subtasks with explicit ordering
+"subtasks": [
+  { "title": "First Step", "priority": "p2", "orderNum": 1 },
+  { "title": "Second Step", "priority": "p2", "orderNum": 2 },
+  { "title": "Third Step", "priority": "p2", "orderNum": 3 }
+]
+```
+
 **Example**:
 ```json
 // Step 1: Create the roadmap in one call
@@ -21,15 +32,15 @@
         "title": "Phase 1: Networking Basics",
         "priority": "p2",
         "subtasks": [
-          { "title": "Learn OSI Model", "priority": "p2" },
-          { "title": "Understand TCP/IP", "priority": "p2" }
+          { "title": "Learn OSI Model", "priority": "p2", "orderNum": 1 },
+          { "title": "Understand TCP/IP", "priority": "p2", "orderNum": 2 }
         ]
       },
       {
         "title": "Phase 2: Advanced Protocols",
         "priority": "p3",
         "subtasks": [
-          { "title": "Study BGP", "priority": "p3" }
+          { "title": "Study BGP", "priority": "p3", "orderNum": 1 }
         ]
       }
     ]
