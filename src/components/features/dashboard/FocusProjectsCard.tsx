@@ -9,6 +9,15 @@ export interface FocusProjectsCardProps {
 	projects: ProjectStat[];
 }
 
+const priorityOrder = { p1: 1, p2: 2, p3: 3, p4: 4 };
+
+const priorityConfig = {
+	p1: { label: "P1", className: "bg-red-500 text-white" },
+	p2: { label: "P2", className: "bg-orange-500 text-white" },
+	p3: { label: "P3", className: "bg-yellow-500 text-black" },
+	p4: { label: "P4", className: "bg-gray-400 text-white" },
+};
+
 export function FocusProjectsCard({ projects }: FocusProjectsCardProps) {
 	const router = useRouter();
 
@@ -29,58 +38,73 @@ export function FocusProjectsCard({ projects }: FocusProjectsCardProps) {
 		return `${count} ${label} (${percent}%)`;
 	};
 
+	const topProjects = projects
+		.slice()
+		.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+		.slice(0, 3);
+
 	return (
 		<Card className="h-full">
 			<CardContent className="px-4 py-2">
 				<div className="max-h-[280px] overflow-y-auto space-y-1">
-					{projects.map((project) => (
-						<button
-							type="button"
-							key={project.projectId}
-							onClick={() => handleProjectClick(project.projectId)}
-							className="w-full text-left py-1 px-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer block"
-						>
-							<div className="flex items-center gap-1.5 mb-0.5">
-								<span
-									className="w-2 h-2 rounded-full flex-shrink-0"
-									style={{ backgroundColor: project.color }}
+					{topProjects.map((project) => {
+						const priority = priorityConfig[project.priority];
+						return (
+							<button
+								type="button"
+								key={project.projectId}
+								onClick={() => handleProjectClick(project.projectId)}
+								className="w-full text-left py-1 px-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer block"
+							>
+								<div className="flex items-center gap-1.5 mb-0.5">
+									<span
+										className="w-2 h-2 rounded-full flex-shrink-0"
+										style={{ backgroundColor: project.color }}
+									/>
+									<span className="font-medium text-sm truncate flex-1">
+										{project.name}
+									</span>
+									<span
+										className={`text-[9px] px-1 py-0.5 rounded font-semibold ${priority.className}`}
+									>
+										{priority.label}
+									</span>
+								</div>
+
+								<SegmentedProgress
+									done={project.doneCount}
+									inProgress={project.inProgressCount}
+									backlog={project.backlogCount}
+									className="mb-0.5"
 								/>
-								<span className="font-medium text-sm">{project.name}</span>
-							</div>
 
-							<SegmentedProgress
-								done={project.doneCount}
-								inProgress={project.inProgressCount}
-								backlog={project.backlogCount}
-								className="mb-0.5"
-							/>
-
-							<div className="text-[11px] text-muted-foreground">
-								{[
-									formatCountWithPercent(
-										project.doneCount,
-										project.totalCount,
-										"done",
-										"done",
-									),
-									formatCountWithPercent(
-										project.inProgressCount,
-										project.totalCount,
-										"in progress",
-										"in progress",
-									),
-									formatCountWithPercent(
-										project.backlogCount,
-										project.totalCount,
-										"backlog",
-										"backlog",
-									),
-								]
-									.filter(Boolean)
-									.join(" • ") || "No tasks"}
-							</div>
-						</button>
-					))}
+								<div className="text-[11px] text-muted-foreground">
+									{[
+										formatCountWithPercent(
+											project.doneCount,
+											project.totalCount,
+											"done",
+											"done",
+										),
+										formatCountWithPercent(
+											project.inProgressCount,
+											project.totalCount,
+											"in progress",
+											"in progress",
+										),
+										formatCountWithPercent(
+											project.backlogCount,
+											project.totalCount,
+											"backlog",
+											"backlog",
+										),
+									]
+										.filter(Boolean)
+										.join(" • ") || "No tasks"}
+								</div>
+							</button>
+						);
+					})}
 				</div>
 			</CardContent>
 		</Card>

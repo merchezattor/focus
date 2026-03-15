@@ -25,6 +25,7 @@ export interface ProjectStat {
 	projectId: string;
 	name: string;
 	color: string;
+	priority: "p1" | "p2" | "p3" | "p4";
 	doneCount: number;
 	inProgressCount: number;
 	backlogCount: number;
@@ -985,6 +986,7 @@ export async function getWorkingProjectStats(
 			projectId: projects.id,
 			name: projects.name,
 			color: projects.color,
+			priority: projects.priority,
 			doneCount: sql`COUNT(CASE WHEN ${tasks.status} = 'done' THEN 1 END)`,
 			inProgressCount: sql`COUNT(CASE WHEN ${tasks.status} IN ('in_progress', 'review', 'todo') THEN 1 END)`,
 			backlogCount: sql`COUNT(CASE WHEN ${tasks.status} = 'cold' THEN 1 END)`,
@@ -999,6 +1001,7 @@ export async function getWorkingProjectStats(
 		projectId: row.projectId,
 		name: row.name,
 		color: row.color,
+		priority: row.priority,
 		doneCount: Number(row.doneCount) || 0,
 		inProgressCount: Number(row.inProgressCount) || 0,
 		backlogCount: Number(row.backlogCount) || 0,
