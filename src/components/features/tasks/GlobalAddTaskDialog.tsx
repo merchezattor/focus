@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtom, useSetAtom } from "jotai";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AddTaskDialog } from "@/components/features/tasks/AddTaskDialog";
 import { isAddTaskOpenAtom, refreshBacklogAtom, tasksAtom } from "@/lib/atoms";
 import type { Project } from "@/types";
@@ -11,10 +11,11 @@ export function GlobalAddTaskDialog({ projects }: { projects: Project[] }) {
 	const setTasks = useSetAtom(tasksAtom);
 	const triggerRefresh = useSetAtom(refreshBacklogAtom);
 	const router = useRouter();
+	const pathname = usePathname();
 	const searchParams = useSearchParams();
 
-	// Get project ID from URL if present
 	const defaultProjectId = searchParams.get("project") || undefined;
+	const defaultStatus = pathname === "/backlog" ? "cold" : undefined;
 
 	return (
 		<AddTaskDialog
@@ -22,6 +23,7 @@ export function GlobalAddTaskDialog({ projects }: { projects: Project[] }) {
 			onOpenChange={setIsOpen}
 			projects={projects}
 			defaultProjectId={defaultProjectId}
+			defaultStatus={defaultStatus}
 			onOptimisticAdd={(task) => setTasks((prev) => [task, ...prev])}
 			onTaskCreated={() => {
 				router.refresh();

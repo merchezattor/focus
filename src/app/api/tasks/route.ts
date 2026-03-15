@@ -38,6 +38,10 @@ const createTaskSchema = taskSchema
 			.transform((val: string | null | undefined) =>
 				val ? new Date(val) : null,
 			),
+		// Optional status override - client can specify initial status
+		status: z
+			.enum(["todo", "in_progress", "review", "done", "cold"])
+			.optional(),
 	});
 
 // GET /api/tasks - Get all tasks (optionally filtered by project)
@@ -108,11 +112,14 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Check if this is an inbox task (null projectId or "inbox")
+		// Use client-provided status if available, otherwise fall back to existing logic
 		const isInbox =
 			result.data.projectId === "inbox" ||
 			result.data.projectId === null ||
 			result.data.projectId === "";
+
+		// Determine status: client override > context-based default
+		const status = result.data.status ?? (isInbox ? "cold" : "todo");
 
 		// Add new task with generated id and timestamps
 		const newTask: Task = {
@@ -121,8 +128,7 @@ export async function POST(request: NextRequest) {
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			comments: [],
-			// Set status to "cold" for inbox tasks, "todo" otherwise
-			status: isInbox ? "cold" : "todo",
+			status,
 			// Convert special project IDs to null
 			projectId:
 				result.data.projectId === "inbox" || result.data.projectId === ""

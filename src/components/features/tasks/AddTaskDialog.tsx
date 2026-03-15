@@ -60,6 +60,7 @@ interface AddTaskDialogProps {
 	onOpenChange?: (open: boolean) => void;
 	trigger?: React.ReactNode;
 	defaultProjectId?: string;
+	defaultStatus?: "todo" | "in_progress" | "review" | "done" | "cold";
 }
 
 export function AddTaskDialog({
@@ -70,6 +71,7 @@ export function AddTaskDialog({
 	onOpenChange,
 	trigger,
 	defaultProjectId,
+	defaultStatus,
 }: AddTaskDialogProps) {
 	const router = useRouter();
 	const [internalOpen, setInternalOpen] = useState(false);
@@ -111,6 +113,7 @@ export function AddTaskDialog({
 		// Optimistic Update
 		if (onOptimisticAdd) {
 			const hasProject = projectId && projectId !== "";
+			const taskStatus = defaultStatus ?? (hasProject ? "todo" : "cold");
 			const tempTask = {
 				id: `temp-${Date.now()}`,
 				title,
@@ -118,7 +121,7 @@ export function AddTaskDialog({
 				projectId: hasProject ? projectId : null,
 				priority,
 				dueDate: dueDate?.toISOString(),
-				status: hasProject ? "todo" : "cold",
+				status: taskStatus,
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
 				planDate: null,
@@ -145,6 +148,7 @@ export function AddTaskDialog({
 					projectId: hasProject ? projectId : null,
 					dueDate: dueDate?.toISOString(),
 					priority,
+					status: defaultStatus,
 				}),
 			});
 
