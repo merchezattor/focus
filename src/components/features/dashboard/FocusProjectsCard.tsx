@@ -56,7 +56,7 @@ export function FocusProjectsCard({ projects }: FocusProjectsCardProps) {
 								onClick={() => handleProjectClick(project.projectId)}
 								className="w-full text-left py-1 px-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer block"
 							>
-								<div className="flex items-center gap-1.5 mb-0.5">
+								<div className="flex items-center gap-1.5 mb-1.5">
 									<span
 										className="w-2 h-2 rounded-full flex-shrink-0"
 										style={{ backgroundColor: project.color }}
@@ -75,7 +75,7 @@ export function FocusProjectsCard({ projects }: FocusProjectsCardProps) {
 									done={project.doneCount}
 									inProgress={project.inProgressCount}
 									backlog={project.backlogCount}
-									className="mb-0.5"
+									className="mb-1.5"
 								/>
 
 								<div className="text-[11px] text-muted-foreground">
