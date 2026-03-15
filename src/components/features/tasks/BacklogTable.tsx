@@ -104,7 +104,7 @@ export function BacklogTable({
 				const res = await fetch(`/api/tasks/${task.id}`, {
 					method: "PATCH",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ status: "in_progress" }),
+					body: JSON.stringify({ status: "todo" }),
 				});
 				if (!res.ok) throw new Error("Failed to start work");
 				onTaskUpdated?.();

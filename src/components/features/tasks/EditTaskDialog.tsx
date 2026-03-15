@@ -316,125 +316,125 @@ export function EditTaskDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
-			<DialogContent className="sm:max-w-4xl h-[600px] flex flex-col p-0 gap-0">
+			<DialogContent className="sm:max-w-4xl h-[85vh] max-h-[800px] flex flex-col p-0 gap-0">
 				<DialogTitle className="sr-only">Edit Task</DialogTitle>
 				<DialogDescription className="sr-only">
 					Edit the details of the selected task.
 				</DialogDescription>
 				<div className="flex flex-1 h-full overflow-hidden">
 					{/* Left Column: Main Content */}
-					<div className="flex-1 flex flex-col p-6 border-r overflow-y-auto">
-						<div className="space-y-4 flex-1 min-h-0">
+					<div className="flex-1 flex flex-col p-6 border-r overflow-hidden">
+						<div className="flex-1 flex flex-col min-h-0 gap-4 overflow-y-auto">
 							<Input
 								value={title}
 								onChange={(e) => setTitle(e.target.value)}
 								onBlur={() => saveChanges({ title })}
-								className="text-xl font-bold border-none px-0 focus-visible:ring-0 shadow-none"
+								className="text-xl font-bold border-none px-0 focus-visible:ring-0 shadow-none shrink-0"
 								placeholder="Task title"
 							/>
-							<div className="flex-1 min-h-[120px]">
+							<div className="flex-1 min-h-[200px]">
 								<Textarea
 									value={description}
 									onChange={(e) => setDescription(e.target.value)}
 									onBlur={() => saveChanges({ description })}
-									className="h-full min-h-[120px] resize-none border-none px-0 focus-visible:ring-0 shadow-none text-muted-foreground"
+									className="h-full min-h-[200px] resize-y border-none px-0 focus-visible:ring-0 shadow-none text-muted-foreground"
 									placeholder="Description..."
 								/>
 							</div>
-						</div>
 
-						<div className="mt-4 pt-4 border-t shrink-0">
-							<h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-muted-foreground">
-								Comments{" "}
-								{optimisticComments.length
-									? `(${optimisticComments.length})`
-									: ""}
-							</h3>
+							<div className="pt-4 border-t shrink-0">
+								<h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-muted-foreground">
+									Comments{" "}
+									{optimisticComments.length
+										? `(${optimisticComments.length})`
+										: ""}
+								</h3>
 
-							<div className="max-h-[180px] overflow-y-auto space-y-4 mb-4">
-								{!showAllComments && optimisticComments.length > 3 && (
-									<Button
-										variant="ghost"
-										size="sm"
-										className="w-full h-8 text-xs text-muted-foreground mb-2"
-										onClick={() => setShowAllComments(true)}
-									>
-										View {optimisticComments.length - 3} previous comments
-									</Button>
-								)}
-								{(showAllComments
-									? optimisticComments
-									: optimisticComments.slice(-3)
-								).map((comment) => (
-									<div key={comment.id} className="flex gap-3 text-sm group">
-										<div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs shrink-0">
-											U
-										</div>
-										<div className="flex-1 min-w-0">
-											<div className="flex items-center justify-between gap-2">
-												<div className="flex gap-2 items-center">
-													<span className="font-semibold">User</span>
-													<span className="text-xs text-muted-foreground">
-														{format(new Date(comment.postedAt), "MMM d, p")}
-													</span>
-												</div>
-												<DropdownMenu>
-													<DropdownMenuTrigger asChild>
-														<Button
-															variant="ghost"
-															className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-														>
-															<MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-														</Button>
-													</DropdownMenuTrigger>
-													<DropdownMenuContent align="end">
-														<DropdownMenuItem
-															className="text-destructive focus:text-destructive"
-															onClick={() => handleDeleteComment(comment.id)}
-														>
-															<Trash2 className="mr-2 h-4 w-4" />
-															Delete
-														</DropdownMenuItem>
-													</DropdownMenuContent>
-												</DropdownMenu>
+								<div className="max-h-[120px] overflow-y-auto space-y-4 mb-4">
+									{!showAllComments && optimisticComments.length > 3 && (
+										<Button
+											variant="ghost"
+											size="sm"
+											className="w-full h-8 text-xs text-muted-foreground mb-2"
+											onClick={() => setShowAllComments(true)}
+										>
+											View {optimisticComments.length - 3} previous comments
+										</Button>
+									)}
+									{(showAllComments
+										? optimisticComments
+										: optimisticComments.slice(-3)
+									).map((comment) => (
+										<div key={comment.id} className="flex gap-3 text-sm group">
+											<div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs shrink-0">
+												U
 											</div>
-											<p className="mt-1 break-words">{comment.content}</p>
+											<div className="flex-1 min-w-0">
+												<div className="flex items-center justify-between gap-2">
+													<div className="flex gap-2 items-center">
+														<span className="font-semibold">User</span>
+														<span className="text-xs text-muted-foreground">
+															{format(new Date(comment.postedAt), "MMM d, p")}
+														</span>
+													</div>
+													<DropdownMenu>
+														<DropdownMenuTrigger asChild>
+															<Button
+																variant="ghost"
+																className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+															>
+																<MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+															</Button>
+														</DropdownMenuTrigger>
+														<DropdownMenuContent align="end">
+															<DropdownMenuItem
+																className="text-destructive focus:text-destructive"
+																onClick={() => handleDeleteComment(comment.id)}
+															>
+																<Trash2 className="mr-2 h-4 w-4" />
+																Delete
+															</DropdownMenuItem>
+														</DropdownMenuContent>
+													</DropdownMenu>
+												</div>
+												<p className="mt-1 break-words">{comment.content}</p>
+											</div>
 										</div>
-									</div>
-								))}
-							</div>
-
-							<div className="flex gap-2">
-								<div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs shrink-0">
-									U
+									))}
 								</div>
-								<div className="flex-1 border rounded-lg p-2 focus-within:ring-1 focus-within:ring-ring">
-									<Textarea
-										placeholder="Comment"
-										className="min-h-[40px] border-none p-0 resize-none focus-visible:ring-0 shadow-none text-sm mb-2"
-										value={comment}
-										onChange={(e) => setComment(e.target.value)}
-									/>
-									<div className="flex justify-between items-center">
-										<div className="flex gap-1">
-											{/* Rich text icons placeholders */}
-										</div>
-										<div className="flex gap-2">
-											<Button
-												size="sm"
-												variant="ghost"
-												onClick={() => setComment("")}
-											>
-												Cancel
-											</Button>
-											<Button
-												size="sm"
-												disabled={!comment.trim()}
-												onClick={handleAddComment}
-											>
-												<Send className="h-3 w-3 mr-2" />
-												Comment
-											</Button>
+
+								<div className="flex gap-2">
+									<div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs shrink-0">
+										U
+									</div>
+									<div className="flex-1 border rounded-lg p-2 focus-within:ring-1 focus-within:ring-ring">
+										<Textarea
+											placeholder="Comment"
+											className="min-h-[40px] border-none p-0 resize-none focus-visible:ring-0 shadow-none text-sm mb-2"
+											value={comment}
+											onChange={(e) => setComment(e.target.value)}
+										/>
+										<div className="flex justify-between items-center">
+											<div className="flex gap-1">
+												{/* Rich text icons placeholders */}
+											</div>
+											<div className="flex gap-2">
+												<Button
+													size="sm"
+													variant="ghost"
+													onClick={() => setComment("")}
+												>
+													Cancel
+												</Button>
+												<Button
+													size="sm"
+													disabled={!comment.trim()}
+													onClick={handleAddComment}
+												>
+													<Send className="h-3 w-3 mr-2" />
+													Comment
+												</Button>
+											</div>
 										</div>
 									</div>
 								</div>
