@@ -24,6 +24,7 @@ export function createTask(overrides?: Partial<Task>): Task {
 		priority: "p2",
 		status: "todo",
 		comments: [],
+		orderNum: 0,
 		createdAt: now,
 		updatedAt: now,
 	};
