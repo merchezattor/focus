@@ -162,7 +162,7 @@ export function TablePagination<TData>({
 
 	return (
 		<nav
-			className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-2"
+			className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 pl-4 pr-16 py-2"
 			aria-label="Table pagination"
 		>
 			<div className="flex items-center space-x-2">
