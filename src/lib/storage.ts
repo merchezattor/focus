@@ -679,6 +679,7 @@ export async function createTask(
 			parent_id: task.parentId || null,
 			due_date: task.dueDate,
 			plan_date: task.planDate,
+			order_num: task.orderNum ?? 0,
 			created_at: task.createdAt,
 			updated_at: task.updatedAt,
 			userId: userId,
@@ -720,6 +721,7 @@ export async function createTasksBulk(
 		parent_id: task.parentId || null,
 		due_date: task.dueDate,
 		plan_date: task.planDate,
+		order_num: task.orderNum ?? 0,
 		created_at: task.createdAt,
 		updated_at: task.updatedAt,
 		userId: userId,
@@ -783,6 +785,7 @@ export async function updateTask(
 	if (updates.parentId !== undefined) dbUpdates.parent_id = updates.parentId;
 	if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
 	if (updates.planDate !== undefined) dbUpdates.plan_date = updates.planDate;
+	if (updates.orderNum !== undefined) dbUpdates.order_num = updates.orderNum;
 	if (updates.updatedAt !== undefined) dbUpdates.updated_at = updates.updatedAt;
 
 	if (Object.keys(dbUpdates).length > 0) {
