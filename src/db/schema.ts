@@ -1,6 +1,7 @@
 import {
 	boolean,
 	index,
+	integer,
 	jsonb,
 	pgEnum,
 	pgTable,
@@ -156,6 +157,7 @@ export const tasks = pgTable(
 		parent_id: text("parent_id").references((): any => tasks.id, {
 			onDelete: "cascade",
 		}),
+		order_num: integer("order_num").default(0).notNull(),
 	},
 	(table) => [
 		index("tasks_user_id_project_id_idx").on(table.userId, table.project_id),
