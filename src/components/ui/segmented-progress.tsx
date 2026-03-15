@@ -39,7 +39,7 @@ export function SegmentedProgress({
 				)}
 				{inProgressPercent > 0 && (
 					<div
-						className="bg-amber-500 transition-all duration-300"
+						className="bg-gray-300 transition-all duration-300"
 						style={{ width: `${inProgressPercent}%` }}
 					/>
 				)}
@@ -57,7 +57,7 @@ export function SegmentedProgress({
 						Done ({done})
 					</span>
 					<span className="flex items-center gap-1">
-						<span className="w-2 h-2 rounded-full bg-amber-500" />
+						<span className="w-2 h-2 rounded-full bg-gray-300" />
 						In Progress ({inProgress})
 					</span>
 					<span className="flex items-center gap-1">
