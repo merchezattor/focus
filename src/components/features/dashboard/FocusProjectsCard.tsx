@@ -18,15 +18,15 @@ export function FocusProjectsCard({ projects }: FocusProjectsCardProps) {
 
 	if (projects.length === 0) {
 		return (
-			<Card>
-				<CardHeader className="pb-2">
+			<Card className="h-full">
+				<CardHeader className="p-3 pb-0">
 					<CardTitle className="text-sm">Projects</CardTitle>
 				</CardHeader>
-				<CardContent>
-					<div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
+				<CardContent className="p-3 pt-2">
+					<div className="flex flex-col items-center justify-center py-2 text-muted-foreground">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
-							className="h-8 w-8 mb-2 opacity-50"
+							className="h-6 w-6 mb-1 opacity-50"
 							fill="none"
 							viewBox="0 0 24 24"
 							stroke="currentColor"
@@ -59,22 +59,22 @@ export function FocusProjectsCard({ projects }: FocusProjectsCardProps) {
 	};
 
 	return (
-		<Card>
-			<CardHeader className="pb-2">
+		<Card className="h-full">
+			<CardHeader className="p-3 pb-0">
 				<CardTitle className="text-sm">Projects</CardTitle>
 			</CardHeader>
-			<CardContent>
-				<div className="max-h-[300px] overflow-y-auto space-y-2">
+			<CardContent className="p-3 pt-2">
+				<div className="max-h-[280px] overflow-y-auto space-y-1">
 					{projects.map((project) => (
 						<button
 							type="button"
 							key={project.projectId}
 							onClick={() => handleProjectClick(project.projectId)}
-							className="w-full text-left p-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+							className="w-full text-left px-2 py-1.5 rounded hover:bg-muted/50 transition-colors cursor-pointer"
 						>
-							<div className="flex items-center gap-2 mb-1.5">
+							<div className="flex items-center gap-1.5 mb-1">
 								<span
-									className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+									className="w-2 h-2 rounded-full flex-shrink-0"
 									style={{ backgroundColor: project.color }}
 								/>
 								<span className="font-medium text-xs truncate">
@@ -86,7 +86,7 @@ export function FocusProjectsCard({ projects }: FocusProjectsCardProps) {
 								done={project.doneCount}
 								inProgress={project.inProgressCount}
 								backlog={project.backlogCount}
-								className="mb-1.5"
+								className="mb-1"
 							/>
 
 							<div className="text-[10px] text-muted-foreground leading-tight">
