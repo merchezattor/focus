@@ -31,14 +31,14 @@ export function FocusProjectsCard({ projects }: FocusProjectsCardProps) {
 
 	return (
 		<Card className="h-full">
-			<CardContent className="p-3">
-				<div className="max-h-[280px] overflow-y-auto space-y-2">
+			<CardContent className="px-4 py-2">
+				<div className="max-h-[280px] overflow-y-auto space-y-1">
 					{projects.map((project) => (
 						<button
 							type="button"
 							key={project.projectId}
 							onClick={() => handleProjectClick(project.projectId)}
-							className="w-full text-left py-1 cursor-pointer block"
+							className="w-full text-left py-1 px-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer block"
 						>
 							<div className="flex items-center gap-1.5 mb-0.5">
 								<span
