@@ -21,6 +21,16 @@ import type { Comment, Goal, Project, Task } from "@/types";
 
 import { type ActionType, type ActorType, logAction } from "./actions";
 
+export interface ProjectStat {
+	projectId: string;
+	name: string;
+	color: string;
+	doneCount: number;
+	inProgressCount: number;
+	backlogCount: number;
+	totalCount: number;
+}
+
 // ... existing code ...
 
 export async function getTaskCounts(userId: string): Promise<{
@@ -963,4 +973,38 @@ export async function deleteProject(
 		metadata: { name: result[0]?.name, tokenName },
 		userId: actorId,
 	});
+}
+
+// --- Project Stats ---
+
+export async function getWorkingProjectStats(
+	userId: string,
+): Promise<ProjectStat[]> {
+	const result = await getDb()
+		.select({
+			projectId: projects.id,
+			name: projects.name,
+			color: projects.color,
+			doneCount: sql`COUNT(CASE WHEN ${tasks.status} = 'done' THEN 1 END)`,
+			inProgressCount: sql`COUNT(CASE WHEN ${tasks.status} IN ('in_progress', 'review', 'todo') THEN 1 END)`,
+			backlogCount: sql`COUNT(CASE WHEN ${tasks.status} = 'cold' THEN 1 END)`,
+		})
+		.from(projects)
+		.leftJoin(tasks, eq(tasks.project_id, projects.id))
+		.where(and(eq(projects.userId, userId), eq(projects.status, "working")))
+		.groupBy(projects.id)
+		.orderBy(projects.priority);
+
+	return result.map((row) => ({
+		projectId: row.projectId,
+		name: row.name,
+		color: row.color,
+		doneCount: Number(row.doneCount) || 0,
+		inProgressCount: Number(row.inProgressCount) || 0,
+		backlogCount: Number(row.backlogCount) || 0,
+		totalCount:
+			(Number(row.doneCount) || 0) +
+			(Number(row.inProgressCount) || 0) +
+			(Number(row.backlogCount) || 0),
+	}));
 }

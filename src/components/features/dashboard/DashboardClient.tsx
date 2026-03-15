@@ -5,6 +5,7 @@ import { useAtom } from "jotai";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { FocusProjectsCard } from "@/components/features/dashboard/FocusProjectsCard";
 import { LinkKanban } from "@/components/features/projects/LinkKanban";
 import { AddTaskDialog } from "@/components/features/tasks/AddTaskDialog";
 import { EditTaskDialog } from "@/components/features/tasks/EditTaskDialog";
@@ -12,11 +13,13 @@ import { RoadmapView } from "@/components/features/tasks/RoadmapView";
 import { TaskList } from "@/components/features/tasks/TaskList";
 import { SiteHeader } from "@/components/layout/site-header";
 import { tasksAtom } from "@/lib/atoms";
+import type { ProjectStat } from "@/lib/storage";
 import type { Project, Task } from "@/types";
 
 interface DashboardClientProps {
 	initialTasks: Task[];
 	initialProjects: Project[];
+	initialProjectStats: ProjectStat[];
 	title?: string;
 	filterType?: "all" | "today";
 }
@@ -24,11 +27,14 @@ interface DashboardClientProps {
 export function DashboardClient({
 	initialTasks,
 	initialProjects,
+	initialProjectStats,
 	title,
 	filterType = "all",
 }: DashboardClientProps) {
 	const [tasks, setTasks] = useAtom(tasksAtom);
 	const [projects, setProjects] = useState<Project[]>(initialProjects);
+	const [projectStats, setProjectStats] =
+		useState<ProjectStat[]>(initialProjectStats);
 	const [error, setError] = useState<string | null>(null);
 	const [editingTask, setEditingTask] = useState<Task | null>(null);
 	const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
@@ -43,6 +49,10 @@ export function DashboardClient({
 	useEffect(() => {
 		setProjects(initialProjects);
 	}, [initialProjects]);
+
+	useEffect(() => {
+		setProjectStats(initialProjectStats);
+	}, [initialProjectStats]);
 
 	// Handle deep linking to task via ?taskId=...
 	useEffect(() => {
@@ -179,6 +189,7 @@ export function DashboardClient({
 			<SiteHeader pageTitle={title || activeProject?.name || "Inbox"} />
 			<div className="flex flex-1 flex-col p-4 md:p-6">
 				<div className="@container/main flex flex-1 flex-col gap-2 h-full">
+					<FocusProjectsCard projects={projectStats} />
 					{isBoardView && selectedProjectId ? (
 						<LinkKanban
 							tasks={filteredTasks}

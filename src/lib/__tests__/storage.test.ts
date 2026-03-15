@@ -12,6 +12,7 @@ import {
 	getTaskById,
 	getTaskByIdForUser,
 	getTaskCounts,
+	getWorkingProjectStats,
 	readGoals,
 	readProjects,
 	readTasks,
@@ -586,6 +587,119 @@ describe("Storage Layer", () => {
 			});
 
 			await expect(readTasks("user-123")).rejects.toThrow("Database error");
+		});
+	});
+
+	describe("getWorkingProjectStats", () => {
+		it("should be a function", () => {
+			expect(typeof getWorkingProjectStats).toBe("function");
+		});
+
+		it("should return project stats with correct aggregation for working projects", async () => {
+			mockDb.select.mockReturnValueOnce({
+				from: vi.fn(() => ({
+					leftJoin: vi.fn(() => ({
+						where: vi.fn(() => ({
+							groupBy: vi.fn(() => ({
+								orderBy: vi.fn(() => [
+									{
+										projectId: "proj-1",
+										name: "Project 1",
+										color: "#ff0000",
+										doneCount: 3,
+										inProgressCount: 5,
+										backlogCount: 2,
+									},
+									{
+										projectId: "proj-2",
+										name: "Project 2",
+										color: "#00ff00",
+										doneCount: 1,
+										inProgressCount: 0,
+										backlogCount: 0,
+									},
+								]),
+							})),
+						})),
+					})),
+				})),
+			});
+
+			const result = await getWorkingProjectStats("user-123");
+
+			expect(result).toHaveLength(2);
+			expect(result[0]).toEqual({
+				projectId: "proj-1",
+				name: "Project 1",
+				color: "#ff0000",
+				doneCount: 3,
+				inProgressCount: 5,
+				backlogCount: 2,
+				totalCount: 10,
+			});
+			expect(result[1]).toEqual({
+				projectId: "proj-2",
+				name: "Project 2",
+				color: "#00ff00",
+				doneCount: 1,
+				inProgressCount: 0,
+				backlogCount: 0,
+				totalCount: 1,
+			});
+		});
+
+		it("should handle projects with zero tasks gracefully", async () => {
+			mockDb.select.mockReturnValueOnce({
+				from: vi.fn(() => ({
+					leftJoin: vi.fn(() => ({
+						where: vi.fn(() => ({
+							groupBy: vi.fn(() => ({
+								orderBy: vi.fn(() => [
+									{
+										projectId: "proj-empty",
+										name: "Empty Project",
+										color: "#0000ff",
+										doneCount: 0,
+										inProgressCount: 0,
+										backlogCount: 0,
+									},
+								]),
+							})),
+						})),
+					})),
+				})),
+			});
+
+			const result = await getWorkingProjectStats("user-123");
+
+			expect(result).toHaveLength(1);
+			expect(result[0]).toEqual({
+				projectId: "proj-empty",
+				name: "Empty Project",
+				color: "#0000ff",
+				doneCount: 0,
+				inProgressCount: 0,
+				backlogCount: 0,
+				totalCount: 0,
+			});
+		});
+
+		it("should filter to only working projects", async () => {
+			mockDb.select.mockReturnValueOnce({
+				from: vi.fn(() => ({
+					leftJoin: vi.fn(() => ({
+						where: vi.fn(() => ({
+							groupBy: vi.fn(() => ({
+								orderBy: vi.fn(() => []),
+							})),
+						})),
+					})),
+				})),
+			});
+
+			await getWorkingProjectStats("user-123");
+
+			expect(mockDb.select).toHaveBeenCalled();
 		});
 	});
 });
