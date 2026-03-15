@@ -127,6 +127,10 @@ const createTaskSchema = z.object({
 		.enum(["todo", "in_progress", "review", "done", "cold"])
 		.optional()
 		.describe('Task status. Defaults to "cold" (backlog) if omitted.'),
+	orderNum: z
+		.number()
+		.optional()
+		.describe("Order number for subtask ordering. Lower numbers appear first."),
 });
 
 const updateTaskSchema = z.object({
@@ -394,12 +398,13 @@ async function createTaskTool(
 			id: randomUUID(),
 			title: parsed.title,
 			description: parsed.description,
-			status: parsed.status ?? "cold", // Default to "cold" so agent-created tasks land in backlog
+			status: parsed.status ?? "cold",
 			priority: parsed.priority,
 			projectId: parsed.projectId ?? null,
 			parentId: parsed.parentId ?? null,
 			dueDate: parsed.dueDate ? new Date(parsed.dueDate) : null,
 			planDate: parsed.planDate ? new Date(parsed.planDate) : null,
+			orderNum: parsed.orderNum ?? 0,
 			createdAt: now,
 			updatedAt: now,
 			comments: [],
@@ -452,6 +457,7 @@ async function createProjectRoadmapTool(
 				parentId: null, // Top-level
 				dueDate: null,
 				planDate: null,
+				orderNum: 0,
 				createdAt: now,
 				updatedAt: now,
 				comments: [],
@@ -469,6 +475,7 @@ async function createProjectRoadmapTool(
 					parentId: sectionId, // Link to section
 					dueDate: null,
 					planDate: null,
+					orderNum: 0,
 					createdAt: now,
 					updatedAt: now,
 					comments: [],

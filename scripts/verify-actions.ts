@@ -33,6 +33,7 @@ async function verify() {
 			projectId: null,
 			dueDate: null,
 			planDate: null,
+			orderNum: 0,
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			comments: [],
