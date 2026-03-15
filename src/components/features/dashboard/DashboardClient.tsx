@@ -190,29 +190,31 @@ export function DashboardClient({
 			<SiteHeader pageTitle={title || activeProject?.name || "Inbox"} />
 			<div className="flex flex-1 flex-col p-4 md:p-6">
 				<div className="@container/main flex flex-1 flex-col gap-2 h-full">
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-						<FocusProjectsCard projects={projectStats} />
-						<Card>
-							<CardHeader className="pb-2">
-								<CardTitle className="text-sm">Placeholder 1</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-									<p className="text-xs">Future widget here</p>
-								</div>
-							</CardContent>
-						</Card>
-						<Card>
-							<CardHeader className="pb-2">
-								<CardTitle className="text-sm">Placeholder 2</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-									<p className="text-xs">Future widget here</p>
-								</div>
-							</CardContent>
-						</Card>
-					</div>
+					{!selectedProjectId && (
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+							<FocusProjectsCard projects={projectStats} />
+							<Card>
+								<CardHeader className="pb-2">
+									<CardTitle className="text-sm">Placeholder 1</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
+										<p className="text-xs">Future widget here</p>
+									</div>
+								</CardContent>
+							</Card>
+							<Card>
+								<CardHeader className="pb-2">
+									<CardTitle className="text-sm">Placeholder 2</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
+										<p className="text-xs">Future widget here</p>
+									</div>
+								</CardContent>
+							</Card>
+						</div>
+					)}
 					{isBoardView && selectedProjectId ? (
 						<LinkKanban
 							tasks={filteredTasks}
