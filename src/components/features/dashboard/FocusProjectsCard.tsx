@@ -48,11 +48,14 @@ export function FocusProjectsCard({ projects }: FocusProjectsCardProps) {
 	const formatCountWithPercent = (
 		count: number,
 		total: number,
-		label: string,
+		singularLabel: string,
+		pluralLabel?: string,
 	) => {
 		if (count === 0) return null;
 		const percent = total > 0 ? Math.round((count / total) * 100) : 0;
-		return `${count} ${label}${count !== 1 ? "s" : ""} (${percent}%)`;
+		const label =
+			count === 1 ? singularLabel : pluralLabel || `${singularLabel}s`;
+		return `${count} ${label} (${percent}%)`;
 	};
 
 	return (
@@ -92,15 +95,18 @@ export function FocusProjectsCard({ projects }: FocusProjectsCardProps) {
 										project.doneCount,
 										project.totalCount,
 										"done",
+										"done",
 									),
 									formatCountWithPercent(
 										project.inProgressCount,
 										project.totalCount,
 										"in progress",
+										"in progress",
 									),
 									formatCountWithPercent(
 										project.backlogCount,
 										project.totalCount,
+										"backlog",
 										"backlog",
 									),
 								]
