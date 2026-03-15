@@ -22,6 +22,11 @@ export function RoadmapView({
 }: RoadmapViewProps) {
 	const sortedTasks = useMemo(() => {
 		return [...tasks].sort((a, b) => {
+			const orderA = a.orderNum ?? 0;
+			const orderB = b.orderNum ?? 0;
+			if (orderA !== orderB) {
+				return orderA - orderB;
+			}
 			const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
 			const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
 			return dateA - dateB;
