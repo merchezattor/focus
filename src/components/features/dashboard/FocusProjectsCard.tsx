@@ -12,10 +12,10 @@ export interface FocusProjectsCardProps {
 const priorityOrder = { p1: 1, p2: 2, p3: 3, p4: 4 };
 
 const priorityConfig = {
-	p1: { label: "P1", className: "bg-red-500 text-white" },
-	p2: { label: "P2", className: "bg-orange-500 text-white" },
-	p3: { label: "P3", className: "bg-yellow-500 text-black" },
-	p4: { label: "P4", className: "bg-gray-400 text-white" },
+	p1: { label: "P1", className: "text-muted-foreground" },
+	p2: { label: "P2", className: "text-muted-foreground" },
+	p3: { label: "P3", className: "text-muted-foreground" },
+	p4: { label: "P4", className: "text-muted-foreground" },
 };
 
 export function FocusProjectsCard({ projects }: FocusProjectsCardProps) {

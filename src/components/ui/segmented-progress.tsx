@@ -33,7 +33,7 @@ export function SegmentedProgress({
 			<div className="flex h-2 rounded-full overflow-hidden gap-0.5 bg-muted">
 				{donePercent > 0 && (
 					<div
-						className="bg-green-500 transition-all duration-300"
+						className="bg-emerald-600 transition-all duration-300"
 						style={{ width: `${donePercent}%` }}
 					/>
 				)}
@@ -45,7 +45,7 @@ export function SegmentedProgress({
 				)}
 				{backlogPercent > 0 && (
 					<div
-						className="bg-blue-500 transition-all duration-300"
+						className="bg-slate-500 transition-all duration-300"
 						style={{ width: `${backlogPercent}%` }}
 					/>
 				)}
@@ -53,7 +53,7 @@ export function SegmentedProgress({
 			{showLegend && (
 				<div className="flex gap-3 text-xs mt-2 text-muted-foreground">
 					<span className="flex items-center gap-1">
-						<span className="w-2 h-2 rounded-full bg-green-500" />
+						<span className="w-2 h-2 rounded-full bg-emerald-600" />
 						Done ({done})
 					</span>
 					<span className="flex items-center gap-1">
@@ -61,7 +61,7 @@ export function SegmentedProgress({
 						In Progress ({inProgress})
 					</span>
 					<span className="flex items-center gap-1">
-						<span className="w-2 h-2 rounded-full bg-blue-500" />
+						<span className="w-2 h-2 rounded-full bg-slate-500" />
 						Backlog ({backlog})
 					</span>
 				</div>
