@@ -42,6 +42,8 @@ const createTaskSchema = taskSchema
 		status: z
 			.enum(["todo", "in_progress", "review", "done", "cold"])
 			.optional(),
+		// Optional order number for subtask ordering
+		orderNum: z.number().optional(),
 	});
 
 // GET /api/tasks - Get all tasks (optionally filtered by project)
@@ -129,6 +131,7 @@ export async function POST(request: NextRequest) {
 			updatedAt: new Date(),
 			comments: [],
 			status,
+			orderNum: result.data.orderNum ?? 0,
 			// Convert special project IDs to null
 			projectId:
 				result.data.projectId === "inbox" || result.data.projectId === ""
