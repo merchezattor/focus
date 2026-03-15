@@ -395,7 +395,7 @@ async function listInbox(
 	}
 }
 
-async function createTaskTool(
+export async function createTaskTool(
 	args: unknown,
 	context: MCPServerContext,
 ): Promise<{
@@ -443,7 +443,7 @@ async function createTaskTool(
 	}
 }
 
-async function createProjectRoadmapTool(
+export async function createProjectRoadmapTool(
 	args: unknown,
 	context: MCPServerContext,
 ): Promise<{
@@ -526,7 +526,7 @@ async function createProjectRoadmapTool(
 	}
 }
 
-async function updateTaskTool(
+export async function updateTaskTool(
 	args: unknown,
 	context: MCPServerContext,
 ): Promise<{
@@ -550,6 +550,7 @@ async function updateTaskTool(
 			updates.dueDate = parsed.dueDate ? new Date(parsed.dueDate) : null;
 		if (parsed.planDate !== undefined)
 			updates.planDate = parsed.planDate ? new Date(parsed.planDate) : null;
+		if (parsed.orderNum !== undefined) updates.orderNum = parsed.orderNum;
 		updates.updatedAt = new Date();
 		await updateTask(
 			parsed.id,
