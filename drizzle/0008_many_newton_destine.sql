@@ -1,0 +1,1 @@
+ALTER TABLE "tasks" ADD COLUMN "order_num" integer DEFAULT 0 NOT NULL;
