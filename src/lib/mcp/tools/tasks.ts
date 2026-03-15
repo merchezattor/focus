@@ -487,7 +487,7 @@ async function createProjectRoadmapTool(
 					parentId: sectionId, // Link to section
 					dueDate: null,
 					planDate: null,
-					orderNum: 0,
+					orderNum: sub.orderNum ?? 0,
 					createdAt: now,
 					updatedAt: now,
 					comments: [],
