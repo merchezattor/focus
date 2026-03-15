@@ -1,62 +1,69 @@
 {
-	"version": "7",
-	"dialect": "postgresql",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "7",
-			"when": 1770377668300,
-			"tag": "0000_odd_doomsday",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1771567377677,
-			"tag": "0001_aberrant_inertia",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "7",
-			"when": 1771859047362,
-			"tag": "0002_oval_glorian",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "7",
-			"when": 1772473259662,
-			"tag": "0003_living_gamora",
-			"breakpoints": true
-		},
-		{
-			"idx": 4,
-			"version": "7",
-			"when": 1772515450732,
-			"tag": "0004_polite_scarlet_spider",
-			"breakpoints": true
-		},
-		{
-			"idx": 5,
-			"version": "7",
-			"when": 1772896318081,
-			"tag": "0005_sloppy_professor_monster",
-			"breakpoints": true
-		},
-		{
-			"idx": 6,
-			"version": "7",
-			"when": 1772947798675,
-			"tag": "0006_outgoing_sunspot",
-			"breakpoints": true
-		},
-		{
-			"idx": 7,
-			"version": "7",
-			"when": 1772961918259,
-			"tag": "0007_military_electro",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1770377668300,
+      "tag": "0000_odd_doomsday",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771567377677,
+      "tag": "0001_aberrant_inertia",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771859047362,
+      "tag": "0002_oval_glorian",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772473259662,
+      "tag": "0003_living_gamora",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772515450732,
+      "tag": "0004_polite_scarlet_spider",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772896318081,
+      "tag": "0005_sloppy_professor_monster",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772947798675,
+      "tag": "0006_outgoing_sunspot",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1772961918259,
+      "tag": "0007_military_electro",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773579312577,
+      "tag": "0008_many_newton_destine",
+      "breakpoints": true
+    }
+  ]
 }
