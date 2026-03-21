@@ -19,7 +19,7 @@ Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", {
 // Cleanup after each test
 afterEach(() => {
 	cleanup();
-	vi.clearAllMocks();
+	vi.restoreAllMocks();
 });
 
 // Mock next/navigation

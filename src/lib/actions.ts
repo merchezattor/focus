@@ -34,7 +34,7 @@ interface LogActionParams {
  * Logs an action to the database asynchronously.
  * Uses fire-and-forget to not block the main flow.
  */
-export function logAction(params: LogActionParams) {
+export async function logAction(params: LogActionParams) {
 	const {
 		entityId,
 		entityType,
@@ -47,31 +47,26 @@ export function logAction(params: LogActionParams) {
 		userId,
 	} = params;
 
-	const performLog = async () => {
-		try {
-			await getDb()
-				.insert(actions)
-				.values({
-					id: uuidv4(),
-					entityId,
-					entityType,
-					actorId,
-					actorType,
-					actionType,
-					changes,
-					metadata,
-					comment,
-					isRead: false,
-					userId: userId || actorId,
-				});
-		} catch (error) {
-			console.error("Failed to log action:", error);
-			// Fail silently to not impact main flow
-		}
-	};
-
-	// Use simple fire-and-forget
-	performLog();
+	try {
+		await getDb()
+			.insert(actions)
+			.values({
+				id: uuidv4(),
+				entityId,
+				entityType,
+				actorId,
+				actorType,
+				actionType,
+				changes,
+				metadata,
+				comment,
+				isRead: false,
+				userId: userId || actorId,
+			});
+	} catch (error) {
+		console.error("Failed to log action:", error);
+		// Fail silently to not impact main flow
+	}
 }
 
 /**
