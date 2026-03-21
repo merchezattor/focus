@@ -30,6 +30,7 @@ import type { Goal, Project } from "@/types";
 const createProjectSchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	description: z.string().optional(),
+	kind: z.enum(["project", "container"]).default("project"),
 	viewType: z.enum(["list", "board", "roadmap"]).default("list"),
 	status: z
 		.enum(["working", "archived", "complete", "frozen"])
@@ -65,6 +66,24 @@ const priorities = [
 	{ value: "p2", label: "Priority 2", color: "#f97316" },
 	{ value: "p3", label: "Priority 3", color: "#3b82f6" },
 	{ value: "p4", label: "Priority 4", color: "#6b7280" },
+];
+
+const projectKinds: Array<{
+	value: Project["kind"];
+	label: string;
+	description: string;
+}> = [
+	{
+		value: "project",
+		label: "Project",
+		description: "Actionable work that should appear in normal project lists.",
+	},
+	{
+		value: "container",
+		label: "Container",
+		description:
+			"Structural node for organizing the graph without acting as a normal project.",
+	},
 ];
 
 /**
@@ -119,6 +138,7 @@ export function AddProjectDialog(
 	const [viewType, setViewType] = useState("list");
 	const [status, setStatus] = useState("working");
 	const [priority, setPriority] = useState("p4");
+	const [kind, setKind] = useState<Project["kind"]>("project");
 	const [goalId, setGoalId] = useState<string | undefined>(undefined);
 	const [parentProjectId, setParentProjectId] = useState<string | undefined>(
 		undefined,
@@ -133,6 +153,7 @@ export function AddProjectDialog(
 				setName(projectToEdit.name);
 				setDescription(projectToEdit.description || "");
 				setColor(projectToEdit.color);
+				setKind(projectToEdit.kind);
 				setViewType(projectToEdit.viewType || "list");
 				setStatus(projectToEdit.status || "working");
 				setPriority(projectToEdit.priority || "p4");
@@ -143,6 +164,7 @@ export function AddProjectDialog(
 				setName("");
 				setDescription("");
 				setColor(colors[Math.floor(Math.random() * colors.length)]);
+				setKind("project");
 				setViewType("list");
 				setStatus("working");
 				setPriority("p4");
@@ -164,6 +186,7 @@ export function AddProjectDialog(
 		const result = createProjectSchema.safeParse({
 			name,
 			description,
+			kind,
 			viewType,
 			status,
 			priority,
@@ -186,6 +209,7 @@ export function AddProjectDialog(
 						name,
 						description,
 						color,
+						kind,
 						viewType,
 						status,
 						priority,
@@ -208,6 +232,7 @@ export function AddProjectDialog(
 						name,
 						description,
 						color,
+						kind,
 						viewType,
 						status,
 						priority,
@@ -224,7 +249,9 @@ export function AddProjectDialog(
 				const data = await res.json();
 
 				if (!projectToEdit) {
-					router.push(`/?project=${data.project.id}`);
+					router.push(
+						kind === "container" ? "/map" : `/?project=${data.project.id}`,
+					);
 				}
 				toast.success("Project created successfully");
 			}
@@ -279,7 +306,7 @@ export function AddProjectDialog(
 						/>
 					</div>
 
-					<div className="grid grid-cols-2 gap-4">
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 						<div className="space-y-3">
 							<label className="text-sm font-medium">View</label>
 							<Select value={viewType} onValueChange={setViewType}>
@@ -290,6 +317,33 @@ export function AddProjectDialog(
 									<SelectItem value="list">List</SelectItem>
 									<SelectItem value="board">Board (Kanban)</SelectItem>
 									<SelectItem value="roadmap">Roadmap</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="space-y-3">
+							<label className="text-sm font-medium">Kind</label>
+							<Select
+								value={kind}
+								onValueChange={(value) => setKind(value as Project["kind"])}
+							>
+								<SelectTrigger className="w-full" aria-label="Project kind">
+									<SelectValue placeholder="Select kind" />
+								</SelectTrigger>
+								<SelectContent>
+									{projectKinds.map((projectKind) => (
+										<SelectItem
+											key={projectKind.value}
+											value={projectKind.value}
+										>
+											<div className="flex flex-col items-start">
+												<span>{projectKind.label}</span>
+												<span className="text-xs text-muted-foreground">
+													{projectKind.description}
+												</span>
+											</div>
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
 						</div>

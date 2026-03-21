@@ -12,7 +12,9 @@ import {
 	getTaskById,
 	getTaskByIdForUser,
 	getTaskCounts,
+	getWorkingActionableProjectStats,
 	getWorkingProjectStats,
+	readActionableProjects,
 	readGoals,
 	readProjects,
 	readTasks,
@@ -297,6 +299,54 @@ describe("Storage Layer", () => {
 		});
 	});
 
+	describe("Project Reads", () => {
+		it("should read actionable projects only", async () => {
+			mockDb.select.mockReturnValueOnce({
+				from: vi.fn(() => ({
+					where: vi.fn(() => ({
+						orderBy: vi.fn(() => [
+							{
+								id: "project-1",
+								name: "Project 1",
+								color: "#ff0000",
+								kind: "project",
+								priority: "p2",
+								description: null,
+								status: "working",
+								isFavorite: false,
+								goalId: null,
+								parentProjectId: null,
+								view_type: "list",
+								createdAt: new Date("2025-01-01"),
+								updatedAt: new Date("2025-01-02"),
+							},
+						]),
+					})),
+				})),
+			});
+
+			const result = await readActionableProjects("user-123");
+
+			expect(result).toEqual([
+				{
+					id: "project-1",
+					name: "Project 1",
+					color: "#ff0000",
+					kind: "project",
+					priority: "p2",
+					description: undefined,
+					status: "working",
+					isFavorite: false,
+					goalId: undefined,
+					parentProjectId: undefined,
+					viewType: "list",
+					createdAt: new Date("2025-01-01"),
+					updatedAt: new Date("2025-01-02"),
+				},
+			]);
+		});
+	});
+
 	describe("Project Operations", () => {
 		describe("readProjects", () => {
 			it("should be a function", () => {
@@ -327,6 +377,7 @@ describe("Storage Layer", () => {
 					id: "project-1",
 					name: "Test Project",
 					color: "#3b82f6",
+					kind: "project" as const,
 					priority: "p4" as const,
 					status: "working" as const,
 					description: undefined,
@@ -700,6 +751,51 @@ describe("Storage Layer", () => {
 			await getWorkingProjectStats("user-123");
 
 			expect(mockDb.select).toHaveBeenCalled();
+		});
+	});
+
+	describe("getWorkingActionableProjectStats", () => {
+		it("should be a function", () => {
+			expect(typeof getWorkingActionableProjectStats).toBe("function");
+		});
+
+		it("should return project stats for actionable projects", async () => {
+			mockDb.select.mockReturnValueOnce({
+				from: vi.fn(() => ({
+					leftJoin: vi.fn(() => ({
+						where: vi.fn(() => ({
+							groupBy: vi.fn(() => ({
+								orderBy: vi.fn(() => [
+									{
+										projectId: "proj-actionable",
+										name: "Actionable Project",
+										color: "#ff0000",
+										priority: "p1",
+										doneCount: 1,
+										inProgressCount: 2,
+										backlogCount: 3,
+									},
+								]),
+							})),
+						})),
+					})),
+				})),
+			});
+
+			const result = await getWorkingActionableProjectStats("user-123");
+
+			expect(result).toEqual([
+				{
+					projectId: "proj-actionable",
+					name: "Actionable Project",
+					color: "#ff0000",
+					priority: "p1",
+					doneCount: 1,
+					inProgressCount: 2,
+					backlogCount: 3,
+					totalCount: 6,
+				},
+			]);
 		});
 	});
 });

@@ -11,7 +11,12 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getUnreadActionsCount } from "@/lib/actions";
 import { auth } from "@/lib/auth";
-import { getTaskCounts, readGoals, readProjects } from "@/lib/storage";
+import {
+	getTaskCounts,
+	readActionableProjects,
+	readGoals,
+	readProjects,
+} from "@/lib/storage";
 
 export default async function MainLayout({
 	children,
@@ -26,12 +31,14 @@ export default async function MainLayout({
 		redirect("/login");
 	}
 
-	const [projects, counts, goals, unreadActionsCount] = await Promise.all([
-		readProjects(session.user.id),
-		getTaskCounts(session.user.id),
-		readGoals(session.user.id),
-		getUnreadActionsCount(session.user.id),
-	]);
+	const [allProjects, actionableProjects, counts, goals, unreadActionsCount] =
+		await Promise.all([
+			readProjects(session.user.id),
+			readActionableProjects(session.user.id),
+			getTaskCounts(session.user.id),
+			readGoals(session.user.id),
+			getUnreadActionsCount(session.user.id),
+		]);
 
 	return (
 		<SidebarProvider
@@ -44,14 +51,14 @@ export default async function MainLayout({
 			}
 		>
 			<AppSidebar
-				projects={projects}
+				projects={actionableProjects}
 				user={session.user}
 				counts={{ ...counts, eventsCount: unreadActionsCount }}
 				goals={goals}
 			/>
-			<GlobalAddTaskDialog projects={projects} />
-			<GlobalAddProjectDialog goals={goals} projects={projects} />
-			<GlobalEditProjectDialog goals={goals} projects={projects} />
+			<GlobalAddTaskDialog projects={actionableProjects} />
+			<GlobalAddProjectDialog goals={goals} projects={allProjects} />
+			<GlobalEditProjectDialog goals={goals} projects={allProjects} />
 			<GlobalAddGoalDialog />
 			<GlobalEditGoalDialog />
 			<AddTaskFab />

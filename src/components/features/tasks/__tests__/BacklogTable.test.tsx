@@ -11,6 +11,7 @@ const mockProjects = new Map<string, Project>([
 			id: "project-1",
 			name: "Test Project",
 			color: "#ff0000",
+			kind: "project",
 			priority: "p1",
 			status: "working",
 			isFavorite: false,

@@ -32,6 +32,7 @@ async function seed() {
 				id: p.id,
 				name: p.name,
 				color: p.color,
+				kind: p.kind ?? "project",
 				isFavorite: p.isFavorite,
 				// Default dates if missing in JSON
 				createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
