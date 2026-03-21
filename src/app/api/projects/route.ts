@@ -3,7 +3,7 @@ import { getAuthenticatedUser } from "@/lib/api-auth";
 import {
 	createProject,
 	deleteProject,
-	readProjects,
+	readActionableProjects,
 	updateProject,
 } from "@/lib/storage";
 import { type Project, projectSchema } from "@/types";
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 		}
 		const { user } = auth;
 
-		const projects = await readProjects(user.id);
+		const projects = await readActionableProjects(user.id);
 		return NextResponse.json({ projects });
 	} catch (error) {
 		console.error("Failed to read projects:", error);

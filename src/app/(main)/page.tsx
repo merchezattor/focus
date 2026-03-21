@@ -3,7 +3,11 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { DashboardClient } from "@/components/features/dashboard/DashboardClient";
 import { auth } from "@/lib/auth";
-import { getWorkingProjectStats, readProjects, readTasks } from "@/lib/storage";
+import {
+	getWorkingActionableProjectStats,
+	readActionableProjects,
+	readTasks,
+} from "@/lib/storage";
 
 export default async function TodayPage() {
 	const session = await auth.api.getSession({
@@ -16,8 +20,8 @@ export default async function TodayPage() {
 
 	const [tasks, projects, projectStats] = await Promise.all([
 		readTasks(session.user.id),
-		readProjects(session.user.id),
-		getWorkingProjectStats(session.user.id),
+		readActionableProjects(session.user.id),
+		getWorkingActionableProjectStats(session.user.id),
 	]);
 
 	return (

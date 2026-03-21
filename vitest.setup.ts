@@ -10,6 +10,12 @@ afterEach(() => server.resetHandlers());
 
 afterAll(() => server.close());
 
+// Tell React test utilities that this environment supports act().
+Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", {
+	value: true,
+	writable: true,
+});
+
 // Cleanup after each test
 afterEach(() => {
 	cleanup();
@@ -76,6 +82,22 @@ Object.defineProperty(globalThis, "matchMedia", {
 		dispatchEvent: vi.fn(),
 	})),
 });
+
+if (!HTMLElement.prototype.hasPointerCapture) {
+	HTMLElement.prototype.hasPointerCapture = () => false;
+}
+
+if (!HTMLElement.prototype.setPointerCapture) {
+	HTMLElement.prototype.setPointerCapture = () => {};
+}
+
+if (!HTMLElement.prototype.releasePointerCapture) {
+	HTMLElement.prototype.releasePointerCapture = () => {};
+}
+
+if (!HTMLElement.prototype.scrollIntoView) {
+	HTMLElement.prototype.scrollIntoView = () => {};
+}
 
 // Filter console.error for React act() warnings in test environment
 const originalError = console.error;

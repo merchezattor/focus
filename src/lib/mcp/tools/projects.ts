@@ -14,7 +14,14 @@ import {
 import type { Project } from "@/types/project";
 
 // Input validation schemas
-const _emptyInputSchema = z.object({});
+const listProjectsInputSchema = z.object({
+	kind: z
+		.array(z.enum(["project", "container"]))
+		.optional()
+		.describe(
+			"Optional project kind filter. Omit to list all projects, or pass one or both kinds to narrow results.",
+		),
+});
 
 const createProjectInputSchema = z.object({
 	name: z.string().min(1).max(100).describe("Project name. 1–100 characters."),
@@ -23,6 +30,12 @@ const createProjectInputSchema = z.object({
 		.regex(/^#[0-9A-Fa-f]{6}$/)
 		.describe('Hex color code in #RRGGBB format, e.g. "#E44332".'),
 	description: z.string().optional().describe("Project description."),
+	kind: z
+		.enum(["project", "container"])
+		.optional()
+		.describe(
+			"Project kind. Use 'project' for actionable work, 'container' for structural graph nodes.",
+		),
 	status: z
 		.enum(["working", "archived", "complete", "frozen"])
 		.optional()
@@ -67,6 +80,10 @@ const updateProjectInputSchema = z.object({
 		.optional()
 		.describe('New hex color code in #RRGGBB format, e.g. "#10B981".'),
 	description: z.string().optional().describe("New project description."),
+	kind: z
+		.enum(["project", "container"])
+		.optional()
+		.describe("Change project kind to 'project' or 'container'."),
 	status: z
 		.enum(["working", "archived", "complete", "frozen"])
 		.optional()
@@ -87,18 +104,23 @@ const deleteProjectInputSchema = z.object({
 });
 
 // Tool definitions
-export const focusListProjects: MCPToolHandler<Record<string, never>> = async (
-	_args: Record<string, never>,
+export const focusListProjects: MCPToolHandler<
+	z.infer<typeof listProjectsInputSchema>
+> = async (
+	args: z.infer<typeof listProjectsInputSchema>,
 	context: MCPServerContext,
 ): Promise<MCPResponse> => {
 	try {
 		const projects = await readProjects(context.user.id);
+		const filteredProjects = args.kind?.length
+			? projects.filter((project) => args.kind?.includes(project.kind))
+			: projects;
 
 		return {
 			content: [
 				{
 					type: "text" as const,
-					text: JSON.stringify({ success: true, data: projects }),
+					text: JSON.stringify({ success: true, data: filteredProjects }),
 				},
 			],
 		};
@@ -129,6 +151,7 @@ export const focusCreateProject: MCPToolHandler<
 			id: randomUUID(),
 			name: args.name,
 			color: args.color,
+			kind: args.kind ?? "project",
 			description: args.description,
 			status: args.status ?? "working",
 			priority: args.priority ?? "p4",
@@ -181,6 +204,7 @@ export const focusUpdateProject: MCPToolHandler<
 		if (args.name !== undefined) updates.name = args.name;
 		if (args.color !== undefined) updates.color = args.color;
 		if (args.description !== undefined) updates.description = args.description;
+		if (args.kind !== undefined) updates.kind = args.kind;
 		if (args.status !== undefined) updates.status = args.status;
 		if (args.priority !== undefined) updates.priority = args.priority;
 		if (args.isFavorite !== undefined) updates.isFavorite = args.isFavorite;
@@ -262,8 +286,8 @@ export const projectTools = [
 	{
 		name: "focus_list_projects",
 		description:
-			"List all projects. Returns: Array of Project objects with id, name, color.",
-		schema: _emptyInputSchema,
+			"List projects. By default returns all projects, including structural containers. Use the optional kind filter to narrow results.",
+		schema: listProjectsInputSchema,
 		handler: focusListProjects,
 	},
 	{

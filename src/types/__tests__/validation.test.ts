@@ -310,6 +310,7 @@ describe("projectSchema Validation", () => {
 		id: "550e8400-e29b-41d4-a716-446655440000",
 		name: "Test Project",
 		color: "#FF5733",
+		kind: "project" as const,
 		description: "Test description",
 		goalId: null,
 		parentProjectId: null,
@@ -342,6 +343,15 @@ describe("projectSchema Validation", () => {
 			expect(result.success).toBe(true);
 			if (result.success) {
 				expect(result.data.viewType).toBe("list");
+			}
+		});
+
+		it("should use default kind when not provided", () => {
+			const { kind, ...projectWithoutKind } = validProject;
+			const result = projectSchema.safeParse(projectWithoutKind);
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.data.kind).toBe("project");
 			}
 		});
 	});

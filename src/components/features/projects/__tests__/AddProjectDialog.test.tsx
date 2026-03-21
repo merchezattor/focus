@@ -1,6 +1,6 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createGoal, createProject } from "@/test/fixtures";
 import { render } from "@/test/test-utils";
 import { AddProjectDialog } from "../AddProjectDialog";
@@ -20,6 +20,10 @@ const mockProjects = [
 		color: "#3b82f6",
 	}),
 ];
+
+afterEach(() => {
+	vi.unstubAllGlobals();
+});
 
 describe("AddProjectDialog", () => {
 	beforeEach(() => {
@@ -96,6 +100,15 @@ describe("AddProjectDialog", () => {
 			expect(screen.getByText("View")).toBeInTheDocument();
 		});
 
+		it("renders kind select", () => {
+			render(<AddProjectDialog open={true} onOpenChange={vi.fn()} />);
+
+			expect(screen.getByText("Kind")).toBeInTheDocument();
+			expect(screen.getByRole("combobox", { name: /kind/i })).toHaveTextContent(
+				"Project",
+			);
+		});
+
 		it("renders color picker section", () => {
 			render(<AddProjectDialog open={true} onOpenChange={vi.fn()} />);
 
@@ -167,6 +180,42 @@ describe("AddProjectDialog", () => {
 			const submitButton = screen.getByRole("button", { name: /add project/i });
 			expect(submitButton).not.toBeDisabled();
 		});
+
+		it("submits default project kind in create mode", async () => {
+			const user = userEvent.setup();
+			const fetchMock = vi.fn().mockResolvedValue({
+				ok: true,
+				json: async () => ({
+					project: { id: "created-project-1" },
+				}),
+			});
+			vi.stubGlobal("fetch", fetchMock);
+
+			render(<AddProjectDialog open={true} onOpenChange={vi.fn()} />);
+
+			await user.type(
+				screen.getByPlaceholderText("Project name"),
+				"New Project",
+			);
+			await user.click(screen.getByRole("button", { name: /add project/i }));
+
+			await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+			expect(fetchMock).toHaveBeenCalledWith(
+				"/api/projects",
+				expect.objectContaining({
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: expect.any(String),
+				}),
+			);
+
+			const request = fetchMock.mock.calls[0]?.[1];
+			expect(request).toBeDefined();
+			expect(JSON.parse(String(request?.body))).toMatchObject({
+				name: "New Project",
+				kind: "project",
+			});
+		});
 	});
 
 	describe("Cancel", () => {
@@ -227,6 +276,71 @@ describe("AddProjectDialog - Edit Mode", () => {
 			"Description (optional)",
 		) as HTMLTextAreaElement;
 		expect(descInput.value).toBe("Existing description");
+
+		expect(screen.getByRole("combobox", { name: /kind/i })).toHaveTextContent(
+			"Project",
+		);
+	});
+
+	it("shows container kind when editing a container project", () => {
+		const containerProject = createProject({
+			...projectToEdit,
+			id: "container-project-1",
+			kind: "container",
+		});
+
+		render(
+			<AddProjectDialog
+				open={true}
+				onOpenChange={vi.fn()}
+				projectToEdit={containerProject}
+			/>,
+		);
+
+		expect(screen.getByRole("combobox", { name: /kind/i })).toHaveTextContent(
+			"Container",
+		);
+	});
+
+	it("submits container kind in edit mode", async () => {
+		const user = userEvent.setup();
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ({ success: true }),
+		});
+		vi.stubGlobal("fetch", fetchMock);
+		const containerProject = createProject({
+			...projectToEdit,
+			id: "container-project-2",
+			kind: "container",
+		});
+
+		render(
+			<AddProjectDialog
+				open={true}
+				onOpenChange={vi.fn()}
+				projectToEdit={containerProject}
+			/>,
+		);
+
+		await user.click(screen.getByRole("button", { name: /save/i }));
+
+		await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+		expect(fetchMock).toHaveBeenCalledWith(
+			"/api/projects",
+			expect.objectContaining({
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: expect.any(String),
+			}),
+		);
+
+		const request = fetchMock.mock.calls[0]?.[1];
+		expect(request).toBeDefined();
+		expect(JSON.parse(String(request?.body))).toMatchObject({
+			id: "container-project-2",
+			kind: "container",
+		});
 	});
 
 	it("shows Save button instead of Add Project", () => {

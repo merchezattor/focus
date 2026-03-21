@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/site-header";
 import { auth } from "@/lib/auth";
-import { getBacklogTasks, readProjects } from "@/lib/storage";
+import { getBacklogTasks, readActionableProjects } from "@/lib/storage";
 import { BacklogClient } from "./client";
 
 export const metadata: Metadata = {
@@ -22,7 +22,7 @@ export default async function BacklogPage() {
 
 	const [tasks, projects] = await Promise.all([
 		getBacklogTasks(session.user.id),
-		readProjects(session.user.id),
+		readActionableProjects(session.user.id),
 	]);
 
 	return (

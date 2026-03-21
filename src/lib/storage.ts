@@ -32,6 +32,24 @@ export interface ProjectStat {
 	totalCount: number;
 }
 
+function mapDbProject(p: typeof projects.$inferSelect): Project {
+	return {
+		id: p.id,
+		name: p.name,
+		color: p.color,
+		kind: p.kind,
+		priority: p.priority,
+		description: p.description || undefined,
+		status: p.status,
+		isFavorite: p.isFavorite,
+		goalId: p.goalId || undefined,
+		parentProjectId: p.parentProjectId || undefined,
+		viewType: (p.view_type as "list" | "board" | "roadmap") || "list",
+		createdAt: p.createdAt,
+		updatedAt: p.updatedAt,
+	};
+}
+
 // ... existing code ...
 
 export async function getTaskCounts(userId: string): Promise<{
@@ -95,20 +113,18 @@ export async function readProjects(userId: string): Promise<Project[]> {
 		.from(projects)
 		.where(eq(projects.userId, userId))
 		.orderBy(projects.priority, desc(projects.createdAt));
-	return dbProjects.map((p) => ({
-		id: p.id,
-		name: p.name,
-		color: p.color,
-		priority: p.priority,
-		description: p.description || undefined,
-		status: p.status,
-		isFavorite: p.isFavorite,
-		goalId: p.goalId || undefined,
-		parentProjectId: p.parentProjectId || undefined,
-		viewType: (p.view_type as "list" | "board") || "list",
-		createdAt: p.createdAt,
-		updatedAt: p.updatedAt,
-	}));
+	return dbProjects.map(mapDbProject);
+}
+
+export async function readActionableProjects(
+	userId: string,
+): Promise<Project[]> {
+	const dbProjects = await getDb()
+		.select()
+		.from(projects)
+		.where(and(eq(projects.userId, userId), eq(projects.kind, "project")))
+		.orderBy(projects.priority, desc(projects.createdAt));
+	return dbProjects.map(mapDbProject);
 }
 
 export async function createProject(
@@ -121,6 +137,7 @@ export async function createProject(
 		id: project.id,
 		name: project.name,
 		color: project.color,
+		kind: project.kind,
 		priority: project.priority,
 		description: project.description,
 		status: project.status,
@@ -160,6 +177,7 @@ export async function updateProject(
 	if (updates.description !== undefined)
 		dbUpdates.description = updates.description;
 	if (updates.color !== undefined) dbUpdates.color = updates.color;
+	if (updates.kind !== undefined) dbUpdates.kind = updates.kind;
 	if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
 	if (updates.status !== undefined) dbUpdates.status = updates.status;
 	if (updates.isFavorite !== undefined)
@@ -989,6 +1007,24 @@ export async function deleteProject(
 export async function getWorkingProjectStats(
 	userId: string,
 ): Promise<ProjectStat[]> {
+	return getWorkingProjectStatsByKind(userId);
+}
+
+export async function getWorkingActionableProjectStats(
+	userId: string,
+): Promise<ProjectStat[]> {
+	return getWorkingProjectStatsByKind(userId, "project");
+}
+
+async function getWorkingProjectStatsByKind(
+	userId: string,
+	kind?: Project["kind"],
+): Promise<ProjectStat[]> {
+	const filters = [eq(projects.userId, userId), eq(projects.status, "working")];
+	if (kind) {
+		filters.push(eq(projects.kind, kind));
+	}
+
 	const result = await getDb()
 		.select({
 			projectId: projects.id,
@@ -1001,7 +1037,7 @@ export async function getWorkingProjectStats(
 		})
 		.from(projects)
 		.leftJoin(tasks, eq(tasks.project_id, projects.id))
-		.where(and(eq(projects.userId, userId), eq(projects.status, "working")))
+		.where(and(...filters))
 		.groupBy(projects.id)
 		.orderBy(projects.priority);
 

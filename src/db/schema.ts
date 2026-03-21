@@ -78,6 +78,8 @@ export const projectStatusEnum = pgEnum("project_status", [
 	"frozen",
 ]);
 
+export const projectKindEnum = pgEnum("project_kind", ["project", "container"]);
+
 export const actionTypeEnum = pgEnum("action_type", [
 	"create",
 	"update",
@@ -122,6 +124,7 @@ export const projects = pgTable(
 		id: text("id").primaryKey(),
 		name: text("name").notNull(),
 		color: text("color").notNull(),
+		kind: projectKindEnum("kind").default("project").notNull(),
 		priority: priorityEnum("priority").notNull().default("p4"),
 		description: text("description"),
 		isFavorite: boolean("is_favorite").default(false).notNull(),
