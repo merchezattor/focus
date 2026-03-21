@@ -150,7 +150,7 @@ export async function createProject(
 		userId: userId,
 	});
 
-	logAction({
+	await logAction({
 		entityId: project.id,
 		entityType: "project",
 		actorId: userId,
@@ -196,7 +196,7 @@ export async function updateProject(
 			.where(eq(projects.id, id))
 			.returning({ name: projects.name });
 
-		logAction({
+		await logAction({
 			entityId: id,
 			entityType: "project",
 			actorId: actorId,
@@ -247,7 +247,7 @@ export async function createGoal(
 		updatedAt: goal.updatedAt,
 	});
 
-	logAction({
+	await logAction({
 		entityId: goal.id,
 		entityType: "goal",
 		actorId: userId,
@@ -282,7 +282,7 @@ export async function updateGoal(
 			.where(eq(goals.id, id))
 			.returning({ name: goals.name });
 
-		logAction({
+		await logAction({
 			entityId: id,
 			entityType: "goal",
 			actorId: actorId,
@@ -306,7 +306,7 @@ export async function deleteGoal(
 		.where(eq(goals.id, id))
 		.returning({ name: goals.name });
 
-	logAction({
+	await logAction({
 		entityId: id,
 		entityType: "goal",
 		actorId: actorId,
@@ -709,7 +709,7 @@ export async function createTask(
 		}
 	}
 
-	logAction({
+	await logAction({
 		entityId: task.id,
 		entityType: "task",
 		actorId: userId,
@@ -770,7 +770,7 @@ export async function createTasksBulk(
 	const targetEntityId = projectIds[0] || tasksList[0].id;
 	const targetEntityType = projectIds.length > 0 ? "project" : "task";
 
-	logAction({
+	await logAction({
 		entityId: targetEntityId,
 		entityType: targetEntityType,
 		actorId: userId,
@@ -820,7 +820,7 @@ export async function updateTask(
 					? "uncomplete"
 					: "update";
 
-		logAction({
+		await logAction({
 			entityId: id,
 			entityType: "task",
 			actorId: actorId,
@@ -844,7 +844,7 @@ export async function deleteTask(
 		.where(and(eq(tasks.id, id), eq(tasks.userId, actorId)))
 		.returning({ title: tasks.title });
 
-	logAction({
+	await logAction({
 		entityId: id,
 		entityType: "task",
 		actorId: actorId,
@@ -962,7 +962,7 @@ export async function syncComments(
 		for (const c of toAdd) {
 			await createComment(taskId, c, actorId, actorType);
 
-			logAction({
+			await logAction({
 				entityId: taskId,
 				entityType: "task",
 				actorId: actorId,
@@ -991,7 +991,7 @@ export async function deleteProject(
 		.where(eq(projects.id, id))
 		.returning({ name: projects.name });
 
-	logAction({
+	await logAction({
 		entityId: id,
 		entityType: "project",
 		actorId: actorId,

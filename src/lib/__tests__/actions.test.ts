@@ -23,43 +23,49 @@ describe("actions.ts", () => {
 		it("should accept entityId, entityType, actorId, and actionType params", async () => {
 			const { logAction } = await import("../actions");
 
-			expect(() => {
-				logAction({
-					entityId: "test-id",
-					entityType: "task",
-					actorId: "user-1",
-					actionType: "create",
-				});
-			}).not.toThrow();
+			await expect(
+				Promise.resolve(
+					logAction({
+						entityId: "test-id",
+						entityType: "task",
+						actorId: "user-1",
+						actionType: "create",
+					}),
+				),
+			).resolves.not.toThrow();
 		});
 
 		it("should accept optional actorType parameter", async () => {
 			const { logAction } = await import("../actions");
 
-			expect(() => {
-				logAction({
-					entityId: "test-id",
-					entityType: "task",
-					actorId: "user-1",
-					actorType: "agent",
-					actionType: "create",
-				});
-			}).not.toThrow();
+			await expect(
+				Promise.resolve(
+					logAction({
+						entityId: "test-id",
+						entityType: "task",
+						actorId: "user-1",
+						actorType: "agent",
+						actionType: "create",
+					}),
+				),
+			).resolves.not.toThrow();
 		});
 
 		it("should accept optional changes and metadata", async () => {
 			const { logAction } = await import("../actions");
 
-			expect(() => {
-				logAction({
-					entityId: "test-id",
-					entityType: "task",
-					actorId: "user-1",
-					actionType: "update",
-					changes: { title: "New Title" },
-					metadata: { source: "test" },
-				});
-			}).not.toThrow();
+			await expect(
+				Promise.resolve(
+					logAction({
+						entityId: "test-id",
+						entityType: "task",
+						actorId: "user-1",
+						actionType: "update",
+						changes: { title: "New Title" },
+						metadata: { source: "test" },
+					}),
+				),
+			).resolves.not.toThrow();
 		});
 
 		it("should accept all entity types", async () => {
@@ -67,14 +73,16 @@ describe("actions.ts", () => {
 			const entityTypes = ["task", "project", "goal"] as const;
 
 			for (const entityType of entityTypes) {
-				expect(() => {
-					logAction({
-						entityId: "test-id",
-						entityType,
-						actorId: "user-1",
-						actionType: "create",
-					});
-				}).not.toThrow();
+				await expect(
+					Promise.resolve(
+						logAction({
+							entityId: "test-id",
+							entityType,
+							actorId: "user-1",
+							actionType: "create",
+						}),
+					),
+				).resolves.not.toThrow();
 			}
 		});
 
@@ -89,14 +97,16 @@ describe("actions.ts", () => {
 			] as const;
 
 			for (const actionType of actionTypes) {
-				expect(() => {
-					logAction({
-						entityId: "test-id",
-						entityType: "task",
-						actorId: "user-1",
-						actionType,
-					});
-				}).not.toThrow();
+				await expect(
+					Promise.resolve(
+						logAction({
+							entityId: "test-id",
+							entityType: "task",
+							actorId: "user-1",
+							actionType,
+						}),
+					),
+				).resolves.not.toThrow();
 			}
 		});
 	});
