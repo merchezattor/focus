@@ -1,7 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/api-auth";
-import { deleteTask, readTasks, syncComments, updateTask } from "@/lib/storage";
+import {
+	deleteTask,
+	getTaskByIdForUser,
+	syncComments,
+	updateTask,
+} from "@/lib/storage";
 import { taskSchema } from "@/types";
 
 // GET /api/tasks/[id] - Get single task
@@ -17,11 +22,7 @@ export async function GET(
 		const { user } = auth;
 		const { id } = await params;
 
-		// Reusing readTasks (inefficient but safe for MVP) or implement readTask
-		// Let's implement finding it in the user's tasks
-		// Ideally storage.ts should have readTask(id, userId)
-		const tasks = await readTasks(user.id);
-		const task = tasks.find((t) => t.id === id);
+		const task = await getTaskByIdForUser(id, user.id);
 
 		if (!task) {
 			return NextResponse.json({ error: "Task not found" }, { status: 404 });
@@ -59,6 +60,13 @@ export async function PATCH(
 					return val;
 				}),
 			planDate: z
+				.union([z.string(), z.date(), z.null()])
+				.optional()
+				.transform((val: string | Date | null | undefined) => {
+					if (typeof val === "string") return new Date(val);
+					return val;
+				}),
+			completedAt: z
 				.union([z.string(), z.date(), z.null()])
 				.optional()
 				.transform((val: string | Date | null | undefined) => {

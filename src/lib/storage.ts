@@ -32,6 +32,8 @@ export interface ProjectStat {
 	totalCount: number;
 }
 
+type DbTask = typeof tasks.$inferSelect;
+
 function mapDbProject(p: typeof projects.$inferSelect): Project {
 	return {
 		id: p.id,
@@ -48,6 +50,46 @@ function mapDbProject(p: typeof projects.$inferSelect): Project {
 		createdAt: p.createdAt,
 		updatedAt: p.updatedAt,
 	};
+}
+
+function mapDbTask(t: DbTask, taskComments: Comment[] = []): Task {
+	return {
+		id: t.id,
+		title: t.title,
+		description: t.description || undefined,
+		status: t.status || "todo",
+		projectId: t.project_id,
+		parentId: t.parent_id,
+		priority: t.priority,
+		dueDate: t.due_date,
+		planDate: t.plan_date,
+		completedAt: t.completed_at,
+		orderNum: t.order_num ?? 0,
+		createdAt: t.created_at,
+		updatedAt: t.updated_at,
+		comments: taskComments,
+	};
+}
+
+function groupCommentsByTaskId(
+	dbComments: (typeof comments.$inferSelect)[],
+): Record<string, Comment[]> {
+	const commentsByTaskId: Record<string, Comment[]> = {};
+
+	for (const c of dbComments) {
+		if (!commentsByTaskId[c.task_id]) {
+			commentsByTaskId[c.task_id] = [];
+		}
+		commentsByTaskId[c.task_id].push({
+			id: c.id,
+			content: c.content,
+			postedAt: c.posted_at,
+			userId: c.userId || undefined,
+			actorType: c.actorType || undefined,
+		});
+	}
+
+	return commentsByTaskId;
 }
 
 // ... existing code ...
@@ -324,21 +366,7 @@ export async function getTaskById(id: string): Promise<Task | undefined> {
 
 	if (!result[0]) return undefined;
 
-	return {
-		id: result[0].id,
-		title: result[0].title,
-		description: result[0].description || undefined,
-		status: result[0].status || "todo",
-		priority: result[0].priority,
-		projectId: result[0].project_id,
-		parentId: result[0].parent_id,
-		dueDate: result[0].due_date,
-		planDate: result[0].plan_date,
-		orderNum: result[0].order_num ?? 0,
-		createdAt: result[0].created_at,
-		updatedAt: result[0].updated_at,
-		comments: [],
-	};
+	return mapDbTask(result[0]);
 }
 
 export async function getTaskByIdForUser(
@@ -358,27 +386,7 @@ export async function getTaskByIdForUser(
 		.from(comments)
 		.where(eq(comments.task_id, id));
 
-	return {
-		id: result[0].id,
-		title: result[0].title,
-		description: result[0].description || undefined,
-		status: result[0].status || "todo",
-		priority: result[0].priority,
-		projectId: result[0].project_id,
-		parentId: result[0].parent_id,
-		dueDate: result[0].due_date,
-		planDate: result[0].plan_date,
-		orderNum: result[0].order_num ?? 0,
-		createdAt: result[0].created_at,
-		updatedAt: result[0].updated_at,
-		comments: dbComments.map((c) => ({
-			id: c.id,
-			content: c.content,
-			postedAt: c.posted_at,
-			userId: c.userId || undefined,
-			actorType: c.actorType || undefined,
-		})),
-	};
+	return mapDbTask(result[0], groupCommentsByTaskId(dbComments)[id] || []);
 }
 
 // --- Advanced Search ---
@@ -552,35 +560,9 @@ export async function searchTasks(
 					.from(comments)
 					.where(inArray(comments.task_id, taskIds))
 			: [];
-	const commentsByTaskId: Record<string, Comment[]> = {};
-	for (const c of dbComments) {
-		if (!commentsByTaskId[c.task_id]) {
-			commentsByTaskId[c.task_id] = [];
-		}
-		commentsByTaskId[c.task_id].push({
-			id: c.id,
-			content: c.content,
-			postedAt: c.posted_at,
-			userId: c.userId || undefined,
-			actorType: c.actorType || undefined,
-		});
-	}
+	const commentsByTaskId = groupCommentsByTaskId(dbComments);
 
-	return dbTasks.map((t) => ({
-		id: t.id,
-		title: t.title,
-		description: t.description || undefined,
-		status: t.status || "todo",
-		projectId: t.project_id,
-		parentId: t.parent_id,
-		priority: t.priority,
-		dueDate: t.due_date,
-		planDate: t.plan_date,
-		orderNum: t.order_num ?? 0,
-		createdAt: t.created_at,
-		updatedAt: t.updated_at,
-		comments: commentsByTaskId[t.id] || [],
-	}));
+	return dbTasks.map((t) => mapDbTask(t, commentsByTaskId[t.id] || []));
 }
 
 export async function readTasks(userId: string): Promise<Task[]> {
@@ -600,36 +582,9 @@ export async function readTasks(userId: string): Promise<Task[]> {
 					.from(comments)
 					.where(inArray(comments.task_id, taskIds))
 			: [];
+	const commentsByTaskId = groupCommentsByTaskId(dbComments);
 
-	const commentsByTaskId: Record<string, Comment[]> = {};
-	for (const c of dbComments) {
-		if (!commentsByTaskId[c.task_id]) {
-			commentsByTaskId[c.task_id] = [];
-		}
-		commentsByTaskId[c.task_id].push({
-			id: c.id,
-			content: c.content,
-			postedAt: c.posted_at,
-			userId: c.userId || undefined,
-			actorType: c.actorType || undefined,
-		});
-	}
-
-	return dbTasks.map((t) => ({
-		id: t.id,
-		title: t.title,
-		description: t.description || undefined,
-		status: t.status || "todo",
-		projectId: t.project_id,
-		parentId: t.parent_id,
-		priority: t.priority,
-		dueDate: t.due_date,
-		planDate: t.plan_date,
-		orderNum: t.order_num ?? 0,
-		createdAt: t.created_at,
-		updatedAt: t.updated_at,
-		comments: commentsByTaskId[t.id] || [],
-	}));
+	return dbTasks.map((t) => mapDbTask(t, commentsByTaskId[t.id] || []));
 }
 
 export async function getBacklogTasks(userId: string): Promise<Task[]> {
@@ -647,44 +602,17 @@ export async function getBacklogTasks(userId: string): Promise<Task[]> {
 					.from(comments)
 					.where(inArray(comments.task_id, taskIds))
 			: [];
+	const commentsByTaskId = groupCommentsByTaskId(dbComments);
 
-	const commentsByTaskId: Record<string, Comment[]> = {};
-	for (const c of dbComments) {
-		if (!commentsByTaskId[c.task_id]) {
-			commentsByTaskId[c.task_id] = [];
-		}
-		commentsByTaskId[c.task_id].push({
-			id: c.id,
-			content: c.content,
-			postedAt: c.posted_at,
-			userId: c.userId || undefined,
-			actorType: c.actorType || undefined,
-		});
-	}
-
-	return dbTasks.map((t) => ({
-		id: t.id,
-		title: t.title,
-		description: t.description || undefined,
-		status: t.status || "todo",
-		projectId: t.project_id,
-		parentId: t.parent_id,
-		priority: t.priority,
-		dueDate: t.due_date,
-		planDate: t.plan_date,
-		orderNum: t.order_num ?? 0,
-		createdAt: t.created_at,
-		updatedAt: t.updated_at,
-		comments: commentsByTaskId[t.id] || [],
-	}));
+	return dbTasks.map((t) => mapDbTask(t, commentsByTaskId[t.id] || []));
 }
 
-export async function getArchivedTasks(userId: string): Promise<Task[]> {
+export async function getCompletedTasks(userId: string): Promise<Task[]> {
 	const dbTasks = await getDb()
 		.select()
 		.from(tasks)
 		.where(and(eq(tasks.userId, userId), eq(tasks.status, "done")))
-		.orderBy(desc(tasks.created_at));
+		.orderBy(desc(tasks.completed_at), desc(tasks.created_at));
 
 	const taskIds = dbTasks.map((t) => t.id);
 	const dbComments =
@@ -694,36 +622,9 @@ export async function getArchivedTasks(userId: string): Promise<Task[]> {
 					.from(comments)
 					.where(inArray(comments.task_id, taskIds))
 			: [];
+	const commentsByTaskId = groupCommentsByTaskId(dbComments);
 
-	const commentsByTaskId: Record<string, Comment[]> = {};
-	for (const c of dbComments) {
-		if (!commentsByTaskId[c.task_id]) {
-			commentsByTaskId[c.task_id] = [];
-		}
-		commentsByTaskId[c.task_id].push({
-			id: c.id,
-			content: c.content,
-			postedAt: c.posted_at,
-			userId: c.userId || undefined,
-			actorType: c.actorType || undefined,
-		});
-	}
-
-	return dbTasks.map((t) => ({
-		id: t.id,
-		title: t.title,
-		description: t.description || undefined,
-		status: t.status || "todo",
-		projectId: t.project_id,
-		parentId: t.parent_id,
-		priority: t.priority,
-		dueDate: t.due_date,
-		planDate: t.plan_date,
-		orderNum: t.order_num ?? 0,
-		createdAt: t.created_at,
-		updatedAt: t.updated_at,
-		comments: commentsByTaskId[t.id] || [],
-	}));
+	return dbTasks.map((t) => mapDbTask(t, commentsByTaskId[t.id] || []));
 }
 
 export async function createTask(
@@ -744,6 +645,7 @@ export async function createTask(
 			parent_id: task.parentId || null,
 			due_date: task.dueDate,
 			plan_date: task.planDate,
+			completed_at: task.completedAt,
 			order_num: task.orderNum ?? 0,
 			created_at: task.createdAt,
 			updated_at: task.updatedAt,
@@ -839,6 +741,19 @@ export async function updateTask(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
+	const currentTask = await getDb()
+		.select({
+			title: tasks.title,
+			status: tasks.status,
+			completedAt: tasks.completed_at,
+		})
+		.from(tasks)
+		.where(and(eq(tasks.id, id), eq(tasks.userId, actorId)));
+
+	if (!currentTask[0]) {
+		return;
+	}
+
 	// Map partial Task to partial DB Task
 	const dbUpdates: any = {};
 	if (updates.title !== undefined) dbUpdates.title = updates.title;
@@ -850,22 +765,34 @@ export async function updateTask(
 	if (updates.parentId !== undefined) dbUpdates.parent_id = updates.parentId;
 	if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
 	if (updates.planDate !== undefined) dbUpdates.plan_date = updates.planDate;
+	if (updates.completedAt !== undefined)
+		dbUpdates.completed_at = updates.completedAt;
 	if (updates.orderNum !== undefined) dbUpdates.order_num = updates.orderNum;
-	if (updates.updatedAt !== undefined) dbUpdates.updated_at = updates.updatedAt;
+
+	const previousStatus = currentTask[0].status;
+	if (updates.status !== undefined) {
+		if (previousStatus !== "done" && updates.status === "done") {
+			dbUpdates.completed_at = updates.completedAt ?? new Date();
+		} else if (previousStatus === "done" && updates.status !== "done") {
+			dbUpdates.completed_at = null;
+		}
+	}
 
 	if (Object.keys(dbUpdates).length > 0) {
+		dbUpdates.updated_at = updates.updatedAt ?? new Date();
+
 		const result = await getDb()
 			.update(tasks)
 			.set(dbUpdates)
 			.where(and(eq(tasks.id, id), eq(tasks.userId, actorId)))
 			.returning({ title: tasks.title });
 
-		const actionType: ActionType =
-			updates.status === "done"
-				? "complete"
-				: updates.status !== undefined
-					? "uncomplete"
-					: "update";
+		let actionType: ActionType = "update";
+		if (previousStatus !== "done" && updates.status === "done") {
+			actionType = "complete";
+		} else if (previousStatus === "done" && updates.status !== "done") {
+			actionType = "uncomplete";
+		}
 
 		logAction({
 			entityId: id,
@@ -874,7 +801,7 @@ export async function updateTask(
 			actorType: actorType,
 			actionType: actionType,
 			changes: updates,
-			metadata: { title: result[0]?.title, tokenName },
+			metadata: { title: result[0]?.title ?? currentTask[0].title, tokenName },
 			userId: actorId,
 		});
 	}

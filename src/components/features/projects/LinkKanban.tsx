@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Calendar, Flag, MessageSquare } from "lucide-react";
+import { Calendar, CheckCircle2, Flag, MessageSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -23,7 +23,10 @@ import type { Task } from "@/types";
 
 interface LinkKanbanProps {
 	tasks: Task[];
-	onTaskUpdate?: (taskId: string, newStatus: string) => void;
+	onTaskUpdate?: (
+		taskId: string,
+		updates: Partial<Task>,
+	) => Promise<void> | void;
 	onTaskClick?: (task: Task) => void;
 }
 
@@ -41,40 +44,64 @@ const INITIAL_COLUMNS: Omit<ColumnType, "items">[] = [
 	{ id: "done", title: "Done", color: "green" },
 ];
 
+const DONE_VISIBILITY_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+function getDoneReferenceDate(task: Task): Date {
+	return new Date(task.completedAt ?? task.updatedAt ?? task.createdAt);
+}
+
+function shouldShowRecentDone(task: Task): boolean {
+	return (
+		Date.now() - getDoneReferenceDate(task).getTime() <=
+		DONE_VISIBILITY_WINDOW_MS
+	);
+}
+
+function buildColumns(tasks: Task[]): ColumnType[] {
+	return INITIAL_COLUMNS.map((col) => ({
+		...col,
+		items: tasks.filter((task) => {
+			const status = task.status || "todo";
+			if (status !== col.id) {
+				return false;
+			}
+
+			if (col.id !== "done") {
+				return true;
+			}
+
+			return shouldShowRecentDone(task);
+		}),
+	}));
+}
+
 export function LinkKanban({
 	tasks,
 	onTaskUpdate,
 	onTaskClick,
 }: LinkKanbanProps) {
-	const [columns, setColumns] = useState<ColumnType[]>(() => {
-		return INITIAL_COLUMNS.map((col) => ({
-			...col,
-			items: tasks.filter((t) => (t.status || "todo") === col.id),
-		}));
-	});
+	const [columns, setColumns] = useState<ColumnType[]>(() =>
+		buildColumns(tasks),
+	);
 
 	useEffect(() => {
-		const newColumns = INITIAL_COLUMNS.map((col) => ({
-			...col,
-			items: tasks.filter((t) => (t.status || "todo") === col.id),
-		}));
-		setColumns(newColumns);
+		setColumns(buildColumns(tasks));
 	}, [tasks]);
 
-	const handleTaskUpdate = async (taskId: string, newStatus: string) => {
+	const handleTaskUpdate = async (taskId: string, updates: Partial<Task>) => {
 		// Optimistic update handled by local state, but we also notify parent
 		if (onTaskUpdate) {
-			onTaskUpdate(taskId, newStatus);
+			onTaskUpdate(taskId, updates);
 		} else {
 			// Fallback if no parent handler (though currently required for sync)
 			try {
-				await fetch(`/api/tasks`, {
-					method: "PUT",
+				await fetch(`/api/tasks/${taskId}`, {
+					method: "PATCH",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ id: taskId, status: newStatus }),
+					body: JSON.stringify(updates),
 				});
 			} catch {
-				toast.error("Failed to update task status");
+				toast.error("Failed to update task");
 			}
 		}
 	};
@@ -101,10 +128,19 @@ function KanbanBoardContainer({
 }: {
 	columns: ColumnType[];
 	setColumns: React.Dispatch<React.SetStateAction<ColumnType[]>>;
-	onTaskUpdate: (id: string, status: string) => void;
+	onTaskUpdate: (id: string, updates: Partial<Task>) => Promise<void> | void;
 	onTaskClick?: (task: Task) => void;
 }) {
 	function handleMoveCardToColumn(columnId: string, index: number, card: Task) {
+		const nextStatus = columnId as Task["status"];
+		const statusChanged = card.status !== nextStatus;
+		const nextCompletedAt =
+			statusChanged && nextStatus === "done"
+				? new Date()
+				: nextStatus !== "done"
+					? null
+					: (card.completedAt ?? null);
+
 		// 1. Update local state for immediate feedback
 		setColumns((previousColumns) =>
 			previousColumns.map((column) => {
@@ -114,7 +150,11 @@ function KanbanBoardContainer({
 						...column,
 						items: [
 							...updatedItems.slice(0, index),
-							{ ...card, status: columnId as Task["status"] }, // Update status locally
+							{
+								...card,
+								status: nextStatus,
+								completedAt: nextCompletedAt,
+							},
 							...updatedItems.slice(index),
 						],
 					};
@@ -128,8 +168,8 @@ function KanbanBoardContainer({
 		);
 
 		// 2. Trigger API update
-		if (card.status !== columnId) {
-			onTaskUpdate(card.id, columnId);
+		if (statusChanged) {
+			onTaskUpdate(card.id, { status: nextStatus });
 		}
 	}
 
@@ -149,7 +189,7 @@ function KanbanBoardContainer({
 					<KanbanBoardColumnHeader>
 						<KanbanBoardColumnTitle columnId={col.id}>
 							<KanbanColorCircle color={col.color} />
-							{col.title}
+							{col.title} ({col.items.length})
 						</KanbanBoardColumnTitle>
 					</KanbanBoardColumnHeader>
 					<KanbanBoardColumnList>
@@ -216,6 +256,15 @@ function KanbanBoardContainer({
 											<div className="flex items-center gap-1">
 												<MessageSquare className="w-3 h-3" />
 												<span>{task.comments.length}</span>
+											</div>
+										)}
+
+										{task.status === "done" && (
+											<div className="flex items-center gap-1 text-emerald-600">
+												<CheckCircle2 className="w-3 h-3" />
+												<span>
+													{format(getDoneReferenceDate(task), "MMM d")}
+												</span>
 											</div>
 										)}
 									</div>

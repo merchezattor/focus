@@ -42,6 +42,36 @@ export function DashboardClient({
 	const searchParams = useSearchParams();
 	const selectedProjectId = searchParams.get("project");
 
+	const applyTaskUpdates = useCallback(
+		(task: Task, updates: Partial<Task>): Task => {
+			if (updates.status === "done" && task.status !== "done") {
+				return {
+					...task,
+					...updates,
+					completedAt: updates.completedAt ?? new Date(),
+				};
+			}
+
+			if (
+				updates.status &&
+				updates.status !== "done" &&
+				task.status === "done"
+			) {
+				return {
+					...task,
+					...updates,
+					completedAt: null,
+				};
+			}
+
+			return {
+				...task,
+				...updates,
+			};
+		},
+		[],
+	);
+
 	// Sync state with props when router.refresh() updates them
 	useEffect(() => {
 		setTasks(initialTasks);
@@ -109,7 +139,9 @@ export function DashboardClient({
 			// Optimistic update
 			setTasks((prev) =>
 				prev.map((t) =>
-					t.id === taskId ? { ...t, status: newStatus as Task["status"] } : t,
+					t.id === taskId
+						? applyTaskUpdates(t, { status: newStatus as Task["status"] })
+						: t,
 				),
 			);
 
@@ -152,19 +184,20 @@ export function DashboardClient({
 	const isBoardView = activeProject?.viewType === "board";
 	const isRoadmapView = activeProject?.viewType === "roadmap";
 
-	const handleBoardTaskUpdate = async (taskId: string, newStatus: string) => {
+	const handleBoardTaskUpdate = async (
+		taskId: string,
+		updates: Partial<Task>,
+	) => {
 		// Optimistic update
 		setTasks((prev) =>
-			prev.map((t) =>
-				t.id === taskId ? { ...t, status: newStatus as Task["status"] } : t,
-			),
+			prev.map((t) => (t.id === taskId ? applyTaskUpdates(t, updates) : t)),
 		);
 
 		try {
-			const res = await fetch(`/api/tasks`, {
-				method: "PUT",
+			const res = await fetch(`/api/tasks/${taskId}`, {
+				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ id: taskId, status: newStatus }),
+				body: JSON.stringify(updates),
 			});
 			if (!res.ok) throw new Error("Failed to update task status");
 		} catch (e) {

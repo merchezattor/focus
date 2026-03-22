@@ -416,6 +416,7 @@ export async function createTaskTool(
 			parentId: parsed.parentId ?? null,
 			dueDate: parsed.dueDate ? new Date(parsed.dueDate) : null,
 			planDate: parsed.planDate ? new Date(parsed.planDate) : null,
+			completedAt: parsed.status === "done" ? now : null,
 			orderNum: parsed.orderNum ?? 0,
 			createdAt: now,
 			updatedAt: now,
@@ -469,6 +470,7 @@ export async function createProjectRoadmapTool(
 				parentId: null, // Top-level
 				dueDate: null,
 				planDate: null,
+				completedAt: null,
 				orderNum: 0,
 				createdAt: now,
 				updatedAt: now,
@@ -487,6 +489,7 @@ export async function createProjectRoadmapTool(
 					parentId: sectionId, // Link to section
 					dueDate: null,
 					planDate: null,
+					completedAt: null,
 					orderNum: sub.orderNum ?? 0,
 					createdAt: now,
 					updatedAt: now,

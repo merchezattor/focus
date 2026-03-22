@@ -21,6 +21,7 @@ export function createTask(overrides?: Partial<Task>): Task {
 		projectId: null,
 		dueDate: null,
 		planDate: null,
+		completedAt: null,
 		priority: "p2",
 		status: "todo",
 		comments: [],

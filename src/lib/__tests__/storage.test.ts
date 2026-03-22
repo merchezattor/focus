@@ -173,6 +173,17 @@ describe("Storage Layer", () => {
 			});
 
 			it("should accept id, updates, actorId, actorType, and tokenName", async () => {
+				mockDb.select.mockReturnValueOnce({
+					from: vi.fn(() => ({
+						where: vi.fn(() => [
+							{
+								title: "Original Task",
+								status: "todo",
+								completedAt: null,
+							},
+						]),
+					})),
+				});
 				mockDb.update.mockReturnValueOnce({
 					set: vi.fn(() => ({
 						where: vi.fn(() => ({

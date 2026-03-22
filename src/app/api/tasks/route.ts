@@ -10,6 +10,7 @@ const createTaskSchema = taskSchema
 		id: true,
 		createdAt: true,
 		updatedAt: true,
+		completedAt: true,
 	})
 	.extend({
 		// Accept string or null for projectId (client sends string, we convert)
@@ -129,6 +130,7 @@ export async function POST(request: NextRequest) {
 			id: crypto.randomUUID(),
 			createdAt: new Date(),
 			updatedAt: new Date(),
+			completedAt: status === "done" ? new Date() : null,
 			comments: [],
 			status,
 			orderNum: result.data.orderNum ?? 0,

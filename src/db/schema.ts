@@ -151,6 +151,7 @@ export const tasks = pgTable(
 		priority: priorityEnum("priority").notNull(),
 		due_date: timestamp("due_date"),
 		plan_date: timestamp("plan_date"),
+		completed_at: timestamp("completed_at"),
 		project_id: text("project_id").references(() => projects.id, {
 			onDelete: "cascade",
 		}),

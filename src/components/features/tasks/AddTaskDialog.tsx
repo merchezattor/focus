@@ -122,6 +122,7 @@ export function AddTaskDialog({
 				priority,
 				dueDate: dueDate?.toISOString(),
 				status: taskStatus,
+				completedAt: taskStatus === "done" ? new Date().toISOString() : null,
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
 				planDate: null,

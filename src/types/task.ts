@@ -18,6 +18,7 @@ export const taskSchema = z.object({
 	parentId: z.string().uuid().nullable().optional(),
 	dueDate: z.date().nullable(),
 	planDate: z.date().nullable().optional(),
+	completedAt: z.date().nullable().default(null),
 	priority: z.enum(["p1", "p2", "p3", "p4"]),
 	status: z
 		.enum(["todo", "in_progress", "review", "done", "cold"])

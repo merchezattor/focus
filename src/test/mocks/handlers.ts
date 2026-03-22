@@ -8,6 +8,7 @@ export interface Task {
 	projectId: string | null;
 	dueDate: string | null;
 	planDate: string | null;
+	completedAt: string | null;
 	priority: "p1" | "p2" | "p3" | "p4";
 	status: "todo" | "in_progress" | "review" | "done";
 	comments: Array<{
@@ -31,6 +32,7 @@ function createTask(data: Partial<Task>): Task {
 		projectId: data.projectId ?? null,
 		dueDate: data.dueDate ?? null,
 		planDate: data.planDate ?? null,
+		completedAt: data.completedAt ?? null,
 		priority: data.priority ?? "p3",
 		status: data.status ?? "todo",
 		comments: data.comments ?? [],
@@ -86,6 +88,7 @@ export const handlers = [
 			projectId: body.projectId as string | null | undefined,
 			dueDate: body.dueDate as string | null | undefined,
 			planDate: body.planDate as string | null | undefined,
+			completedAt: body.completedAt as string | null | undefined,
 			priority: body.priority as "p1" | "p2" | "p3" | "p4" | undefined,
 			status: body.status as
 				| "todo"

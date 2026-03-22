@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtomValue } from "jotai";
-import { Archive, Calendar } from "lucide-react";
+import { CheckCircle2, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export function CompletedClient({
 }: CompletedClientProps) {
 	const [tasks, setTasks] = useState<Task[]>(initialTasks);
 	const [projects, setProjects] = useState<Project[]>(initialProjects);
-	const [unarchivingId, setUnarchivingId] = useState<string | null>(null);
+	const [reopeningId, setReopeningId] = useState<string | null>(null);
 	const refreshTrigger = useAtomValue(refreshCompletedAtom);
 
 	const fetchData = useCallback(async () => {
@@ -56,31 +56,30 @@ export function CompletedClient({
 		}
 	}, [refreshTrigger, fetchData]);
 
-	const handleUnarchive = async (taskId: string) => {
-		setUnarchivingId(taskId);
+	const handleReopen = async (taskId: string) => {
+		setReopeningId(taskId);
 		try {
-			const response = await fetch("/api/tasks", {
-				method: "PUT",
+			const response = await fetch(`/api/tasks/${taskId}`, {
+				method: "PATCH",
 				headers: {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
-					id: taskId,
-					archived: false,
+					status: "todo",
 				}),
 			});
 
 			if (!response.ok) {
-				throw new Error("Failed to unarchive task");
+				throw new Error("Failed to reopen task");
 			}
 
 			toast.success("Task moved back to active");
 			fetchData();
 		} catch (err) {
-			console.error("Failed to unarchive task:", err);
-			toast.error("Failed to unarchive task");
+			console.error("Failed to reopen task:", err);
+			toast.error("Failed to reopen task");
 		} finally {
-			setUnarchivingId(null);
+			setReopeningId(null);
 		}
 	};
 
@@ -102,12 +101,12 @@ export function CompletedClient({
 		return (
 			<div className="flex flex-1 flex-col items-center justify-center gap-4 py-12 text-center">
 				<div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-					<Archive className="h-8 w-8 text-muted-foreground" />
+					<CheckCircle2 className="h-8 w-8 text-muted-foreground" />
 				</div>
 				<div className="space-y-2">
-					<h3 className="text-lg font-semibold">No archived tasks</h3>
+					<h3 className="text-lg font-semibold">No completed tasks</h3>
 					<p className="text-sm text-muted-foreground">
-						Completed tasks that you archive will appear here.
+						Tasks you finish will appear here.
 					</p>
 				</div>
 			</div>
@@ -147,24 +146,23 @@ export function CompletedClient({
 									)}
 								</TableCell>
 								<TableCell>
-									<div className="flex items-center gap-1 text-muted-foreground">
-										<Calendar className="h-3 w-3" />
-										{formatDate(task.updatedAt)}
+									<div className="text-muted-foreground">
+										{formatDate(task.completedAt ?? task.updatedAt)}
 									</div>
 								</TableCell>
 								<TableCell className="text-right">
 									<Button
 										variant="outline"
 										size="sm"
-										onClick={() => handleUnarchive(task.id)}
-										disabled={unarchivingId === task.id}
+										onClick={() => handleReopen(task.id)}
+										disabled={reopeningId === task.id}
 									>
-										{unarchivingId === task.id ? (
-											"Unarchiving..."
+										{reopeningId === task.id ? (
+											"Reopening..."
 										) : (
 											<>
-												<Archive className="mr-2 h-4 w-4" />
-												Unarchive
+												<RotateCcw className="mr-2 h-4 w-4" />
+												Reopen
 											</>
 										)}
 									</Button>

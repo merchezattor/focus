@@ -3,12 +3,12 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/site-header";
 import { auth } from "@/lib/auth";
-import { getArchivedTasks, readProjects } from "@/lib/storage";
+import { getCompletedTasks, readProjects } from "@/lib/storage";
 import { CompletedClient } from "./client";
 
 export const metadata: Metadata = {
 	title: "Completed | Focus",
-	description: "View your archived tasks.",
+	description: "View your completed tasks.",
 };
 
 export default async function CompletedPage() {
@@ -21,7 +21,7 @@ export default async function CompletedPage() {
 	}
 
 	const [tasks, projects] = await Promise.all([
-		getArchivedTasks(session.user.id),
+		getCompletedTasks(session.user.id),
 		readProjects(session.user.id),
 	]);
 
