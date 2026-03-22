@@ -33,7 +33,7 @@ export function CompletedClient({
 	const fetchData = useCallback(async () => {
 		try {
 			const [tasksRes, projectsRes] = await Promise.all([
-				fetch("/api/tasks/search?archived=true"),
+				fetch("/api/tasks/search?status=done"),
 				fetch("/api/projects"),
 			]);
 
@@ -149,7 +149,7 @@ export function CompletedClient({
 								<TableCell>
 									<div className="flex items-center gap-1 text-muted-foreground">
 										<Calendar className="h-3 w-3" />
-										{formatDate(task.archivedAt)}
+										{formatDate(task.updatedAt)}
 									</div>
 								</TableCell>
 								<TableCell className="text-right">

@@ -679,6 +679,53 @@ export async function getBacklogTasks(userId: string): Promise<Task[]> {
 	}));
 }
 
+export async function getArchivedTasks(userId: string): Promise<Task[]> {
+	const dbTasks = await getDb()
+		.select()
+		.from(tasks)
+		.where(and(eq(tasks.userId, userId), eq(tasks.status, "done")))
+		.orderBy(desc(tasks.created_at));
+
+	const taskIds = dbTasks.map((t) => t.id);
+	const dbComments =
+		taskIds.length > 0
+			? await getDb()
+					.select()
+					.from(comments)
+					.where(inArray(comments.task_id, taskIds))
+			: [];
+
+	const commentsByTaskId: Record<string, Comment[]> = {};
+	for (const c of dbComments) {
+		if (!commentsByTaskId[c.task_id]) {
+			commentsByTaskId[c.task_id] = [];
+		}
+		commentsByTaskId[c.task_id].push({
+			id: c.id,
+			content: c.content,
+			postedAt: c.posted_at,
+			userId: c.userId || undefined,
+			actorType: c.actorType || undefined,
+		});
+	}
+
+	return dbTasks.map((t) => ({
+		id: t.id,
+		title: t.title,
+		description: t.description || undefined,
+		status: t.status || "todo",
+		projectId: t.project_id,
+		parentId: t.parent_id,
+		priority: t.priority,
+		dueDate: t.due_date,
+		planDate: t.plan_date,
+		orderNum: t.order_num ?? 0,
+		createdAt: t.created_at,
+		updatedAt: t.updated_at,
+		comments: commentsByTaskId[t.id] || [],
+	}));
+}
+
 export async function createTask(
 	task: Task,
 	userId: string,

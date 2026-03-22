@@ -218,12 +218,7 @@ export function AppSidebar({
 					<SidebarGroupContent>
 						<SidebarMenu>
 							{projects
-								.filter(
-									(p) =>
-										!p.isFavorite &&
-										p.status === "working" &&
-										(counts?.projectCounts?.[p.id] || 0) > 0,
-								)
+								.filter((p) => p.kind === "project" && p.status === "working")
 								.slice(0, 5)
 								.map((project) => (
 									<SidebarMenuItem key={project.id}>
