@@ -104,9 +104,8 @@ describe("AddProjectDialog", () => {
 			render(<AddProjectDialog open={true} onOpenChange={vi.fn()} />);
 
 			expect(screen.getByText("Kind")).toBeInTheDocument();
-			expect(screen.getByRole("combobox", { name: /kind/i })).toHaveTextContent(
-				"Project",
-			);
+			const comboboxes = screen.getAllByRole("combobox");
+			expect(comboboxes[1]).toHaveTextContent("Project");
 		});
 
 		it("renders color picker section", () => {
@@ -277,49 +276,45 @@ describe("AddProjectDialog - Edit Mode", () => {
 		) as HTMLTextAreaElement;
 		expect(descInput.value).toBe("Existing description");
 
-		expect(screen.getByRole("combobox", { name: /kind/i })).toHaveTextContent(
-			"Project",
-		);
+		const comboboxes = screen.getAllByRole("combobox");
+		expect(comboboxes[1]).toHaveTextContent("Project");
 	});
 
-	it("shows container kind when editing a container project", () => {
-		const containerProject = createProject({
-			...projectToEdit,
-			id: "container-project-1",
-			kind: "container",
+	it("shows group kind when editing a group project", () => {
+		const groupProject = createProject({
+			id: "group-project-1",
+			kind: "group",
 		});
 
 		render(
 			<AddProjectDialog
 				open={true}
 				onOpenChange={vi.fn()}
-				projectToEdit={containerProject}
+				projectToEdit={groupProject}
 			/>,
 		);
 
-		expect(screen.getByRole("combobox", { name: /kind/i })).toHaveTextContent(
-			"Container",
-		);
+		const comboboxes = screen.getAllByRole("combobox");
+		expect(comboboxes[1]).toHaveTextContent("Group");
 	});
 
-	it("submits container kind in edit mode", async () => {
+	it("submits group kind in edit mode", async () => {
 		const user = userEvent.setup();
 		const fetchMock = vi.fn().mockResolvedValue({
 			ok: true,
 			json: async () => ({ success: true }),
 		});
 		vi.stubGlobal("fetch", fetchMock);
-		const containerProject = createProject({
-			...projectToEdit,
-			id: "container-project-2",
-			kind: "container",
+		const projectToEdit = createProject({
+			id: "group-project-2",
+			kind: "group",
 		});
 
 		render(
 			<AddProjectDialog
 				open={true}
 				onOpenChange={vi.fn()}
-				projectToEdit={containerProject}
+				projectToEdit={projectToEdit}
 			/>,
 		);
 
@@ -338,12 +333,15 @@ describe("AddProjectDialog - Edit Mode", () => {
 		const request = fetchMock.mock.calls[0]?.[1];
 		expect(request).toBeDefined();
 		expect(JSON.parse(String(request?.body))).toMatchObject({
-			id: "container-project-2",
-			kind: "container",
+			id: "group-project-2",
+			kind: "group",
 		});
 	});
 
 	it("shows Save button instead of Add Project", () => {
+		const projectToEdit = createProject({
+			id: "project-edit-1",
+		});
 		render(
 			<AddProjectDialog
 				open={true}
@@ -356,6 +354,9 @@ describe("AddProjectDialog - Edit Mode", () => {
 	});
 
 	it("shows Delete button in edit mode", () => {
+		const projectToEdit = createProject({
+			id: "project-edit-2",
+		});
 		render(
 			<AddProjectDialog
 				open={true}
@@ -376,6 +377,9 @@ describe("AddProjectDialog - Edit Mode", () => {
 	});
 
 	it("can render with projects for parent selection", () => {
+		const projectToEdit = createProject({
+			id: "project-edit-3",
+		});
 		const projectsWithSelf = [
 			projectToEdit,
 			createProject({

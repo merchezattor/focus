@@ -45,9 +45,9 @@ describe("MCP Project Tools", () => {
 		},
 		{
 			id: "project-2",
-			name: "Container Node",
+			name: "Group Node",
 			color: "#00ff00",
-			kind: "container",
+			kind: "group",
 			priority: "p2",
 			status: "working",
 			isFavorite: false,
@@ -75,7 +75,7 @@ describe("MCP Project Tools", () => {
 			expect(payload.data).toHaveLength(2);
 			expect(payload.data.map((project: Project) => project.kind)).toEqual([
 				"project",
-				"container",
+				"group",
 			]);
 		});
 

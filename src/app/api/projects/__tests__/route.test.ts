@@ -61,7 +61,7 @@ describe("Projects API", () => {
 	});
 
 	describe("POST /api/projects", () => {
-		it("creates a container project when kind=container is provided", async () => {
+		it("creates a group project when kind=group is provided", async () => {
 			mockGetAuthenticatedUser.mockResolvedValueOnce({
 				user: { id: "user-123" },
 				actorType: "user",
@@ -72,9 +72,9 @@ describe("Projects API", () => {
 			const request = {
 				url: "http://localhost/api/projects",
 				json: async () => ({
-					name: "Container Node",
+					name: "Group Node",
 					color: "#10b981",
-					kind: "container",
+					kind: "group",
 					isFavorite: false,
 				}),
 			} as NextRequest;
@@ -82,11 +82,11 @@ describe("Projects API", () => {
 			const data = await response.json();
 
 			expect(response.status).toBe(201);
-			expect(data.project.kind).toBe("container");
+			expect(data.project.kind).toBe("group");
 			expect(mockCreateProject).toHaveBeenCalledOnce();
 			expect(mockCreateProject.mock.calls[0]?.[0]).toMatchObject({
-				name: "Container Node",
-				kind: "container",
+				name: "Group Node",
+				kind: "group",
 			});
 		});
 	});
@@ -104,7 +104,7 @@ describe("Projects API", () => {
 				url: "http://localhost/api/projects",
 				json: async () => ({
 					id: "project-1",
-					kind: "container",
+					kind: "group",
 				}),
 			} as NextRequest;
 			const response = await PUT(request);
@@ -112,7 +112,7 @@ describe("Projects API", () => {
 			expect(response.status).toBe(200);
 			expect(mockUpdateProject).toHaveBeenCalledWith(
 				"project-1",
-				expect.objectContaining({ kind: "container" }),
+				expect.objectContaining({ kind: "group" }),
 				"user-123",
 				"user",
 				"web",

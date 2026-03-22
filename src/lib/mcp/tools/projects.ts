@@ -16,7 +16,7 @@ import type { Project } from "@/types/project";
 // Input validation schemas
 const listProjectsInputSchema = z.object({
 	kind: z
-		.array(z.enum(["project", "container"]))
+		.array(z.enum(["project", "group"]))
 		.optional()
 		.describe(
 			"Optional project kind filter. Omit to list all projects, or pass one or both kinds to narrow results.",
@@ -31,10 +31,10 @@ const createProjectInputSchema = z.object({
 		.describe('Hex color code in #RRGGBB format, e.g. "#E44332".'),
 	description: z.string().optional().describe("Project description."),
 	kind: z
-		.enum(["project", "container"])
+		.enum(["project", "group"])
 		.optional()
 		.describe(
-			"Project kind. Use 'project' for actionable work, 'container' for structural graph nodes.",
+			"Project kind. Use 'project' for actionable work, 'group' for structural graph nodes.",
 		),
 	status: z
 		.enum(["working", "archived", "complete", "frozen"])
@@ -81,9 +81,9 @@ const updateProjectInputSchema = z.object({
 		.describe('New hex color code in #RRGGBB format, e.g. "#10B981".'),
 	description: z.string().optional().describe("New project description."),
 	kind: z
-		.enum(["project", "container"])
+		.enum(["project", "group"])
 		.optional()
-		.describe("Change project kind to 'project' or 'container'."),
+		.describe("Change project kind to 'project' or 'group'."),
 	status: z
 		.enum(["working", "archived", "complete", "frozen"])
 		.optional()
@@ -286,7 +286,7 @@ export const projectTools = [
 	{
 		name: "focus_list_projects",
 		description:
-			"List projects. By default returns all projects, including structural containers. Use the optional kind filter to narrow results.",
+			"List projects. By default returns all projects, including structural groups. Use the optional kind filter to narrow results.",
 		schema: listProjectsInputSchema,
 		handler: focusListProjects,
 	},

@@ -78,7 +78,7 @@ export const projectStatusEnum = pgEnum("project_status", [
 	"frozen",
 ]);
 
-export const projectKindEnum = pgEnum("project_kind", ["project", "container"]);
+export const projectKindEnum = pgEnum("project_kind", ["project", "group"]);
 
 export const actionTypeEnum = pgEnum("action_type", [
 	"create",

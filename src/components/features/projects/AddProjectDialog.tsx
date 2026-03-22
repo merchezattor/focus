@@ -30,7 +30,7 @@ import type { Goal, Project } from "@/types";
 const createProjectSchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	description: z.string().optional(),
-	kind: z.enum(["project", "container"]).default("project"),
+	kind: z.enum(["project", "group"]).default("project"),
 	viewType: z.enum(["list", "board", "roadmap"]).default("list"),
 	status: z
 		.enum(["working", "archived", "complete", "frozen"])
@@ -79,8 +79,8 @@ const projectKinds: Array<{
 		description: "Actionable work that should appear in normal project lists.",
 	},
 	{
-		value: "container",
-		label: "Container",
+		value: "group",
+		label: "Group",
 		description:
 			"Structural node for organizing the graph without acting as a normal project.",
 	},
@@ -250,7 +250,7 @@ export function AddProjectDialog(
 
 				if (!projectToEdit) {
 					router.push(
-						kind === "container" ? "/map" : `/?project=${data.project.id}`,
+						kind === "group" ? "/map" : `/?project=${data.project.id}`,
 					);
 				}
 				toast.success("Project created successfully");
@@ -306,7 +306,7 @@ export function AddProjectDialog(
 						/>
 					</div>
 
-					<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+					<div className="grid grid-cols-2 gap-4">
 						<div className="space-y-3">
 							<label className="text-sm font-medium">View</label>
 							<Select value={viewType} onValueChange={setViewType}>
@@ -327,7 +327,7 @@ export function AddProjectDialog(
 								value={kind}
 								onValueChange={(value) => setKind(value as Project["kind"])}
 							>
-								<SelectTrigger className="w-full" aria-label="Project kind">
+								<SelectTrigger className="w-full">
 									<SelectValue placeholder="Select kind" />
 								</SelectTrigger>
 								<SelectContent>
@@ -336,12 +336,7 @@ export function AddProjectDialog(
 											key={projectKind.value}
 											value={projectKind.value}
 										>
-											<div className="flex flex-col items-start">
-												<span>{projectKind.label}</span>
-												<span className="text-xs text-muted-foreground">
-													{projectKind.description}
-												</span>
-											</div>
+											{projectKind.label}
 										</SelectItem>
 									))}
 								</SelectContent>

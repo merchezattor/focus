@@ -30,7 +30,7 @@ vi.mock("@xyflow/react", () => ({
 import { MapClient } from "../MapClient";
 
 describe("MapClient", () => {
-	it("renders both actionable projects and containers, but excludes archived projects", () => {
+	it("renders both actionable projects and groups, but excludes archived projects", () => {
 		const projects: Project[] = [
 			{
 				id: "project-1",
@@ -48,7 +48,7 @@ describe("MapClient", () => {
 				id: "project-2",
 				name: "Container Node",
 				color: "#00ff00",
-				kind: "container",
+				kind: "group",
 				priority: "p2",
 				status: "working",
 				isFavorite: false,

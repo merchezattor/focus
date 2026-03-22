@@ -23,7 +23,9 @@ export function ProjectList({ projects }: ProjectListProps) {
 			archived: [],
 		};
 
-		projects.forEach((project) => {
+		const regularProjects = projects.filter((p) => p.kind !== "group");
+
+		regularProjects.forEach((project) => {
 			const status = project.status || "working";
 			if (!groups[status]) {
 				groups[status] = [];
@@ -52,8 +54,7 @@ export function ProjectList({ projects }: ProjectListProps) {
 		);
 	}
 
-	const renderGroup = (title: string, groupKey: string, count: number) => {
-		const items = groupedProjects[groupKey];
+	const renderGroup = (title: string, groupKey: string, items: Project[]) => {
 		if (!items || items.length === 0) return null;
 
 		return (
@@ -61,7 +62,7 @@ export function ProjectList({ projects }: ProjectListProps) {
 				<h2 className="text-sm font-bold border-b pb-2 mb-4 px-1 flex items-center justify-between">
 					<span>{title}</span>
 					<span className="text-muted-foreground font-normal text-xs">
-						{count}
+						{items.length}
 					</span>
 				</h2>
 				<div className="space-y-2">
@@ -73,12 +74,16 @@ export function ProjectList({ projects }: ProjectListProps) {
 		);
 	};
 
+	const groupProjects = projects.filter((p) => p.kind === "group");
+
 	return (
 		<div className="space-y-4">
-			{renderGroup("Working", "working", groupedProjects.working.length)}
-			{renderGroup("Frozen", "frozen", groupedProjects.frozen.length)}
-			{renderGroup("Complete", "complete", groupedProjects.complete.length)}
-			{renderGroup("Archived", "archived", groupedProjects.archived.length)}
+			{renderGroup("Working", "working", groupedProjects.working)}
+			{renderGroup("Frozen", "frozen", groupedProjects.frozen)}
+			{renderGroup("Complete", "complete", groupedProjects.complete)}
+			{renderGroup("Archived", "archived", groupedProjects.archived)}
+			{groupProjects.length > 0 &&
+				renderGroup("Groups", "groups", groupProjects)}
 		</div>
 	);
 }
