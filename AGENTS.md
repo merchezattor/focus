@@ -54,7 +54,7 @@ src/
 |------|----------|-------|
 | Add new page | `src/app/(main)/` | Use authenticated layout |
 | API endpoint | `src/app/api/**/route.ts` | RESTful patterns |
-| Database change | `src/db/schema.ts` | Then run `bun run db:push` |
+| Database change | `src/db/schema.ts` | Run `bun run db:push` for local validation, then `bun run db:generate` to create a real Drizzle migration |
 | New UI primitive | `src/components/ui/` | Use `bunx shadcn add <component>` |
 | Feature component | `src/components/features/<domain>/` | Domain-organized |
 | Global state | `src/lib/atoms.ts` | Jotai atoms |
@@ -80,9 +80,12 @@ src/
 
 - **ORM:** Drizzle ORM with `postgres` driver (TCP-based)
 - **Development:** Use `bun run db:push` for rapid prototyping
-- **Production:** Uses formal migrations via `drizzle-kit migrate`
+- **Required for schema changes:** After editing `src/db/schema.ts`, always generate a real migration with `bun run db:generate`
+- **Do not stop at `db:push`:** `db:push` is only for local/dev schema sync and validation. It does **not** replace committed migration files.
+- **Production:** Uses formal migrations from the `drizzle/` folder via `drizzle-kit migrate`
 - **Production (Dokploy):** Migrations run automatically at **runtime** when container starts
-- **Migration Script:** `scripts/migrate.mjs` - includes retry logic (3 attempts)
+- **Runtime migration script:** `scripts/migrate.mjs` - applies committed Drizzle migrations with retry logic (3 attempts)
+- **Legacy script:** `scripts/manual-migrate.ts` is a one-off/manual helper, not the primary production migration path
 
 ### Icons
 
