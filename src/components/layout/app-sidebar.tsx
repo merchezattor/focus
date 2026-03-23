@@ -6,7 +6,6 @@ import {
 	IconClock,
 	IconMap,
 	IconPlus,
-	IconSearch,
 } from "@tabler/icons-react";
 import { useSetAtom } from "jotai";
 import {
@@ -26,7 +25,6 @@ import {
 	SidebarGroupContent,
 	SidebarGroupLabel,
 	SidebarHeader,
-	SidebarInput,
 	SidebarMenu,
 	SidebarMenuAction,
 	SidebarMenuButton,
@@ -126,16 +124,6 @@ export function AppSidebar({
 			</SidebarHeader>
 
 			<SidebarContent>
-				<div className="px-3 pb-3">
-					<div className="relative">
-						<IconSearch className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-						<SidebarInput
-							placeholder="Search"
-							className="pl-8 bg-background/50"
-						/>
-					</div>
-				</div>
-
 				<SidebarGroup>
 					<SidebarGroupContent>
 						<SidebarMenu>
