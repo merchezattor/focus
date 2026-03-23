@@ -14,6 +14,11 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+	NO_PROJECT_VALUE,
+	normalizeSelectableProjectId,
+	TaskProjectSelectItems,
+} from "@/components/features/tasks/TaskProjectSelectItems";
+import {
 	AlertDialog,
 	AlertDialogAction,
 	AlertDialogCancel,
@@ -88,7 +93,9 @@ export function EditTaskDialog({
 
 	const [title, setTitle] = useState(task.title);
 	const [description, setDescription] = useState(task.description || "");
-	const [projectId, setProjectId] = useState(task.projectId || "");
+	const [projectId, setProjectId] = useState<string | null>(() =>
+		normalizeSelectableProjectId(projects, task.projectId),
+	);
 	const [dueDate, setDueDate] = useState<Date | undefined>(
 		task.dueDate ? new Date(task.dueDate) : undefined,
 	);
@@ -104,13 +111,16 @@ export function EditTaskDialog({
 	const [optimisticComments, setOptimisticComments] = useState<Comment[]>(
 		task.comments || [],
 	);
+	const selectedProject = projects.find((project) => project.id === projectId);
+	const projectTriggerLabel = selectedProject
+		? `Project ${selectedProject.name}`
+		: "Project No project";
 
 	useEffect(() => {
 		if (open) {
 			setTitle(task.title);
 			setDescription(task.description || "");
-			setProjectId(task.projectId || "");
-			setProjectId(task.projectId || "");
+			setProjectId(normalizeSelectableProjectId(projects, task.projectId));
 			setDueDate(task.dueDate ? new Date(task.dueDate) : undefined);
 			setPlanDate(task.planDate ? new Date(task.planDate) : undefined);
 			setPriority(task.priority || "p4");
@@ -119,7 +129,7 @@ export function EditTaskDialog({
 			setOptimisticComments(task.comments || []);
 			setShowAllComments(false);
 		}
-	}, [open, task]);
+	}, [open, projects, task]);
 
 	const saveChanges = async (
 		updates: {
@@ -450,27 +460,21 @@ export function EditTaskDialog({
 									Project
 								</label>
 								<Select
-									value={projectId}
+									value={projectId ?? NO_PROJECT_VALUE}
 									onValueChange={(val) => {
-										setProjectId(val);
-										saveChanges({ projectId: val });
+										const nextProjectId = val === NO_PROJECT_VALUE ? null : val;
+										setProjectId(nextProjectId);
+										saveChanges({ projectId: nextProjectId });
 									}}
 								>
-									<SelectTrigger className="border-none shadow-none hover:bg-muted/50 p-2 h-auto">
-										<SelectValue placeholder="Project" />
+									<SelectTrigger
+										aria-label={projectTriggerLabel}
+										className="border-none shadow-none hover:bg-muted/50 p-2 h-auto"
+									>
+										<SelectValue placeholder="No project" />
 									</SelectTrigger>
 									<SelectContent className="z-[100]" position="popper">
-										{projects.map((project) => (
-											<SelectItem key={project.id} value={project.id}>
-												<div className="flex items-center gap-2">
-													<span
-														className="w-2 h-2 rounded-full"
-														style={{ backgroundColor: project.color }}
-													/>
-													{project.name}
-												</div>
-											</SelectItem>
-										))}
+										<TaskProjectSelectItems projects={projects} />
 									</SelectContent>
 								</Select>
 							</div>

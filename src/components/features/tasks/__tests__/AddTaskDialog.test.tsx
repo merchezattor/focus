@@ -20,7 +20,18 @@ describe("AddTaskDialog", () => {
 			color: "#ef4444",
 			isFavorite: true,
 		}),
-		createProject({ id: "proj-2", name: "Personal", color: "#3b82f6" }),
+		createProject({
+			id: "proj-2",
+			name: "Personal",
+			color: "#3b82f6",
+			status: "archived",
+		}),
+		createProject({
+			id: "proj-3",
+			name: "Portfolio Group",
+			color: "#10b981",
+			kind: "group",
+		}),
 	];
 
 	const defaultProps = {
@@ -120,7 +131,7 @@ describe("AddTaskDialog", () => {
 			render(<AddTaskDialog {...defaultProps} open={true} />);
 
 			expect(
-				screen.getByRole("button", { name: /no project/i }),
+				screen.getByRole("combobox", { name: /no project/i }),
 			).toBeInTheDocument();
 		});
 
@@ -274,7 +285,26 @@ describe("AddTaskDialog", () => {
 				/>,
 			);
 
-			expect(screen.getByRole("button", { name: /work/i })).toBeInTheDocument();
+			expect(
+				screen.getByRole("combobox", { name: /work/i }),
+			).toBeInTheDocument();
+		});
+
+		it("groups projects by status and excludes project groups", async () => {
+			const user = userEvent.setup();
+			render(<AddTaskDialog {...defaultProps} open={true} />);
+
+			await user.click(screen.getByRole("combobox", { name: /no project/i }));
+
+			expect(screen.getByText("Working Projects")).toBeInTheDocument();
+			expect(screen.getByText("Other Projects")).toBeInTheDocument();
+			expect(screen.getByRole("option", { name: /work/i })).toBeInTheDocument();
+			expect(
+				screen.getByRole("option", { name: /personal/i }),
+			).toBeInTheDocument();
+			expect(
+				screen.queryByRole("option", { name: /portfolio group/i }),
+			).not.toBeInTheDocument();
 		});
 	});
 });

@@ -12,6 +12,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import {
+	findSelectableProject,
+	NO_PROJECT_VALUE,
+	normalizeSelectableProjectId,
+	TaskProjectSelectItems,
+} from "@/components/features/tasks/TaskProjectSelectItems";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -33,6 +39,12 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+	Select,
+	SelectContent,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/types";
@@ -84,13 +96,15 @@ export function AddTaskDialog({
 	// Sync state when opening
 	useEffect(() => {
 		if (open) {
-			setProjectId(defaultProjectId || "");
+			setProjectId(normalizeSelectableProjectId(projects, defaultProjectId));
 		}
-	}, [open, defaultProjectId]);
+	}, [defaultProjectId, open, projects]);
 
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
-	const [projectId, setProjectId] = useState(defaultProjectId || "");
+	const [projectId, setProjectId] = useState<string | null>(() =>
+		normalizeSelectableProjectId(projects, defaultProjectId),
+	);
 	const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
 	const [priority, setPriority] = useState("p4");
 	const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +115,7 @@ export function AddTaskDialog({
 		const result = createTaskSchema.safeParse({
 			title,
 			description: description || undefined,
-			projectId: projectId || undefined,
+			projectId: projectId ?? undefined,
 			dueDate: dueDate?.toISOString(),
 		});
 
@@ -112,13 +126,13 @@ export function AddTaskDialog({
 
 		// Optimistic Update
 		if (onOptimisticAdd) {
-			const hasProject = projectId && projectId !== "";
+			const hasProject = projectId !== null;
 			const taskStatus = defaultStatus ?? (hasProject ? "todo" : "cold");
 			const tempTask = {
 				id: `temp-${Date.now()}`,
 				title,
 				description: description || undefined,
-				projectId: hasProject ? projectId : null,
+				projectId,
 				priority,
 				dueDate: dueDate?.toISOString(),
 				status: taskStatus,
@@ -139,14 +153,13 @@ export function AddTaskDialog({
 		}
 
 		try {
-			const hasProject = projectId && projectId !== "";
 			const res = await fetch("/api/tasks", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					title,
 					description: description || undefined,
-					projectId: hasProject ? projectId : null,
+					projectId,
 					dueDate: dueDate?.toISOString(),
 					priority,
 					status: defaultStatus,
@@ -179,7 +192,7 @@ export function AddTaskDialog({
 	const resetForm = () => {
 		setTitle("");
 		setDescription("");
-		setProjectId(defaultProjectId || "");
+		setProjectId(normalizeSelectableProjectId(projects, defaultProjectId));
 		setDueDate(undefined);
 		setPriority("p4");
 	};
@@ -191,7 +204,10 @@ export function AddTaskDialog({
 		}
 	};
 
-	const selectedProject = projects.find((p) => p.id === projectId);
+	const selectedProject = findSelectableProject(projects, projectId);
+	const projectTriggerLabel = selectedProject
+		? `Project ${selectedProject.name}`
+		: "Project No project";
 
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
@@ -328,12 +344,17 @@ export function AddTaskDialog({
 					</div>
 
 					<div className="border-t p-3 bg-muted/5 flex items-center justify-between">
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="h-8 gap-2 border-transparent bg-transparent shadow-none hover:bg-muted/50 px-2 text-xs font-medium text-muted-foreground hover:text-foreground focus:ring-0"
-								>
+						<Select
+							value={projectId ?? NO_PROJECT_VALUE}
+							onValueChange={(value) =>
+								setProjectId(value === NO_PROJECT_VALUE ? null : value)
+							}
+						>
+							<SelectTrigger
+								aria-label={projectTriggerLabel}
+								className="h-8 gap-2 border-transparent bg-transparent shadow-none hover:bg-muted/50 px-2 text-xs font-medium text-muted-foreground hover:text-foreground focus:ring-0"
+							>
+								<SelectValue placeholder="No project">
 									{selectedProject ? (
 										<>
 											<span
@@ -348,31 +369,12 @@ export function AddTaskDialog({
 											No project
 										</>
 									)}
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="start" className="z-[100]">
-								<DropdownMenuItem onClick={() => setProjectId("")}>
-									<div className="flex items-center gap-2">
-										<span className="w-2 h-2 rounded-full bg-black dark:bg-white" />
-										No project
-									</div>
-								</DropdownMenuItem>
-								{projects.map((project) => (
-									<DropdownMenuItem
-										key={project.id}
-										onClick={() => setProjectId(project.id)}
-									>
-										<div className="flex items-center gap-2">
-											<span
-												className="w-2 h-2 rounded-full"
-												style={{ backgroundColor: project.color }}
-											/>
-											{project.name}
-										</div>
-									</DropdownMenuItem>
-								))}
-							</DropdownMenuContent>
-						</DropdownMenu>
+								</SelectValue>
+							</SelectTrigger>
+							<SelectContent align="start" className="z-[100]">
+								<TaskProjectSelectItems projects={projects} />
+							</SelectContent>
+						</Select>
 
 						<div className="flex items-center gap-2">
 							<Button
