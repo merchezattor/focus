@@ -13,6 +13,7 @@ import {
 	Archive,
 	Flag,
 	FolderOpen,
+	Milestone,
 	MoreHorizontal,
 } from "lucide-react";
 import { ModeToggle } from "@/components/layout/mode-toggle";
@@ -163,6 +164,14 @@ export function AppSidebar({
 									<a href="/projects" className="flex items-center gap-2">
 										<FolderOpen className="h-4 w-4" />
 										<span>Projects</span>
+									</a>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
+							<SidebarMenuItem>
+								<SidebarMenuButton asChild className="w-full justify-start">
+									<a href="/milestones" className="flex items-center gap-2">
+										<Milestone className="h-4 w-4" />
+										<span>Milestones</span>
 									</a>
 								</SidebarMenuButton>
 							</SidebarMenuItem>

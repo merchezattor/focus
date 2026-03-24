@@ -14,7 +14,7 @@ export type ActionType =
 	| "processed"
 	| "pending";
 
-export type EntityType = "task" | "project" | "goal";
+export type EntityType = "task" | "project" | "goal" | "milestone";
 
 export type ActorType = "user" | "agent" | "system";
 

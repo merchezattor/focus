@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	createComment,
 	createGoal,
+	createMilestone,
 	createProject,
 	createTask,
 	createTasksBulk,
 	deleteComment,
 	deleteGoal,
+	deleteMilestone,
 	deleteProject,
 	deleteTask,
 	getTaskById,
@@ -16,11 +18,13 @@ import {
 	getWorkingProjectStats,
 	readActionableProjects,
 	readGoals,
+	readMilestones,
 	readProjects,
 	readTasks,
 	searchTasks,
 	syncComments,
 	updateGoal,
+	updateMilestone,
 	updateProject,
 	updateTask,
 } from "../storage";
@@ -313,6 +317,47 @@ describe("Storage Layer", () => {
 					projectCounts: { p1: 2 },
 				});
 			});
+		});
+	});
+
+	describe("Milestone Operations", () => {
+		it("exposes milestone CRUD helpers", async () => {
+			expect(typeof readMilestones).toBe("function");
+			expect(typeof createMilestone).toBe("function");
+			expect(typeof updateMilestone).toBe("function");
+			expect(typeof deleteMilestone).toBe("function");
+
+			mockDb.select.mockReturnValueOnce({
+				from: vi.fn(() => ({
+					where: vi.fn(() => ({
+						orderBy: vi.fn(() => []),
+					})),
+				})),
+			});
+
+			await readMilestones("user-123");
+			await createMilestone(
+				{
+					id: "550e8400-e29b-41d4-a716-446655440000",
+					title: "Move to Japan",
+					description: "Plan the relocation",
+					targetDate: new Date("2026-05-01T00:00:00.000Z"),
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				},
+				"user-123",
+			);
+			await updateMilestone(
+				"550e8400-e29b-41d4-a716-446655440000",
+				{ title: "Updated title" },
+				"user-123",
+			);
+			await deleteMilestone("550e8400-e29b-41d4-a716-446655440000", "user-123");
+
+			expect(mockDb.select).toHaveBeenCalled();
+			expect(mockDb.insert).toHaveBeenCalled();
+			expect(mockDb.update).toHaveBeenCalled();
+			expect(mockDb.delete).toHaveBeenCalled();
 		});
 	});
 

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { GlobalAddGoalDialog } from "@/components/features/goals/GlobalAddGoalDialog";
 import { GlobalEditGoalDialog } from "@/components/features/goals/GlobalEditGoalDialog";
+import { GlobalAddMilestoneDialog } from "@/components/features/milestones/GlobalAddMilestoneDialog";
+import { GlobalEditMilestoneDialog } from "@/components/features/milestones/GlobalEditMilestoneDialog";
 import { GlobalAddProjectDialog } from "@/components/features/projects/GlobalAddProjectDialog";
 import { GlobalEditProjectDialog } from "@/components/features/projects/GlobalEditProjectDialog";
 import { AddTaskFab } from "@/components/features/tasks/AddTaskFab";
@@ -61,6 +63,8 @@ export default async function MainLayout({
 			<GlobalEditProjectDialog goals={goals} projects={allProjects} />
 			<GlobalAddGoalDialog />
 			<GlobalEditGoalDialog />
+			<GlobalAddMilestoneDialog />
+			<GlobalEditMilestoneDialog />
 			<AddTaskFab />
 			<SidebarInset>{children}</SidebarInset>
 		</SidebarProvider>

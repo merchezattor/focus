@@ -1,5 +1,6 @@
 import {
 	and,
+	asc,
 	count,
 	desc,
 	eq,
@@ -16,8 +17,15 @@ import {
 	sql,
 } from "drizzle-orm";
 import { getDb } from "@/db";
-import { apiTokens, comments, goals, projects, tasks } from "@/db/schema";
-import type { Comment, Goal, Project, Task } from "@/types";
+import {
+	apiTokens,
+	comments,
+	goals,
+	milestones,
+	projects,
+	tasks,
+} from "@/db/schema";
+import type { Comment, Goal, Milestone, Project, Task } from "@/types";
 
 import { type ActionType, type ActorType, logAction } from "./actions";
 
@@ -68,6 +76,17 @@ function mapDbTask(t: DbTask, taskComments: Comment[] = []): Task {
 		createdAt: t.created_at,
 		updatedAt: t.updated_at,
 		comments: taskComments,
+	};
+}
+
+function mapDbMilestone(m: typeof milestones.$inferSelect): Milestone {
+	return {
+		id: m.id,
+		title: m.title,
+		description: m.description || undefined,
+		targetDate: m.target_date,
+		createdAt: m.createdAt,
+		updatedAt: m.updatedAt,
 	};
 }
 
@@ -355,6 +374,107 @@ export async function deleteGoal(
 		actorType: actorType,
 		actionType: "delete",
 		metadata: { name: result[0]?.name, tokenName },
+		userId: actorId,
+	});
+}
+
+// --- Milestones ---
+
+export async function readMilestones(userId: string): Promise<Milestone[]> {
+	const dbMilestones = await getDb()
+		.select()
+		.from(milestones)
+		.where(eq(milestones.userId, userId))
+		.orderBy(asc(milestones.target_date), desc(milestones.createdAt));
+
+	return dbMilestones.map(mapDbMilestone);
+}
+
+export async function createMilestone(
+	milestone: Milestone,
+	userId: string,
+	actorType: ActorType = "user",
+	tokenName?: string,
+): Promise<void> {
+	await getDb().insert(milestones).values({
+		id: milestone.id,
+		title: milestone.title,
+		description: milestone.description,
+		target_date: milestone.targetDate,
+		userId,
+		createdAt: milestone.createdAt,
+		updatedAt: milestone.updatedAt,
+	});
+
+	logAction({
+		entityId: milestone.id,
+		entityType: "milestone",
+		actorId: userId,
+		actorType,
+		actionType: "create",
+		changes: { title: milestone.title },
+		metadata: { title: milestone.title, tokenName },
+		userId,
+	});
+}
+
+export async function updateMilestone(
+	id: string,
+	updates: Partial<Milestone>,
+	actorId: string,
+	actorType: ActorType = "user",
+	tokenName?: string,
+): Promise<void> {
+	const dbUpdates: Record<string, unknown> = {};
+	if (updates.title !== undefined) dbUpdates.title = updates.title;
+	if (updates.description !== undefined)
+		dbUpdates.description = updates.description;
+	if (updates.targetDate !== undefined)
+		dbUpdates.target_date = updates.targetDate;
+	if (updates.updatedAt !== undefined) dbUpdates.updatedAt = updates.updatedAt;
+
+	if (Object.keys(dbUpdates).length === 0) return;
+
+	if (dbUpdates.updatedAt === undefined) {
+		dbUpdates.updatedAt = new Date();
+	}
+
+	const result = await getDb()
+		.update(milestones)
+		.set(dbUpdates)
+		.where(and(eq(milestones.id, id), eq(milestones.userId, actorId)))
+		.returning({ title: milestones.title });
+
+	logAction({
+		entityId: id,
+		entityType: "milestone",
+		actorId,
+		actorType,
+		actionType: "update",
+		changes: updates,
+		metadata: { title: result[0]?.title, tokenName },
+		userId: actorId,
+	});
+}
+
+export async function deleteMilestone(
+	id: string,
+	actorId: string,
+	actorType: ActorType = "user",
+	tokenName?: string,
+): Promise<void> {
+	const result = await getDb()
+		.delete(milestones)
+		.where(and(eq(milestones.id, id), eq(milestones.userId, actorId)))
+		.returning({ title: milestones.title });
+
+	logAction({
+		entityId: id,
+		entityType: "milestone",
+		actorId,
+		actorType,
+		actionType: "delete",
+		metadata: { title: result[0]?.title, tokenName },
 		userId: actorId,
 	});
 }

@@ -15,7 +15,7 @@ const listActionsSchema = z.object({
 			'Filter by who performed the action. "user"=human user, "agent"=AI agent.',
 		),
 	entityType: z
-		.enum(["task", "project", "goal"])
+		.enum(["task", "project", "goal", "milestone"])
 		.optional()
 		.describe("Filter by the type of entity the action was performed on."),
 	entityId: z

@@ -36,6 +36,10 @@ describe("AppSidebar", () => {
 			"href",
 			"/projects",
 		);
+		expect(screen.getByRole("link", { name: "Milestones" })).toHaveAttribute(
+			"href",
+			"/milestones",
+		);
 	});
 
 	it("keeps the Current Projects section and project links", () => {

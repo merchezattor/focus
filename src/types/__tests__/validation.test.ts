@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { goalSchema } from "../goal";
+import { milestoneSchema } from "../milestone";
 import { projectSchema } from "../project";
 import { commentSchema, taskSchema } from "../task";
 
@@ -302,6 +303,46 @@ describe("taskSchema Validation", () => {
 			});
 			expect(result.success).toBe(false);
 		});
+	});
+});
+
+describe("milestoneSchema Validation", () => {
+	const validMilestone = {
+		id: "550e8400-e29b-41d4-a716-446655440000",
+		title: "Move to Japan",
+		description: "Relocation milestone",
+		targetDate: new Date("2026-09-01T00:00:00.000Z"),
+		createdAt: new Date(),
+		updatedAt: new Date(),
+	};
+
+	it("accepts a valid milestone", () => {
+		const result = milestoneSchema.safeParse(validMilestone);
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects an empty title", () => {
+		const result = milestoneSchema.safeParse({
+			...validMilestone,
+			title: "",
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects a missing target date", () => {
+		const result = milestoneSchema.safeParse({
+			...validMilestone,
+			targetDate: undefined,
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("accepts an omitted description", () => {
+		const result = milestoneSchema.safeParse({
+			...validMilestone,
+			description: undefined,
+		});
+		expect(result.success).toBe(true);
 	});
 });
 

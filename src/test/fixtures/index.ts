@@ -1,13 +1,15 @@
-import type { Goal, Project, Task } from "@/types";
+import type { Goal, Milestone, Project, Task } from "@/types";
 
 let taskIdCounter = 1;
 let projectIdCounter = 1;
 let goalIdCounter = 1;
+let milestoneIdCounter = 1;
 
 export function resetCounters(): void {
 	taskIdCounter = 1;
 	projectIdCounter = 1;
 	goalIdCounter = 1;
+	milestoneIdCounter = 1;
 }
 
 export function createTask(overrides?: Partial<Task>): Task {
@@ -67,6 +69,25 @@ export function createGoal(overrides?: Partial<Goal>): Goal {
 		priority: "p2",
 		dueDate: undefined,
 		color: "#10b981",
+		createdAt: now,
+		updatedAt: now,
+	};
+
+	return { ...defaults, ...overrides };
+}
+
+export function createMilestone(overrides?: Partial<Milestone>): Milestone {
+	const now = new Date();
+	const id = `550e8400-e29b-41d4-a716-${String(milestoneIdCounter++).padStart(
+		12,
+		"0",
+	)}`;
+
+	const defaults: Milestone = {
+		id,
+		title: "Test Milestone",
+		description: undefined,
+		targetDate: new Date("2026-01-15T00:00:00.000Z"),
 		createdAt: now,
 		updatedAt: now,
 	};
