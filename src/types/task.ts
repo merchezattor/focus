@@ -21,7 +21,7 @@ export const taskSchema = z.object({
 	completedAt: z.date().nullable().default(null),
 	priority: z.enum(["p1", "p2", "p3", "p4"]),
 	status: z
-		.enum(["todo", "in_progress", "review", "done", "cold"])
+		.enum(["todo", "in_progress", "review", "done", "cold", "archived"])
 		.optional()
 		.default("todo"),
 	comments: z.array(commentSchema).optional(),

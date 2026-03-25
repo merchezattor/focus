@@ -136,7 +136,7 @@ export async function getTaskCounts(userId: string): Promise<{
 		.where(
 			and(
 				eq(tasks.userId, userId),
-				notInArray(tasks.status, ["done", "cold"]),
+				notInArray(tasks.status, ["done", "cold", "archived"]),
 				gte(tasks.plan_date, todayStart),
 				lte(tasks.plan_date, todayEnd),
 			),
@@ -148,7 +148,7 @@ export async function getTaskCounts(userId: string): Promise<{
 		.where(
 			and(
 				eq(tasks.userId, userId),
-				notInArray(tasks.status, ["done", "cold"]),
+				notInArray(tasks.status, ["done", "cold", "archived"]),
 				sql`${tasks.project_id} IS NOT NULL`,
 			),
 		)
@@ -544,8 +544,8 @@ export async function searchTasks(
 			conditions.push(ne(tasks.status, "done"));
 		}
 	} else {
-		// Default behavior: exclude 'cold' tasks from generic searches
-		conditions.push(ne(tasks.status, "cold"));
+		// Default behavior: exclude 'cold' and 'archived' tasks from generic searches
+		conditions.push(notInArray(tasks.status, ["cold", "archived"]));
 	}
 
 	// 3. Project
@@ -690,7 +690,12 @@ export async function readTasks(userId: string): Promise<Task[]> {
 	const dbTasks = await getDb()
 		.select()
 		.from(tasks)
-		.where(and(eq(tasks.userId, userId), ne(tasks.status, "cold")))
+		.where(
+			and(
+				eq(tasks.userId, userId),
+				notInArray(tasks.status, ["cold", "archived"]),
+			),
+		)
 		.orderBy(tasks.priority, desc(tasks.created_at));
 
 	// Fetch comments scoped to the user's tasks

@@ -117,6 +117,7 @@ describe("BacklogTable", () => {
 			expect(screen.getByText("Edit")).toBeInTheDocument();
 			expect(screen.getByText("To work")).toBeInTheDocument();
 			expect(screen.getByText("For Today")).toBeInTheDocument();
+			expect(screen.getByText("Archive")).toBeInTheDocument();
 			expect(screen.getByText("Delete")).toBeInTheDocument();
 		});
 

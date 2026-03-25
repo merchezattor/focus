@@ -216,6 +216,14 @@ describe("EditTaskDialog", () => {
 			).toBeInTheDocument();
 		});
 
+		it("renders archive button", () => {
+			render(<EditTaskDialog {...defaultProps} open={true} />);
+
+			expect(
+				screen.getByRole("button", { name: /archive/i }),
+			).toBeInTheDocument();
+		});
+
 		it("renders delete button in dropdown menu", async () => {
 			const user = userEvent.setup();
 			render(<EditTaskDialog {...defaultProps} open={true} />);

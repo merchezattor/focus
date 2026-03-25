@@ -2,6 +2,7 @@
 
 import { format, startOfDay } from "date-fns";
 import {
+	Archive,
 	Calendar,
 	ChevronDown,
 	ChevronRight,
@@ -128,6 +129,23 @@ export function BacklogTable({
 				onTaskUpdated?.();
 			} catch (error) {
 				console.error("Failed to plan for today:", error);
+			}
+		},
+		[onTaskUpdated],
+	);
+
+	const handleArchive = useCallback(
+		async (task: Task) => {
+			try {
+				const res = await fetch(`/api/tasks/${task.id}`, {
+					method: "PATCH",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ status: "archived" }),
+				});
+				if (!res.ok) throw new Error("Failed to archive task");
+				onTaskUpdated?.();
+			} catch (error) {
+				console.error("Failed to archive task:", error);
 			}
 		},
 		[onTaskUpdated],
@@ -385,6 +403,13 @@ export function BacklogTable({
 										<Calendar className="mr-2 h-4 w-4" />
 										For Today
 									</DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={() => handleArchive(task)}
+										className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+									>
+										<Archive className="mr-2 h-4 w-4" />
+										Archive
+									</DropdownMenuItem>
 									<DropdownMenuSeparator />
 									<DropdownMenuItem
 										onClick={() => openDeleteDialog(task)}
@@ -409,6 +434,7 @@ export function BacklogTable({
 			projects,
 			handleStartWork,
 			handlePlanForToday,
+			handleArchive,
 			openDeleteDialog,
 		],
 	);

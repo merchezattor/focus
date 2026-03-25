@@ -9,6 +9,7 @@ import {
 	MoreHorizontal,
 	PlusCircle,
 	Send,
+	Snowflake,
 	Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -559,6 +560,7 @@ export function EditTaskDialog({
 										<SelectItem value="review">Review</SelectItem>
 										<SelectItem value="cold">Cold (Backlog)</SelectItem>
 										<SelectItem value="done">Done</SelectItem>
+										<SelectItem value="archived">Archived</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
@@ -649,8 +651,32 @@ export function EditTaskDialog({
 										}
 									}}
 								>
-									<Archive className="h-4 w-4 mr-2" />
+									<Snowflake className="h-4 w-4 mr-2" />
 									Backlog
+								</Button>
+
+								<Button
+									variant="ghost"
+									size="sm"
+									className="rounded-none border-r font-medium text-muted-foreground hover:text-foreground hover:bg-muted h-8"
+									onClick={async () => {
+										try {
+											const res = await fetch(`/api/tasks/${task.id}`, {
+												method: "PATCH",
+												headers: { "Content-Type": "application/json" },
+												body: JSON.stringify({ status: "archived" }),
+											});
+											if (!res.ok) throw new Error("Failed to archive task");
+											setOpen(false);
+											onTaskUpdated();
+											router.refresh();
+										} catch (error) {
+											console.error("Failed to archive task:", error);
+										}
+									}}
+								>
+									<Archive className="h-4 w-4 mr-2" />
+									Archive
 								</Button>
 
 								<DropdownMenu>

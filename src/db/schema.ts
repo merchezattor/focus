@@ -69,6 +69,7 @@ export const taskStatusEnum = pgEnum("task_status", [
 	"review",
 	"done",
 	"cold",
+	"archived",
 ]);
 
 export const projectStatusEnum = pgEnum("project_status", [
