@@ -4,7 +4,11 @@ import { Suspense } from "react";
 import { UpcomingClient } from "@/components/features/upcoming/upcoming-client";
 import { SiteHeader } from "@/components/layout/site-header";
 import { auth } from "@/lib/auth";
-import { readActionableProjects, readTasks } from "@/lib/storage";
+import {
+	readActionableProjects,
+	readMilestones,
+	readTasks,
+} from "@/lib/storage";
 
 export default async function UpcomingPage() {
 	const session = await auth.api.getSession({
@@ -15,16 +19,21 @@ export default async function UpcomingPage() {
 		redirect("/login");
 	}
 
-	const [tasks, projects] = await Promise.all([
+	const [tasks, projects, milestones] = await Promise.all([
 		readTasks(session.user.id),
 		readActionableProjects(session.user.id),
+		readMilestones(session.user.id),
 	]);
 
 	return (
 		<Suspense fallback={<div>Loading...</div>}>
 			<SiteHeader pageTitle="Upcoming" />
 			<div className="flex flex-1 flex-col p-4 md:p-6">
-				<UpcomingClient tasks={tasks} projects={projects} />
+				<UpcomingClient
+					tasks={tasks}
+					projects={projects}
+					milestones={milestones}
+				/>
 			</div>
 		</Suspense>
 	);

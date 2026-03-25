@@ -1,5 +1,7 @@
 "use client";
 
+import { format } from "date-fns";
+import { useSetAtom } from "jotai";
 import { Check, Flag, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -28,7 +30,8 @@ import {
 	ContextMenuSubTrigger,
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import type { Project, Task } from "@/types";
+import { milestoneToEditAtom } from "@/lib/atoms";
+import type { Milestone, Project, Task } from "@/types";
 
 const priorityColors = {
 	p1: "#ef4444", // Red
@@ -40,21 +43,28 @@ const priorityColors = {
 export function UpcomingClient({
 	tasks,
 	projects,
+	milestones,
 }: {
 	tasks: Task[];
 	projects: Project[];
+	milestones: Milestone[];
 }) {
 	const router = useRouter();
 	const [editingTask, setEditingTask] = useState<Task | null>(null);
+	const setMilestoneToEdit = useSetAtom(milestoneToEditAtom);
 
 	const features: Feature[] = useMemo(() => {
-		return tasks
+		const taskFeatures = tasks
 			.filter((t) => t.status !== "done" && (t.planDate || t.dueDate))
 			.map((t) => ({
 				id: t.id,
 				name: t.title,
 				startAt: new Date(t.planDate || t.dueDate!),
 				endAt: new Date(t.planDate || t.dueDate!),
+				kind: "task" as const,
+				description: t.description,
+				dateLabel: `${t.planDate ? "Planned" : "Due"} ${format(new Date(t.planDate || t.dueDate!), "PPP")}`,
+				metaLabel: `Task ${t.priority.toUpperCase()}`,
 				status: {
 					id: t.priority,
 					name: t.priority,
@@ -63,12 +73,37 @@ export function UpcomingClient({
 						"#6b7280",
 				},
 			}));
-	}, [tasks]);
+
+		const milestoneFeatures = milestones.map((milestone) => ({
+			id: milestone.id,
+			name: milestone.title,
+			startAt: new Date(milestone.targetDate),
+			endAt: new Date(milestone.targetDate),
+			kind: "milestone" as const,
+			description: milestone.description,
+			dateLabel: `Target ${format(new Date(milestone.targetDate), "PPP")}`,
+			metaLabel: "Milestone",
+			status: {
+				id: "milestone",
+				name: "milestone",
+				color: "#d97706",
+			},
+		}));
+
+		return [...taskFeatures, ...milestoneFeatures];
+	}, [milestones, tasks]);
 
 	const handleTaskClick = (taskId: string) => {
 		const task = tasks.find((t) => t.id === taskId);
 		if (task) {
 			setEditingTask(task);
+		}
+	};
+
+	const handleMilestoneClick = (milestoneId: string) => {
+		const milestone = milestones.find((item) => item.id === milestoneId);
+		if (milestone) {
+			setMilestoneToEdit(milestone);
 		}
 	};
 
@@ -129,73 +164,82 @@ export function UpcomingClient({
 				</CalendarDate>
 				<CalendarHeader />
 				<CalendarBody features={features}>
-					{({ feature }) => (
-						<ContextMenu key={feature.id}>
-							<ContextMenuTrigger>
-								<CalendarItem
-									feature={feature}
-									onClick={() => handleTaskClick(feature.id)}
-								/>
-							</ContextMenuTrigger>
-							<ContextMenuContent className="w-64">
-								<ContextMenuItem
-									inset
-									onClick={() => handleComplete(feature.id)}
-								>
-									<Check className="mr-2 h-4 w-4" />
-									Complete Task
-								</ContextMenuItem>
-								<ContextMenuSeparator />
-								<ContextMenuSub>
-									<ContextMenuSubTrigger inset>
-										<Flag className="mr-2 h-4 w-4" />
-										Priority
-									</ContextMenuSubTrigger>
-									<ContextMenuSubContent className="w-48">
-										<ContextMenuRadioGroup value={feature.status.name}>
-											<ContextMenuRadioItem
-												value="p1"
-												onClick={() => handleSetPriority(feature.id, "p1")}
-											>
-												<span className="flex h-2 w-2 rounded-full mr-2 bg-[#ef4444]" />
-												Priority 1
-											</ContextMenuRadioItem>
-											<ContextMenuRadioItem
-												value="p2"
-												onClick={() => handleSetPriority(feature.id, "p2")}
-											>
-												<span className="flex h-2 w-2 rounded-full mr-2 bg-[#f97316]" />
-												Priority 2
-											</ContextMenuRadioItem>
-											<ContextMenuRadioItem
-												value="p3"
-												onClick={() => handleSetPriority(feature.id, "p3")}
-											>
-												<span className="flex h-2 w-2 rounded-full mr-2 bg-[#3b82f6]" />
-												Priority 3
-											</ContextMenuRadioItem>
-											<ContextMenuRadioItem
-												value="p4"
-												onClick={() => handleSetPriority(feature.id, "p4")}
-											>
-												<span className="flex h-2 w-2 rounded-full mr-2 bg-[#6b7280]" />
-												Priority 4
-											</ContextMenuRadioItem>
-										</ContextMenuRadioGroup>
-									</ContextMenuSubContent>
-								</ContextMenuSub>
-								<ContextMenuSeparator />
-								<ContextMenuItem
-									inset
-									onClick={() => handleDelete(feature.id)}
-									className="text-destructive focus:text-destructive"
-								>
-									<Trash className="mr-2 h-4 w-4" />
-									Delete Task
-								</ContextMenuItem>
-							</ContextMenuContent>
-						</ContextMenu>
-					)}
+					{({ feature }) =>
+						feature.kind === "milestone" ? (
+							<CalendarItem
+								key={feature.id}
+								feature={feature}
+								onClick={() => handleMilestoneClick(feature.id)}
+								className="pl-1"
+							/>
+						) : (
+							<ContextMenu key={feature.id}>
+								<ContextMenuTrigger>
+									<CalendarItem
+										feature={feature}
+										onClick={() => handleTaskClick(feature.id)}
+									/>
+								</ContextMenuTrigger>
+								<ContextMenuContent className="w-64">
+									<ContextMenuItem
+										inset
+										onClick={() => handleComplete(feature.id)}
+									>
+										<Check className="mr-2 h-4 w-4" />
+										Complete Task
+									</ContextMenuItem>
+									<ContextMenuSeparator />
+									<ContextMenuSub>
+										<ContextMenuSubTrigger inset>
+											<Flag className="mr-2 h-4 w-4" />
+											Priority
+										</ContextMenuSubTrigger>
+										<ContextMenuSubContent className="w-48">
+											<ContextMenuRadioGroup value={feature.status.name}>
+												<ContextMenuRadioItem
+													value="p1"
+													onClick={() => handleSetPriority(feature.id, "p1")}
+												>
+													<span className="mr-2 flex h-2 w-2 rounded-full bg-[#ef4444]" />
+													Priority 1
+												</ContextMenuRadioItem>
+												<ContextMenuRadioItem
+													value="p2"
+													onClick={() => handleSetPriority(feature.id, "p2")}
+												>
+													<span className="mr-2 flex h-2 w-2 rounded-full bg-[#f97316]" />
+													Priority 2
+												</ContextMenuRadioItem>
+												<ContextMenuRadioItem
+													value="p3"
+													onClick={() => handleSetPriority(feature.id, "p3")}
+												>
+													<span className="mr-2 flex h-2 w-2 rounded-full bg-[#3b82f6]" />
+													Priority 3
+												</ContextMenuRadioItem>
+												<ContextMenuRadioItem
+													value="p4"
+													onClick={() => handleSetPriority(feature.id, "p4")}
+												>
+													<span className="mr-2 flex h-2 w-2 rounded-full bg-[#6b7280]" />
+													Priority 4
+												</ContextMenuRadioItem>
+											</ContextMenuRadioGroup>
+										</ContextMenuSubContent>
+									</ContextMenuSub>
+									<ContextMenuSeparator />
+									<ContextMenuItem
+										inset
+										onClick={() => handleDelete(feature.id)}
+										className="text-destructive focus:text-destructive"
+									>
+										<Trash className="mr-2 h-4 w-4" />
+										Delete Task
+									</ContextMenuItem>
+								</ContextMenuContent>
+							</ContextMenu>
+						)
+					}
 				</CalendarBody>
 			</CalendarProvider>
 

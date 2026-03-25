@@ -1,6 +1,6 @@
 "use client";
 
-import { getDay, getDaysInMonth, isSameDay } from "date-fns";
+import { format, getDay, getDaysInMonth, isSameDay } from "date-fns";
 import { atom, useAtom } from "jotai";
 import { Check, ChevronLeft, ChevronRight, ChevronsUpDown } from "lucide-react";
 import {
@@ -26,6 +26,11 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { cn } from "@/lib/utils";
 
@@ -64,6 +69,10 @@ export interface Feature {
 	startAt: Date;
 	endAt: Date;
 	status: Status;
+	kind?: "task" | "milestone";
+	description?: string;
+	dateLabel?: string;
+	metaLabel?: string;
 }
 
 interface ComboboxProps {
@@ -467,23 +476,69 @@ export interface CalendarItemProps {
 
 export const CalendarItem = memo(
 	({ feature, className, onClick }: CalendarItemProps) => (
-		<div
-			onClick={onClick}
-			className={cn(
-				"flex items-center gap-2 bg-primary/10 rounded-sm px-1.5 py-0.5 w-full overflow-hidden w-full cursor-pointer hover:bg-primary/20 transition-colors",
-				className,
-			)}
-		>
-			<div
-				className="h-1.5 w-1.5 shrink-0 rounded-full"
-				style={{
-					backgroundColor: feature.status.color,
-				}}
-			/>
-			<span className="truncate text-[10px] font-medium leading-none">
-				{feature.name}
-			</span>
-		</div>
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<div
+					onClick={onClick}
+					className={cn(
+						"flex w-full cursor-pointer items-center gap-2 overflow-hidden rounded-sm px-1.5 py-0.5 transition-colors",
+						feature.kind === "milestone"
+							? "min-h-6 border border-amber-300/70 bg-amber-50 py-1 text-amber-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] hover:border-amber-400 hover:bg-amber-100 dark:border-amber-700/80 dark:bg-amber-950/40 dark:text-amber-100 dark:hover:bg-amber-900/60"
+							: "bg-primary/10 hover:bg-primary/20",
+						className,
+					)}
+				>
+					<div
+						className={cn(
+							"h-1.5 w-1.5 shrink-0 rounded-full",
+							feature.kind === "milestone" &&
+								"ring-1 ring-black/10 dark:ring-white/15",
+						)}
+						style={{
+							backgroundColor: feature.status.color,
+						}}
+					/>
+					<span
+						className={cn(
+							"truncate text-[10px] font-medium leading-none",
+							feature.kind === "milestone" && "tracking-[0.01em]",
+						)}
+					>
+						{feature.name}
+					</span>
+				</div>
+			</TooltipTrigger>
+			<TooltipContent
+				side="top"
+				sideOffset={8}
+				className="max-w-72 rounded-lg border bg-background px-3 py-2 text-foreground shadow-lg"
+			>
+				<div className="space-y-1.5">
+					<div className="flex items-center gap-2">
+						<span
+							className={cn(
+								"inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]",
+								feature.kind === "milestone"
+									? "bg-amber-100 text-amber-900 dark:bg-amber-900/60 dark:text-amber-100"
+									: "bg-primary/15 text-primary",
+							)}
+						>
+							{feature.metaLabel ||
+								(feature.kind === "milestone" ? "Milestone" : "Task")}
+						</span>
+						<span className="text-[11px] text-muted-foreground">
+							{feature.dateLabel || format(new Date(feature.startAt), "PPP")}
+						</span>
+					</div>
+					<div className="text-sm font-medium leading-snug">{feature.name}</div>
+					{feature.description ? (
+						<div className="text-xs leading-relaxed text-muted-foreground">
+							{feature.description}
+						</div>
+					) : null}
+				</div>
+			</TooltipContent>
+		</Tooltip>
 	),
 );
 
