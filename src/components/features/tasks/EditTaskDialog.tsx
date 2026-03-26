@@ -6,10 +6,10 @@ import {
 	Calendar as CalendarIcon,
 	CheckCircle,
 	Flag,
+	Layers,
 	MoreHorizontal,
 	PlusCircle,
 	Send,
-	Snowflake,
 	Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -610,7 +610,9 @@ export function EditTaskDialog({
 								<Button
 									variant="ghost"
 									size="sm"
-									className="flex-1 rounded-none rounded-l-md border-r font-medium text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-500 dark:hover:text-green-400 dark:hover:bg-green-500/10 h-8"
+									title="Complete task"
+									aria-label="Complete"
+									className="flex-1 rounded-none rounded-l-md border-r text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-500 dark:hover:text-green-400 dark:hover:bg-green-500/10 h-8 px-0"
 									onClick={async () => {
 										try {
 											const res = await fetch(`/api/tasks/${task.id}`, {
@@ -627,14 +629,15 @@ export function EditTaskDialog({
 										}
 									}}
 								>
-									<CheckCircle className="h-4 w-4 mr-2" />
-									Complete
+									<CheckCircle className="h-4 w-4" />
 								</Button>
 
 								<Button
 									variant="ghost"
 									size="sm"
-									className="rounded-none border-r font-medium text-muted-foreground hover:text-foreground hover:bg-muted h-8"
+									title="Move to Backlog"
+									aria-label="Backlog"
+									className="flex-1 rounded-none border-r text-muted-foreground hover:text-foreground hover:bg-muted h-8 px-0"
 									onClick={async () => {
 										try {
 											const res = await fetch(`/api/tasks/${task.id}`, {
@@ -651,14 +654,15 @@ export function EditTaskDialog({
 										}
 									}}
 								>
-									<Snowflake className="h-4 w-4 mr-2" />
-									Backlog
+									<Layers className="h-4 w-4" />
 								</Button>
 
 								<Button
 									variant="ghost"
 									size="sm"
-									className="rounded-none border-r font-medium text-muted-foreground hover:text-foreground hover:bg-muted h-8"
+									title="Archive task"
+									aria-label="Archive"
+									className="flex-1 rounded-none border-r text-muted-foreground hover:text-foreground hover:bg-muted h-8 px-0"
 									onClick={async () => {
 										try {
 											const res = await fetch(`/api/tasks/${task.id}`, {
@@ -675,17 +679,46 @@ export function EditTaskDialog({
 										}
 									}}
 								>
-									<Archive className="h-4 w-4 mr-2" />
-									Archive
+									<Archive className="h-4 w-4" />
 								</Button>
+
+								<AlertDialog>
+									<AlertDialogTrigger asChild>
+										<Button
+											variant="ghost"
+											size="sm"
+											title="Delete task"
+											aria-label="Delete task"
+											className="flex-1 rounded-none border-r text-destructive hover:text-destructive hover:bg-destructive/10 h-8 px-0"
+										>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									</AlertDialogTrigger>
+									<AlertDialogContent>
+										<AlertDialogHeader>
+											<AlertDialogTitle>Delete Task</AlertDialogTitle>
+											<AlertDialogDescription>
+												Are you sure you want to delete this task? This action
+												cannot be undone.
+											</AlertDialogDescription>
+										</AlertDialogHeader>
+										<AlertDialogFooter>
+											<AlertDialogCancel>Cancel</AlertDialogCancel>
+											<AlertDialogAction onClick={handleDelete}>
+												Delete
+											</AlertDialogAction>
+										</AlertDialogFooter>
+									</AlertDialogContent>
+								</AlertDialog>
 
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<Button
 											variant="ghost"
 											size="sm"
-											className="rounded-none rounded-r-md px-2 text-muted-foreground hover:text-foreground hover:bg-muted h-8"
+											title="More options"
 											aria-label="More options"
+											className="flex-1 rounded-none rounded-r-md px-0 text-muted-foreground hover:text-foreground hover:bg-muted h-8"
 										>
 											<MoreHorizontal className="h-4 w-4" />
 										</Button>
@@ -695,33 +728,6 @@ export function EditTaskDialog({
 											<PlusCircle className="mr-2 h-4 w-4" />
 											Add subtask
 										</DropdownMenuItem>
-
-										<AlertDialog>
-											<AlertDialogTrigger asChild>
-												<DropdownMenuItem
-													onSelect={(e) => e.preventDefault()}
-													className="text-destructive focus:text-destructive w-full cursor-pointer"
-												>
-													<Trash2 className="mr-2 h-4 w-4 text-destructive" />
-													Delete task
-												</DropdownMenuItem>
-											</AlertDialogTrigger>
-											<AlertDialogContent>
-												<AlertDialogHeader>
-													<AlertDialogTitle>Delete Task</AlertDialogTitle>
-													<AlertDialogDescription>
-														Are you sure you want to delete this task? This
-														action cannot be undone.
-													</AlertDialogDescription>
-												</AlertDialogHeader>
-												<AlertDialogFooter>
-													<AlertDialogCancel>Cancel</AlertDialogCancel>
-													<AlertDialogAction onClick={handleDelete}>
-														Delete
-													</AlertDialogAction>
-												</AlertDialogFooter>
-											</AlertDialogContent>
-										</AlertDialog>
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</div>

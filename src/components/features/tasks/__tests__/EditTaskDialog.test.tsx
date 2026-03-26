@@ -224,15 +224,11 @@ describe("EditTaskDialog", () => {
 			).toBeInTheDocument();
 		});
 
-		it("renders delete button in dropdown menu", async () => {
-			const user = userEvent.setup();
+		it("renders delete button in main row", () => {
 			render(<EditTaskDialog {...defaultProps} open={true} />);
 
-			const moreButton = screen.getByRole("button", { name: /more options/i });
-			await user.click(moreButton);
-
 			expect(
-				screen.getByRole("menuitem", { name: /delete task/i }),
+				screen.getByRole("button", { name: /delete task/i }),
 			).toBeInTheDocument();
 		});
 
@@ -346,13 +342,10 @@ describe("EditTaskDialog", () => {
 			const user = userEvent.setup();
 			render(<EditTaskDialog {...defaultProps} open={true} />);
 
-			const moreButton = screen.getByRole("button", { name: /more options/i });
-			await user.click(moreButton);
-
-			const deleteMenuItem = screen.getByRole("menuitem", {
+			const deleteButton = screen.getByRole("button", {
 				name: /delete task/i,
 			});
-			await user.click(deleteMenuItem);
+			await user.click(deleteButton);
 
 			expect(screen.getByText("Delete Task")).toBeInTheDocument();
 			expect(
@@ -364,13 +357,10 @@ describe("EditTaskDialog", () => {
 			const user = userEvent.setup();
 			render(<EditTaskDialog {...defaultProps} open={true} />);
 
-			const moreButton = screen.getByRole("button", { name: /more options/i });
-			await user.click(moreButton);
-
-			const deleteMenuItem = screen.getByRole("menuitem", {
+			const deleteButton = screen.getByRole("button", {
 				name: /delete task/i,
 			});
-			await user.click(deleteMenuItem);
+			await user.click(deleteButton);
 
 			expect(screen.getByText("Delete Task")).toBeInTheDocument();
 		});
