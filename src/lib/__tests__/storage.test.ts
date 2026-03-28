@@ -635,7 +635,7 @@ describe("Storage Layer", () => {
 					})),
 				});
 
-				await deleteComment("comment-1");
+				await deleteComment("comment-1", "user-123");
 				expect(mockDb.delete).toHaveBeenCalled();
 			});
 		});

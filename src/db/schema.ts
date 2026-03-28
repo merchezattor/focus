@@ -189,7 +189,10 @@ export const comments = pgTable(
 		userId: text("user_id").references(() => user.id),
 		actorType: actorTypeEnum("actor_type").default("user"),
 	},
-	(table) => [index("comments_task_id_idx").on(table.task_id)],
+	(table) => [
+		index("comments_task_id_idx").on(table.task_id),
+		index("comments_user_id_idx").on(table.userId),
+	],
 );
 
 export const milestones = pgTable(

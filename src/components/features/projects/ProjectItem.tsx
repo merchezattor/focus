@@ -3,9 +3,11 @@
 import { useSetAtom } from "jotai";
 import { Flag, Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { projectToEditAtom } from "@/lib/atoms";
+import { PRIORITY_COLORS } from "@/lib/priority-colors";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/types";
 
@@ -13,7 +15,9 @@ interface ProjectItemProps {
 	project: Project;
 }
 
-export function ProjectItem({ project }: ProjectItemProps) {
+export const ProjectItem = memo(function ProjectItem({
+	project,
+}: ProjectItemProps) {
 	const setProjectToEdit = useSetAtom(projectToEditAtom);
 	const router = useRouter();
 
@@ -40,12 +44,7 @@ export function ProjectItem({ project }: ProjectItemProps) {
 							<Flag
 								className="h-3 w-3 shrink-0"
 								style={{
-									color:
-										project.priority === "p1"
-											? "#ef4444"
-											: project.priority === "p2"
-												? "#f97316"
-												: "#3b82f6",
+									color: PRIORITY_COLORS[project.priority],
 								}}
 							/>
 						)}
@@ -83,4 +82,4 @@ export function ProjectItem({ project }: ProjectItemProps) {
 			</div>
 		</div>
 	);
-}
+});

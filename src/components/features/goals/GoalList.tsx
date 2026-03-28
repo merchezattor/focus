@@ -3,8 +3,8 @@
 import { IconPlus } from "@tabler/icons-react";
 import { useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
+import { isAddGoalOpenAtom } from "@/lib/atoms";
 import type { Goal } from "@/types";
-import { isAddGoalOpenAtom } from "./GlobalAddGoalDialog";
 import { GoalItem } from "./GoalItem";
 
 interface GoalListProps {

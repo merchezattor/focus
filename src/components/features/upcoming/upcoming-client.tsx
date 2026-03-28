@@ -31,14 +31,8 @@ import {
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { milestoneToEditAtom } from "@/lib/atoms";
+import { PRIORITY_BG_CLASSES, PRIORITY_COLORS } from "@/lib/priority-colors";
 import type { Milestone, Project, Task } from "@/types";
-
-const priorityColors = {
-	p1: "#ef4444", // Red
-	p2: "#f97316", // Orange
-	p3: "#3b82f6", // Blue
-	p4: "#6b7280", // Grey
-};
 
 export function UpcomingClient({
 	tasks,
@@ -69,8 +63,8 @@ export function UpcomingClient({
 					id: t.priority,
 					name: t.priority,
 					color:
-						priorityColors[t.priority as keyof typeof priorityColors] ||
-						"#6b7280",
+						PRIORITY_COLORS[t.priority as keyof typeof PRIORITY_COLORS] ||
+						PRIORITY_COLORS.p4,
 				},
 			}));
 
@@ -200,28 +194,36 @@ export function UpcomingClient({
 													value="p1"
 													onClick={() => handleSetPriority(feature.id, "p1")}
 												>
-													<span className="mr-2 flex h-2 w-2 rounded-full bg-[#ef4444]" />
+													<span
+														className={`mr-2 flex h-2 w-2 rounded-full ${PRIORITY_BG_CLASSES.p1}`}
+													/>
 													Priority 1
 												</ContextMenuRadioItem>
 												<ContextMenuRadioItem
 													value="p2"
 													onClick={() => handleSetPriority(feature.id, "p2")}
 												>
-													<span className="mr-2 flex h-2 w-2 rounded-full bg-[#f97316]" />
+													<span
+														className={`mr-2 flex h-2 w-2 rounded-full ${PRIORITY_BG_CLASSES.p2}`}
+													/>
 													Priority 2
 												</ContextMenuRadioItem>
 												<ContextMenuRadioItem
 													value="p3"
 													onClick={() => handleSetPriority(feature.id, "p3")}
 												>
-													<span className="mr-2 flex h-2 w-2 rounded-full bg-[#3b82f6]" />
+													<span
+														className={`mr-2 flex h-2 w-2 rounded-full ${PRIORITY_BG_CLASSES.p3}`}
+													/>
 													Priority 3
 												</ContextMenuRadioItem>
 												<ContextMenuRadioItem
 													value="p4"
 													onClick={() => handleSetPriority(feature.id, "p4")}
 												>
-													<span className="mr-2 flex h-2 w-2 rounded-full bg-[#6b7280]" />
+													<span
+														className={`mr-2 flex h-2 w-2 rounded-full ${PRIORITY_BG_CLASSES.p4}`}
+													/>
 													Priority 4
 												</ContextMenuRadioItem>
 											</ContextMenuRadioGroup>

@@ -7,21 +7,29 @@ export async function DELETE(
 	request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> },
 ) {
-	const auth = await getAuthenticatedUser(request);
+	try {
+		const auth = await getAuthenticatedUser(request);
 
-	if (!auth) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
+		if (!auth) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
 
-	const { id } = await params;
+		const { id } = await params;
 
-	if (!id) {
+		if (!id) {
+			return NextResponse.json(
+				{ error: "Token ID is required" },
+				{ status: 400 },
+			);
+		}
+
+		await deleteApiToken(id, auth.user.id);
+		return new NextResponse(null, { status: 204 });
+	} catch (error) {
+		console.error("Failed to delete token:", error);
 		return NextResponse.json(
-			{ error: "Token ID is required" },
-			{ status: 400 },
+			{ error: "Failed to delete token" },
+			{ status: 500 },
 		);
 	}
-
-	await deleteApiToken(id, auth.user.id);
-	return new NextResponse(null, { status: 204 });
 }

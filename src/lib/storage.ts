@@ -254,7 +254,7 @@ export async function updateProject(
 		const result = await getDb()
 			.update(projects)
 			.set(dbUpdates)
-			.where(eq(projects.id, id))
+			.where(and(eq(projects.id, id), eq(projects.userId, actorId)))
 			.returning({ name: projects.name });
 
 		logAction({
@@ -513,7 +513,7 @@ export async function getTaskByIdForUser(
 
 export interface TaskFilters {
 	priority?: ("p1" | "p2" | "p3" | "p4")[];
-	status?: ("todo" | "in_progress" | "review" | "done" | "cold")[];
+	status?: ("todo" | "in_progress" | "review" | "done" | "cold" | "archived")[];
 	projectId?: string;
 	parentId?: string | null; // UUID or null for top-level
 	dueDateStr?: string; // "today", "overdue", "upcoming", or ISO date
@@ -819,23 +819,24 @@ export async function createTasksBulk(
 		userId: userId,
 	}));
 
-	await getDb().insert(tasks).values(values);
+	await getDb().transaction(async (tx) => {
+		await tx.insert(tasks).values(values);
 
-	// Insert all comments if any
-	const allComments = tasksList.flatMap((task) =>
-		(task.comments || []).map((c) => ({
-			id: c.id,
-			content: c.content,
-			posted_at: c.postedAt,
-			task_id: task.id,
-			userId: userId,
-			actorType: actorType as "user" | "agent" | "system",
-		})),
-	);
+		const allComments = tasksList.flatMap((task) =>
+			(task.comments || []).map((c) => ({
+				id: c.id,
+				content: c.content,
+				posted_at: c.postedAt,
+				task_id: task.id,
+				userId: userId,
+				actorType: actorType as "user" | "agent" | "system",
+			})),
+		);
 
-	if (allComments.length > 0) {
-		await getDb().insert(comments).values(allComments);
-	}
+		if (allComments.length > 0) {
+			await tx.insert(comments).values(allComments);
+		}
+	});
 
 	// Bulk log action
 	const projectIds = [
@@ -976,14 +977,15 @@ export async function createApiToken(
 	userId: string,
 	name: string,
 ): Promise<{ id: string; name: string; token: string; createdAt: Date }> {
-	const { randomBytes } = await import("node:crypto");
-	const newToken = `focus_${randomBytes(24).toString("hex")}`;
+	const { hashToken, generateApiToken } = await import("@/lib/crypto");
+	const newToken = generateApiToken();
+	const tokenHash = hashToken(newToken);
 
 	const result = await getDb()
 		.insert(apiTokens)
 		.values({
 			id: crypto.randomUUID(),
-			token: newToken,
+			token: tokenHash,
 			userId: userId,
 			name: name,
 			createdAt: new Date(),
@@ -995,7 +997,7 @@ export async function createApiToken(
 			createdAt: apiTokens.createdAt,
 		});
 
-	return result[0];
+	return { ...result[0], token: newToken };
 }
 
 export async function deleteApiToken(
@@ -1027,8 +1029,13 @@ export async function createComment(
 		});
 }
 
-export async function deleteComment(commentId: string): Promise<void> {
-	await getDb().delete(comments).where(eq(comments.id, commentId));
+export async function deleteComment(
+	commentId: string,
+	userId: string,
+): Promise<void> {
+	await getDb()
+		.delete(comments)
+		.where(and(eq(comments.id, commentId), eq(comments.userId, userId)));
 }
 
 export async function syncComments(
@@ -1048,7 +1055,7 @@ export async function syncComments(
 	// Identify deletions
 	const toDelete = existingDbComments.filter((c) => !newIds.has(c.id));
 	for (const c of toDelete) {
-		await deleteComment(c.id);
+		await deleteComment(c.id, actorId);
 	}
 
 	// Identify additions
@@ -1083,21 +1090,30 @@ export async function deleteProject(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	// Tasks cascade-delete via FK, but we delete explicitly to be safe
-	await getDb().delete(tasks).where(eq(tasks.project_id, id));
-	const result = await getDb()
-		.delete(projects)
-		.where(eq(projects.id, id))
-		.returning({ name: projects.name });
+	const project = await getDb()
+		.select({ id: projects.id })
+		.from(projects)
+		.where(and(eq(projects.id, id), eq(projects.userId, actorId)))
+		.limit(1);
 
-	logAction({
-		entityId: id,
-		entityType: "project",
-		actorId: actorId,
-		actorType: actorType,
-		actionType: "delete",
-		metadata: { name: result[0]?.name, tokenName },
-		userId: actorId,
+	if (!project.length) return;
+
+	await getDb().transaction(async (tx) => {
+		await tx.delete(tasks).where(eq(tasks.project_id, id));
+		const result = await tx
+			.delete(projects)
+			.where(and(eq(projects.id, id), eq(projects.userId, actorId)))
+			.returning({ name: projects.name });
+
+		logAction({
+			entityId: id,
+			entityType: "project",
+			actorId: actorId,
+			actorType: actorType,
+			actionType: "delete",
+			metadata: { name: result[0]?.name, tokenName },
+			userId: actorId,
+		});
 	});
 }
 

@@ -3,8 +3,10 @@
 import { format } from "date-fns";
 import { useSetAtom } from "jotai";
 import { Calendar, Flag, Pencil } from "lucide-react";
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { goalToEditAtom } from "@/lib/atoms";
+import { PRIORITY_COLORS } from "@/lib/priority-colors";
 import { cn } from "@/lib/utils";
 import type { Goal } from "@/types";
 
@@ -12,14 +14,7 @@ interface GoalItemProps {
 	goal: Goal;
 }
 
-const priorityColors = {
-	p1: "#ef4444",
-	p2: "#f97316",
-	p3: "#3b82f6",
-	p4: "#6b7280",
-} as const;
-
-export function GoalItem({ goal }: GoalItemProps) {
+export const GoalItem = memo(function GoalItem({ goal }: GoalItemProps) {
 	const setGoalToEdit = useSetAtom(goalToEditAtom);
 
 	return (
@@ -41,7 +36,7 @@ export function GoalItem({ goal }: GoalItemProps) {
 						</span>
 						<Flag
 							className="h-3 w-3 shrink-0"
-							style={{ color: priorityColors[goal.priority] }}
+							style={{ color: PRIORITY_COLORS[goal.priority] }}
 						/>
 					</div>
 					{goal.description && (
@@ -71,4 +66,4 @@ export function GoalItem({ goal }: GoalItemProps) {
 			</div>
 		</div>
 	);
-}
+});

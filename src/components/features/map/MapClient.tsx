@@ -13,12 +13,9 @@ import {
 import { Flag, Snowflake } from "lucide-react";
 import { useMemo } from "react";
 
-const PRIORITY_COLORS: Record<string, string> = {
-	p1: "#ef4444", // Red
-	p2: "#f97316", // Orange
-	p3: "#3b82f6", // Blue
-	p4: "#6b7280", // Grey
-};
+import { PRIORITY_COLORS as PRIORITY_COLOR_MAP } from "@/lib/priority-colors";
+
+const PRIORITY_COLORS: Record<string, string> = PRIORITY_COLOR_MAP;
 
 // Using require() instead of import because @dagrejs/dagre's ESM bundle
 // contains a dynamic require shim that Turbopack rejects.

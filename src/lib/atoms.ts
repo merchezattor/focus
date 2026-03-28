@@ -10,3 +10,4 @@ export const milestoneToEditAtom = atom<Milestone | null>(null);
 export const tasksAtom = atom<Task[]>([]);
 export const refreshBacklogAtom = atom(0);
 export const refreshCompletedAtom = atom(0);
+export const isAddGoalOpenAtom = atom(false);

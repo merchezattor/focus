@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { useSetAtom } from "jotai";
 import { Calendar, Pencil } from "lucide-react";
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { milestoneToEditAtom } from "@/lib/atoms";
 import { cn } from "@/lib/utils";
@@ -12,7 +13,9 @@ interface MilestoneItemProps {
 	milestone: Milestone;
 }
 
-export function MilestoneItem({ milestone }: MilestoneItemProps) {
+export const MilestoneItem = memo(function MilestoneItem({
+	milestone,
+}: MilestoneItemProps) {
 	const setMilestoneToEdit = useSetAtom(milestoneToEditAtom);
 
 	return (
@@ -55,4 +58,4 @@ export function MilestoneItem({ milestone }: MilestoneItemProps) {
 			</Button>
 		</div>
 	);
-}
+});

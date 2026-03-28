@@ -2,7 +2,9 @@
 
 import { format } from "date-fns";
 import { MessageSquare } from "lucide-react";
+import { memo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PRIORITY_COLORS } from "@/lib/priority-colors";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/types";
 
@@ -15,7 +17,7 @@ interface TaskItemProps {
 	compact?: boolean;
 }
 
-export function TaskItem({
+export const TaskItem = memo(function TaskItem({
 	task,
 	projectName,
 	projectColor,
@@ -39,23 +41,10 @@ export function TaskItem({
 				onClick={(e) => e.stopPropagation()}
 				className="rounded-full w-5 h-5 border-2 transition-colors data-[state=checked]:border-none data-[state=checked]:text-white"
 				style={{
-					borderColor:
-						task.priority === "p1"
-							? "#ef4444"
-							: task.priority === "p2"
-								? "#f97316"
-								: task.priority === "p3"
-									? "#3b82f6"
-									: "#6b7280",
+					borderColor: PRIORITY_COLORS[task.priority],
 					backgroundColor:
 						task.status === "done"
-							? task.priority === "p1"
-								? "#ef4444"
-								: task.priority === "p2"
-									? "#f97316"
-									: task.priority === "p3"
-										? "#3b82f6"
-										: "#6b7280"
+							? PRIORITY_COLORS[task.priority]
 							: "transparent",
 				}}
 			/>
@@ -98,4 +87,4 @@ export function TaskItem({
 			</div>
 		</div>
 	);
-}
+});

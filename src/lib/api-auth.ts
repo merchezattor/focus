@@ -5,6 +5,7 @@ import { getDb } from "@/db";
 import { apiTokens, user } from "@/db/schema";
 import type { ActorType } from "@/lib/actions";
 import { auth } from "@/lib/auth";
+import { hashToken } from "@/lib/crypto";
 
 export async function getAuthenticatedUser(request: NextRequest) {
 	// 1. Try Session Auth (Cookies) -> Actor = user
@@ -24,9 +25,10 @@ export async function getAuthenticatedUser(request: NextRequest) {
 	const authHeader = request.headers.get("Authorization");
 	if (authHeader?.startsWith("Bearer ")) {
 		const token = authHeader.split(" ")[1];
+		const tokenHash = hashToken(token);
 
 		const apiToken = await getDb().query.apiTokens.findFirst({
-			where: eq(apiTokens.token, token),
+			where: eq(apiTokens.token, tokenHash),
 		});
 
 		if (apiToken) {

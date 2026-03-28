@@ -430,8 +430,6 @@ export async function createTaskTool(
 		};
 
 		await createTask(task, context.user.id, "agent", context.tokenName);
-		console.log("[MCP] createTaskTool context.tokenName:", context.tokenName);
-
 		return {
 			content: [
 				{ type: "text", text: JSON.stringify({ success: true, data: task }) },

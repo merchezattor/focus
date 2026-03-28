@@ -47,6 +47,66 @@ const createTaskSchema = taskSchema
 		orderNum: z.number().optional(),
 	});
 
+// Schema for updating a task (all fields optional, id required separately)
+const taskUpdateSchema = z
+	.object({
+		title: z.string().min(1).max(200).optional(),
+		description: z.string().max(1000).optional(),
+		projectId: z.string().uuid().nullable().optional(),
+		parentId: z.string().uuid().nullable().optional(),
+		dueDate: z
+			.string()
+			.datetime()
+			.nullable()
+			.optional()
+			.transform((val: string | null | undefined) =>
+				val ? new Date(val) : null,
+			),
+		planDate: z
+			.string()
+			.datetime()
+			.nullable()
+			.optional()
+			.transform((val: string | null | undefined) =>
+				val ? new Date(val) : null,
+			),
+		priority: z.enum(["p1", "p2", "p3", "p4"]).optional(),
+		status: z
+			.enum(["todo", "in_progress", "review", "done", "cold", "archived"])
+			.optional(),
+		orderNum: z.number().optional(),
+		completedAt: z
+			.string()
+			.datetime()
+			.nullable()
+			.optional()
+			.transform((val: string | null | undefined) =>
+				val ? new Date(val) : null,
+			),
+	})
+	.strict();
+
+// Valid enum values for search params
+const validStatuses = [
+	"todo",
+	"in_progress",
+	"review",
+	"done",
+	"cold",
+	"archived",
+] as const;
+const validActionTypes = [
+	"create",
+	"update",
+	"delete",
+	"complete",
+	"uncomplete",
+	"reviewed",
+	"groomed",
+	"processed",
+	"pending",
+] as const;
+
 // GET /api/tasks - Get all tasks (optionally filtered by project)
 export async function GET(request: NextRequest) {
 	try {
@@ -60,14 +120,23 @@ export async function GET(request: NextRequest) {
 		const { searchParams } = new URL(request.url);
 		const projectId = searchParams.get("projectId");
 
-		// Parse advanced filters
 		const dueDateStr = searchParams.get("dueDateStr") || undefined;
 		const lastActionTypeParam = searchParams.get("lastActionType");
 		const lastActionType = lastActionTypeParam
-			? (lastActionTypeParam.split(",") as any[])
+			? lastActionTypeParam
+					.split(",")
+					.filter((v): v is (typeof validActionTypes)[number] =>
+						validActionTypes.includes(v as (typeof validActionTypes)[number]),
+					)
 			: undefined;
 		const statusParam = searchParams.get("status");
-		const status = statusParam ? (statusParam.split(",") as any[]) : undefined;
+		const status = statusParam
+			? statusParam
+					.split(",")
+					.filter((v): v is (typeof validStatuses)[number] =>
+						validStatuses.includes(v as (typeof validStatuses)[number]),
+					)
+			: undefined;
 
 		let tasks = await searchTasks(user.id, {
 			dueDateStr,
@@ -172,9 +241,15 @@ export async function PUT(request: NextRequest) {
 			);
 		}
 
-		// Basic validation (can improve with Zod schema for updates)
-		// For now trust the partial update but sanitized via storage function types
-		await updateTask(id, data, user.id, actorType, auth.tokenName);
+		const result = taskUpdateSchema.safeParse(data);
+		if (!result.success) {
+			return NextResponse.json(
+				{ error: "Invalid task data", details: result.error.format() },
+				{ status: 400 },
+			);
+		}
+
+		await updateTask(id, result.data, user.id, actorType, auth.tokenName);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ActionType, ActorType, EntityType } from "@/lib/actions";
+import { PRIORITY_COLORS } from "@/lib/priority-colors";
 
 interface ActionItemProps {
 	action: {
@@ -37,19 +38,13 @@ interface ActionItemProps {
 	};
 }
 
-const PRIORITIES = {
-	p1: { label: "Priority 1", color: "#ef4444" },
-	p2: { label: "Priority 2", color: "#f97316" },
-	p3: { label: "Priority 3", color: "#3b82f6" },
-	p4: { label: "Priority 4", color: "#6b7280" },
-};
-
 export function ActionItem({ action }: ActionItemProps) {
 	const getIcon = () => {
 		if (action.actionType === "update" && action.changes) {
 			if (action.changes.priority) {
-				const priority = action.changes.priority as keyof typeof PRIORITIES;
-				const color = PRIORITIES[priority]?.color || "#6b7280";
+				const priority = action.changes
+					.priority as keyof typeof PRIORITY_COLORS;
+				const color = PRIORITY_COLORS[priority] || PRIORITY_COLORS.p4;
 				return <Flag className="h-4 w-4" style={{ color, fill: "none" }} />;
 			}
 			if (action.changes.comments) {

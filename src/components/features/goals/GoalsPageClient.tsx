@@ -5,8 +5,8 @@ import { useSetAtom } from "jotai";
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Button } from "@/components/ui/button";
+import { isAddGoalOpenAtom } from "@/lib/atoms";
 import type { Goal } from "@/types";
-import { isAddGoalOpenAtom } from "./GlobalAddGoalDialog";
 import { GoalList } from "./GoalList";
 
 interface GoalsPageClientProps {

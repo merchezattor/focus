@@ -2,6 +2,16 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/api-auth";
 import { searchTasks, type TaskFilters } from "@/lib/storage";
 
+const validPriorities = ["p1", "p2", "p3", "p4"] as const;
+const validStatuses = [
+	"todo",
+	"in_progress",
+	"review",
+	"done",
+	"cold",
+	"archived",
+] as const;
+
 export async function GET(request: NextRequest) {
 	try {
 		const auth = await getAuthenticatedUser(request);
@@ -13,42 +23,55 @@ export async function GET(request: NextRequest) {
 
 		const { searchParams } = new URL(request.url);
 
-		// Parse params
 		const filters: TaskFilters = {};
 
-		// Priority (p1, p2...)
 		const priorityParam = searchParams.get("priority");
 		if (priorityParam) {
-			filters.priority = priorityParam.split(",") as any[];
+			const parsed = priorityParam
+				.split(",")
+				.filter((v): v is (typeof validPriorities)[number] =>
+					validPriorities.includes(v as (typeof validPriorities)[number]),
+				);
+			if (parsed.length === 0) {
+				return NextResponse.json(
+					{ error: "Invalid priority values" },
+					{ status: 400 },
+				);
+			}
+			filters.priority = parsed;
 		}
 
-		// Status (todo, done...)
 		const statusParam = searchParams.get("status");
 		if (statusParam) {
-			filters.status = statusParam.split(",") as any[];
+			const parsed = statusParam
+				.split(",")
+				.filter((v): v is (typeof validStatuses)[number] =>
+					validStatuses.includes(v as (typeof validStatuses)[number]),
+				);
+			if (parsed.length === 0) {
+				return NextResponse.json(
+					{ error: "Invalid status values" },
+					{ status: 400 },
+				);
+			}
+			filters.status = parsed;
 		}
 
-		// (completed filter removed — use status instead)
-
-		// Project
 		const projectIdParam = searchParams.get("projectId");
 		if (projectIdParam) {
 			filters.projectId = projectIdParam;
 		}
 
-		// Due Date (today, overdue, upcoming, YYYY-MM-DD)
 		const dueDateParam = searchParams.get("dueDate");
 		if (dueDateParam) {
 			filters.dueDateStr = dueDateParam;
 		}
 
-		// Plan Date (today, overdue, upcoming, YYYY-MM-DD)
 		const planDateParam = searchParams.get("planDate");
 		if (planDateParam) {
 			filters.planDateStr = planDateParam;
 		}
 
-		// Search (text)
 		const searchParam = searchParams.get("search");
 		if (searchParam) {
 			filters.search = searchParam;

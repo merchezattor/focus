@@ -1,7 +1,7 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getDb } from "@/db";
 import { apiTokens } from "@/db/schema";
@@ -30,8 +30,8 @@ export async function generateApiToken() {
 	});
 	if (!session) throw new Error("Unauthorized");
 
-	// Generate simple token: "focus_" prefix + 24 random bytes (48 hex chars)
-	const newToken = `focus_${randomBytes(24).toString("hex")}`;
+	const { generateApiToken } = await import("@/lib/crypto");
+	const newToken = generateApiToken();
 
 	const existing = await getDb().query.apiTokens.findFirst({
 		where: eq(apiTokens.userId, session.user.id),
@@ -87,6 +87,7 @@ export async function createUserToken(name: string): Promise<{
 	if (!session) throw new Error("Unauthorized");
 
 	const result = await createApiToken(session.user.id, name);
+	revalidatePath("/settings");
 	return {
 		id: result.id,
 		name: result.name,
@@ -101,5 +102,8 @@ export async function deleteUserToken(id: string): Promise<void> {
 	});
 	if (!session) throw new Error("Unauthorized");
 
-	return deleteApiToken(id, session.user.id);
+	return deleteApiToken(id, session.user.id).then((result) => {
+		revalidatePath("/settings");
+		return result;
+	});
 }

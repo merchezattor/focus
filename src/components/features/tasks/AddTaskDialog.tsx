@@ -46,15 +46,11 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { PRIORITY_OPTIONS } from "@/lib/priority-colors";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/types";
 
-const priorities = [
-	{ value: "p1", label: "Priority 1", color: "#ef4444" }, // Red
-	{ value: "p2", label: "Priority 2", color: "#f97316" }, // Orange
-	{ value: "p3", label: "Priority 3", color: "#3b82f6" }, // Blue
-	{ value: "p4", label: "Priority 4", color: "#6b7280" }, // Grey
-];
+const priorities = PRIORITY_OPTIONS;
 
 const createTaskSchema = z.object({
 	title: z.string().min(1, "Title is required"),

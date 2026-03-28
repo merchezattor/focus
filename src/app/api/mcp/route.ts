@@ -6,7 +6,23 @@ import { getAuthenticatedUser } from "@/lib/api-auth";
 import { createMcpServer } from "@/lib/mcp/server";
 import type { MCPServerContext } from "@/lib/mcp/types";
 
-const transports = new Map<string, WebStandardStreamableHTTPServerTransport>();
+const SESSION_TTL_MS = 30 * 60 * 1000;
+
+interface SessionEntry {
+	transport: WebStandardStreamableHTTPServerTransport;
+	createdAt: number;
+}
+
+const transports = new Map<string, SessionEntry>();
+
+function cleanupExpiredSessions() {
+	const now = Date.now();
+	for (const [sid, entry] of transports) {
+		if (now - entry.createdAt > SESSION_TTL_MS) {
+			transports.delete(sid);
+		}
+	}
+}
 
 export async function POST(request: NextRequest) {
 	try {
@@ -22,21 +38,21 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		cleanupExpiredSessions();
+
 		const sessionId = request.headers.get("mcp-session-id");
 
-		// Reuse existing transport for session
 		if (sessionId && transports.has(sessionId)) {
-			const transport = transports.get(sessionId)!;
-			const response = await transport.handleRequest(request);
+			const entry = transports.get(sessionId)!;
+			entry.createdAt = Date.now();
+			const response = await entry.transport.handleRequest(request);
 			return response;
 		}
 
-		// Create new transport
 		const transport = new WebStandardStreamableHTTPServerTransport({
 			sessionIdGenerator: () => crypto.randomUUID(),
 			onsessioninitialized: (sid) => {
-				transports.set(sid, transport);
-				console.log(`[MCP] Session initialized: ${sid}`);
+				transports.set(sid, { transport, createdAt: Date.now() });
 			},
 		});
 
@@ -55,12 +71,10 @@ export async function POST(request: NextRequest) {
 			actorType: auth.actorType,
 			tokenName: auth.tokenName,
 		};
-		console.log("[MCP] Creating context with tokenName:", auth.tokenName);
 
 		const server = createMcpServer(context);
 		await server.connect(transport);
 
-		// Handle the request
 		const response = await transport.handleRequest(request);
 		return response;
 	} catch (error) {

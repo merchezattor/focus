@@ -25,6 +25,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { PRIORITY_OPTIONS } from "@/lib/priority-colors";
 import type { Goal, Project } from "@/types";
 
 const createProjectSchema = z.object({
@@ -61,12 +62,7 @@ const colors = [
 	"#6b7280",
 ];
 
-const priorities = [
-	{ value: "p1", label: "Priority 1", color: "#ef4444" },
-	{ value: "p2", label: "Priority 2", color: "#f97316" },
-	{ value: "p3", label: "Priority 3", color: "#3b82f6" },
-	{ value: "p4", label: "Priority 4", color: "#6b7280" },
-];
+const priorities = PRIORITY_OPTIONS;
 
 const projectKinds: Array<{
 	value: Project["kind"];

@@ -39,7 +39,7 @@ export function logAction(params: LogActionParams) {
 		entityId,
 		entityType,
 		actorId,
-		actorType = "user",
+		actorType,
 		actionType,
 		changes,
 		metadata,
@@ -66,12 +66,10 @@ export function logAction(params: LogActionParams) {
 				});
 		} catch (error) {
 			console.error("Failed to log action:", error);
-			// Fail silently to not impact main flow
 		}
 	};
 
-	// Use simple fire-and-forget
-	performLog();
+	return performLog();
 }
 
 /**
