@@ -105,8 +105,10 @@ export function EditTaskDialog({
 	);
 	const [priority, setPriority] = useState<string>(task.priority || "p4");
 	const [status, setStatus] = useState<string>(task.status || "todo");
+	const [orderNum, setOrderNum] = useState<number | "">(task.orderNum ?? 0);
 	const [comment, setComment] = useState("");
 	const [showAllComments, setShowAllComments] = useState(false);
+	const [lastLoadedTaskId, setLastLoadedTaskId] = useState<string | null>(null);
 
 	// Optimistic state for comments
 	const [optimisticComments, setOptimisticComments] = useState<Comment[]>(
@@ -118,7 +120,12 @@ export function EditTaskDialog({
 		: "Project No project";
 
 	useEffect(() => {
-		if (open) {
+		if (!open) {
+			setLastLoadedTaskId(null);
+			return;
+		}
+
+		if (open && lastLoadedTaskId !== task.id) {
 			setTitle(task.title);
 			setDescription(task.description || "");
 			setProjectId(normalizeSelectableProjectId(projects, task.projectId));
@@ -126,11 +133,13 @@ export function EditTaskDialog({
 			setPlanDate(task.planDate ? new Date(task.planDate) : undefined);
 			setPriority(task.priority || "p4");
 			setStatus(task.status || "todo");
+			setOrderNum(task.orderNum ?? 0);
 			setComment("");
 			setOptimisticComments(task.comments || []);
 			setShowAllComments(false);
+			setLastLoadedTaskId(task.id);
 		}
-	}, [open, projects, task]);
+	}, [open, projects, task, lastLoadedTaskId]);
 
 	const saveChanges = async (
 		updates: {
@@ -141,6 +150,7 @@ export function EditTaskDialog({
 			planDate?: string | null;
 			priority?: string;
 			status?: string;
+			orderNum?: number | string;
 		} = {},
 	) => {
 		try {
@@ -176,6 +186,15 @@ export function EditTaskDialog({
 			if (updates.status !== undefined && updates.status !== task.status) {
 				payload.status = updates.status;
 				hasChanges = true;
+			}
+
+			if (updates.orderNum !== undefined) {
+				const numericOrder =
+					updates.orderNum === "" ? 0 : Number(updates.orderNum);
+				if (numericOrder !== (task.orderNum ?? 0)) {
+					payload.orderNum = numericOrder;
+					hasChanges = true;
+				}
 			}
 
 			// Date handling - compare ISO strings or nulls
@@ -602,6 +621,24 @@ export function EditTaskDialog({
 										))}
 									</SelectContent>
 								</Select>
+							</div>
+
+							<div className="space-y-1">
+								<label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+									Order
+								</label>
+								<Input
+									type="number"
+									value={orderNum}
+									onChange={(e) => {
+										const val =
+											e.target.value === "" ? "" : Number(e.target.value);
+										setOrderNum(val);
+									}}
+									onBlur={() => saveChanges({ orderNum })}
+									className="border-none shadow-none hover:bg-muted/50 focus-visible:bg-transparent focus-visible:ring-0 p-2 h-auto text-sm"
+									placeholder="0"
+								/>
 							</div>
 						</div>
 

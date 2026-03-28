@@ -215,6 +215,12 @@ const createProjectRoadmapSchema = z.object({
 					.enum(["p1", "p2", "p3", "p4"])
 					.optional()
 					.describe("Defaults to p4"),
+				orderNum: z
+					.number()
+					.optional()
+					.describe(
+						"Order number for section ordering (lower numbers appear first).",
+					),
 				subtasks: z
 					.array(
 						z.object({
@@ -456,7 +462,8 @@ export async function createProjectRoadmapTool(
 		const tasksToInsert: Task[] = [];
 		const now = new Date();
 
-		for (const section of parsed.sections) {
+		for (let i = 0; i < parsed.sections.length; i++) {
+			const section = parsed.sections[i];
 			const sectionId = randomUUID();
 
 			// 1. Create the section task
@@ -471,14 +478,15 @@ export async function createProjectRoadmapTool(
 				dueDate: null,
 				planDate: null,
 				completedAt: null,
-				orderNum: 0,
+				orderNum: section.orderNum ?? i, // Set top-level order
 				createdAt: now,
 				updatedAt: now,
 				comments: [],
 			});
 
 			// 2. Create its subtasks
-			for (const sub of section.subtasks) {
+			for (let j = 0; j < section.subtasks.length; j++) {
+				const sub = section.subtasks[j];
 				tasksToInsert.push({
 					id: randomUUID(),
 					title: sub.title,
@@ -490,7 +498,7 @@ export async function createProjectRoadmapTool(
 					dueDate: null,
 					planDate: null,
 					completedAt: null,
-					orderNum: sub.orderNum ?? 0,
+					orderNum: sub.orderNum ?? j,
 					createdAt: now,
 					updatedAt: now,
 					comments: [],
