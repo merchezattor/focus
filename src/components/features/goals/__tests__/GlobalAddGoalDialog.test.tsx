@@ -1,15 +1,15 @@
 import { useAtom } from "jotai";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { isAddGoalOpenAtom } from "@/lib/atoms";
 import { render, screen } from "@/test/test-utils";
-import { GlobalAddGoalDialog, isAddGoalOpenAtom } from "../GlobalAddGoalDialog";
+import { GlobalAddGoalDialog } from "../GlobalAddGoalDialog";
 
-vi.mock("jotai", async () => {
-	const actual = await vi.importActual("jotai");
-	return {
-		...actual,
-		useAtom: vi.fn(),
-	};
-});
+vi.mock("jotai", () => ({
+	atom: (value: unknown) => ({ current: value }),
+	useAtom: vi.fn(),
+	Provider: ({ children }: { children: ReactNode }) => children,
+}));
 
 describe("GlobalAddGoalDialog", () => {
 	beforeEach(() => {

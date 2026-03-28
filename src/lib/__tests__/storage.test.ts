@@ -29,11 +29,41 @@ import {
 	updateTask,
 } from "../storage";
 
+// Helper to create a chainable query result for SELECT queries
+const createSelectResult = (result: unknown[] = []) => {
+	const whereFn = vi.fn().mockReturnValue({
+		groupBy: vi.fn().mockReturnValue({
+			orderBy: vi.fn().mockReturnValue(result),
+			returning: vi.fn().mockReturnValue(result),
+		}),
+		orderBy: vi.fn().mockReturnValue({
+			limit: vi.fn().mockReturnValue(result),
+			returning: vi.fn().mockReturnValue(result),
+		}),
+		limit: vi.fn().mockReturnValue(result),
+		returning: vi.fn().mockReturnValue(result),
+	});
+	return {
+		where: whereFn,
+		leftJoin: vi.fn().mockReturnValue({
+			where: vi.fn().mockReturnValue({
+				groupBy: vi.fn().mockReturnValue({
+					orderBy: vi.fn().mockReturnValue(result),
+					returning: vi.fn().mockReturnValue(result),
+				}),
+				limit: vi.fn().mockReturnValue(result),
+				returning: vi.fn().mockReturnValue(result),
+			}),
+		}),
+	};
+};
+
 const mockDb = {
 	select: vi.fn(),
 	insert: vi.fn(),
 	update: vi.fn(),
 	delete: vi.fn(),
+	transaction: vi.fn(),
 };
 
 vi.mock("@/db", () => ({
@@ -48,13 +78,10 @@ vi.mock("../actions", () => ({
 describe("Storage Layer", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+
+		// Default: return empty results for any select query
 		mockDb.select.mockReturnValue({
-			from: vi.fn(() => ({
-				where: vi.fn(() => ({
-					orderBy: vi.fn(() => []),
-					returning: vi.fn(() => []),
-				})),
-			})),
+			from: vi.fn(() => createSelectResult([])),
 		});
 		mockDb.insert.mockReturnValue({
 			values: vi.fn(() => ({
@@ -73,6 +100,13 @@ describe("Storage Layer", () => {
 				returning: vi.fn(() => []),
 			})),
 		});
+
+		// transaction: calls callback with a tx that supports insert/update/delete
+		mockDb.transaction.mockImplementation(
+			async (callback: (tx: typeof mockDb) => Promise<unknown>) => {
+				return callback(mockDb);
+			},
+		);
 	});
 
 	describe("Task Operations", () => {
@@ -499,6 +533,13 @@ describe("Storage Layer", () => {
 					})),
 				});
 
+				mockDb.select.mockReturnValueOnce({
+					from: vi.fn(() => ({
+						where: vi.fn(() => ({
+							limit: vi.fn().mockReturnValue([{ id: "project-1" }]),
+						})),
+					})),
+				});
 				mockDb.delete = deleteSpy;
 
 				await deleteProject("project-1", "user-123", "user", undefined);

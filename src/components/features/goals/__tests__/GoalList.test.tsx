@@ -1,10 +1,9 @@
 import { screen } from "@testing-library/react";
 import { createStore, Provider } from "jotai";
 import { describe, expect, it } from "vitest";
-import { goalToEditAtom } from "@/lib/atoms";
+import { goalToEditAtom, isAddGoalOpenAtom } from "@/lib/atoms";
 import { createGoal } from "@/test/fixtures";
 import { render } from "@/test/test-utils";
-import { isAddGoalOpenAtom } from "../GlobalAddGoalDialog";
 import { GoalList } from "../GoalList";
 
 function renderWithStore(ui: React.ReactElement) {

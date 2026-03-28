@@ -21,23 +21,36 @@ vi.mock("@/db", () => ({
 }));
 
 // We mock drizzle-orm conditions to easily inspect them
-vi.mock("drizzle-orm", async () => {
-	const actual =
-		await vi.importActual<typeof import("drizzle-orm")>("drizzle-orm");
-
-	const mockSql = vi.fn((strings, ...values) => ({
+vi.mock("drizzle-orm", () => {
+	const mockSql = (strings: TemplateStringsArray, ...values: unknown[]) => ({
 		type: "sql",
 		strings,
 		values,
-	}));
-	(mockSql as any).join = vi.fn((arr) => ({ type: "sql.join", arr }));
+	});
+	(mockSql as unknown as { join: (arr: unknown[]) => unknown }).join = (
+		arr: unknown[],
+	) => ({ type: "sql.join", arr });
 
 	return {
-		...actual,
-		and: vi.fn((...args) => ({ type: "and", args })),
-		eq: vi.fn((col, val) => ({ type: "eq", col, val })),
-		inArray: vi.fn((col, val) => ({ type: "inArray", col, val })),
+		and: (...args: unknown[]) => ({ type: "and", args }),
+		or: (...args: unknown[]) => ({ type: "or", args }),
+		eq: (col: unknown, val: unknown) => ({ type: "eq", col, val }),
+		ne: (col: unknown, val: unknown) => ({ type: "ne", col, val }),
+		inArray: (col: unknown, val: unknown) => ({ type: "inArray", col, val }),
+		notInArray: (col: unknown, val: unknown) => ({
+			type: "notInArray",
+			col,
+			val,
+		}),
+		lt: (col: unknown, val: unknown) => ({ type: "lt", col, val }),
+		lte: (col: unknown, val: unknown) => ({ type: "lte", col, val }),
+		gt: (col: unknown, val: unknown) => ({ type: "gt", col, val }),
+		gte: (col: unknown, val: unknown) => ({ type: "gte", col, val }),
 		sql: mockSql,
+		desc: (col: unknown) => ({ type: "desc", col }),
+		asc: (col: unknown) => ({ type: "asc", col }),
+		count: () => ({ type: "count" }),
+		not: (cond: unknown) => ({ type: "not", cond }),
 	};
 });
 

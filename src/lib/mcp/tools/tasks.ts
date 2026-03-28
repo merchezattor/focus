@@ -496,7 +496,7 @@ export async function createProjectRoadmapTool(
 					dueDate: null,
 					planDate: null,
 					completedAt: null,
-					orderNum: sub.orderNum ?? j,
+					orderNum: sub.orderNum ?? 0,
 					createdAt: now,
 					updatedAt: now,
 					comments: [],
