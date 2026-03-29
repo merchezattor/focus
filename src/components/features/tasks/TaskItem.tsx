@@ -12,6 +12,8 @@ interface TaskItemProps {
 	task: Task;
 	projectName?: string;
 	projectColor?: string;
+	parentTitle?: string;
+	showOrigin?: boolean;
 	onToggle: (id: string, done: boolean) => void;
 	onEdit: (task: Task) => void;
 	compact?: boolean;
@@ -21,6 +23,8 @@ export const TaskItem = memo(function TaskItem({
 	task,
 	projectName,
 	projectColor,
+	parentTitle,
+	showOrigin,
 	onToggle,
 	onEdit,
 	compact,
@@ -71,6 +75,34 @@ export const TaskItem = memo(function TaskItem({
 						!compact && "min-h-[1.25rem]",
 					)}
 				>
+					{showOrigin && (projectName || parentTitle) && (
+						<>
+							{projectName && (
+								<span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+									{projectColor && (
+										<span
+											className="h-2 w-2 rounded-full"
+											style={{ backgroundColor: projectColor }}
+										/>
+									)}
+									<span>{projectName}</span>
+								</span>
+							)}
+							{projectName && parentTitle && (
+								<span className="text-xs text-muted-foreground/60">•</span>
+							)}
+							{parentTitle && (
+								<span className="text-xs text-muted-foreground">
+									{parentTitle}
+								</span>
+							)}
+						</>
+					)}
+
+					{showOrigin && (projectName || parentTitle) && task.dueDate && (
+						<span className="text-xs text-muted-foreground/60">•</span>
+					)}
+
 					{task.dueDate && (
 						<span className="text-xs text-muted-foreground">
 							Due {format(new Date(task.dueDate), "MMM d")}

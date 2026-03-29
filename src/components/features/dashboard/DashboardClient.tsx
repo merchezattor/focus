@@ -6,6 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FocusProjectsCard } from "@/components/features/dashboard/FocusProjectsCard";
+import { NextTasksCard } from "@/components/features/dashboard/NextTasksCard";
+import { getNextTasksByProjectType } from "@/components/features/dashboard/task-groups";
 import { UpcomingMilestonesCard } from "@/components/features/dashboard/UpcomingMilestonesCard";
 import { LinkKanban } from "@/components/features/projects/LinkKanban";
 import { AddTaskDialog } from "@/components/features/tasks/AddTaskDialog";
@@ -186,7 +188,13 @@ export function DashboardClient({
 	const activeProject = projects.find((p) => p.id === selectedProjectId);
 	const isBoardView = activeProject?.viewType === "board";
 	const isRoadmapView = activeProject?.viewType === "roadmap";
-
+	const nextTaskGroups =
+		!selectedProjectId && filterType === "today"
+			? getNextTasksByProjectType({
+					projects,
+					tasks,
+				})
+			: { roadmap: [], board: [], list: [] };
 	const handleBoardTaskUpdate = async (
 		taskId: string,
 		updates: Partial<Task>,
@@ -224,8 +232,8 @@ export function DashboardClient({
 	return (
 		<>
 			<SiteHeader pageTitle={title || activeProject?.name || "Inbox"} />
-			<div className="flex flex-1 flex-col p-4 md:p-6">
-				<div className="@container/main flex flex-1 flex-col gap-2 h-full">
+			<div className="flex min-h-0 flex-1 flex-col p-4 md:p-6">
+				<div className="@container/main flex h-full min-h-0 flex-1 flex-col gap-4">
 					{!selectedProjectId && (
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 							<FocusProjectsCard projects={projectStats} />
@@ -242,7 +250,13 @@ export function DashboardClient({
 							</Card>
 						</div>
 					)}
-					{isBoardView && selectedProjectId ? (
+					{!selectedProjectId && filterType === "today" ? (
+						<NextTasksCard
+							groups={nextTaskGroups}
+							onToggle={handleToggle}
+							onEdit={handleEdit}
+						/>
+					) : isBoardView && selectedProjectId ? (
 						<LinkKanban
 							tasks={filteredTasks}
 							onTaskUpdate={handleBoardTaskUpdate}

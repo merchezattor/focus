@@ -207,4 +207,81 @@ describe("TaskList", () => {
 
 		expect(screen.getByText("Task With Project")).toBeInTheDocument();
 	});
+
+	it("renders additional task groups after the dated tasks", () => {
+		const today = new Date("2026-02-21");
+		const tasks: Task[] = [
+			createTask({ id: "1", title: "Task Today", planDate: today }),
+		];
+		const additionalGroupTasks: Task[] = [
+			createTask({ id: "2", title: "Next roadmap task", planDate: null }),
+		];
+
+		render(
+			<TaskList
+				tasks={tasks}
+				projects={defaultProjects}
+				onToggle={vi.fn()}
+				onEdit={vi.fn()}
+				additionalGroups={[
+					{
+						title: "What's next?",
+						tasks: additionalGroupTasks,
+					},
+				]}
+			/>,
+		);
+
+		expect(
+			screen.getByRole("heading", { name: "What's next?" }),
+		).toBeInTheDocument();
+		expect(screen.getByText("Next roadmap task")).toBeInTheDocument();
+	});
+
+	it("does not show the empty state when additional task groups have tasks", () => {
+		render(
+			<TaskList
+				tasks={[]}
+				projects={defaultProjects}
+				onToggle={vi.fn()}
+				onEdit={vi.fn()}
+				additionalGroups={[
+					{
+						title: "What's next?",
+						tasks: [createTask({ id: "2", title: "Roadmap task" })],
+					},
+				]}
+			/>,
+		);
+
+		expect(screen.queryByText("No tasks yet")).not.toBeInTheDocument();
+		expect(screen.getByText("Roadmap task")).toBeInTheDocument();
+	});
+
+	it("renders project and parent milestone context for additional groups", () => {
+		render(
+			<TaskList
+				tasks={[]}
+				projects={defaultProjects}
+				onToggle={vi.fn()}
+				onEdit={vi.fn()}
+				additionalGroups={[
+					{
+						title: "What's next?",
+						tasks: [createTask({ id: "2", title: "Roadmap task" })],
+						contextByTaskId: {
+							"2": {
+								projectName: "Work",
+								projectColor: "#ef4444",
+								parentTitle: "Phase 1",
+							},
+						},
+					},
+				]}
+			/>,
+		);
+
+		expect(screen.getByText("Work")).toBeInTheDocument();
+		expect(screen.getByText("Phase 1")).toBeInTheDocument();
+	});
 });
