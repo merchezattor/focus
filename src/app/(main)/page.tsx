@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import {
 	getWorkingActionableProjectStats,
 	readActionableProjects,
+	readMilestones,
 	readTasks,
 } from "@/lib/storage";
 
@@ -18,10 +19,11 @@ export default async function TodayPage() {
 		redirect("/login");
 	}
 
-	const [tasks, projects, projectStats] = await Promise.all([
+	const [tasks, projects, projectStats, milestones] = await Promise.all([
 		readTasks(session.user.id),
 		readActionableProjects(session.user.id),
 		getWorkingActionableProjectStats(session.user.id),
+		readMilestones(session.user.id),
 	]);
 
 	return (
@@ -32,6 +34,7 @@ export default async function TodayPage() {
 				initialTasks={tasks}
 				initialProjects={projects}
 				initialProjectStats={projectStats}
+				initialMilestones={milestones}
 				title="Today"
 				filterType="today"
 			/>

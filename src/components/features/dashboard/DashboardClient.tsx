@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FocusProjectsCard } from "@/components/features/dashboard/FocusProjectsCard";
+import { UpcomingMilestonesCard } from "@/components/features/dashboard/UpcomingMilestonesCard";
 import { LinkKanban } from "@/components/features/projects/LinkKanban";
 import { AddTaskDialog } from "@/components/features/tasks/AddTaskDialog";
 import { EditTaskDialog } from "@/components/features/tasks/EditTaskDialog";
@@ -15,12 +16,13 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { tasksAtom } from "@/lib/atoms";
 import type { ProjectStat } from "@/lib/storage";
-import type { Project, Task } from "@/types";
+import type { Milestone, Project, Task } from "@/types";
 
 interface DashboardClientProps {
 	initialTasks: Task[];
 	initialProjects: Project[];
 	initialProjectStats: ProjectStat[];
+	initialMilestones: Milestone[];
 	title?: string;
 	filterType?: "all" | "today";
 }
@@ -29,6 +31,7 @@ export function DashboardClient({
 	initialTasks,
 	initialProjects,
 	initialProjectStats,
+	initialMilestones,
 	title,
 	filterType = "all",
 }: DashboardClientProps) {
@@ -226,16 +229,7 @@ export function DashboardClient({
 					{!selectedProjectId && (
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 							<FocusProjectsCard projects={projectStats} />
-							<Card>
-								<CardHeader className="pb-2">
-									<CardTitle className="text-sm">Placeholder 1</CardTitle>
-								</CardHeader>
-								<CardContent>
-									<div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-										<p className="text-xs">Future widget here</p>
-									</div>
-								</CardContent>
-							</Card>
+							<UpcomingMilestonesCard milestones={initialMilestones} />
 							<Card>
 								<CardHeader className="pb-2">
 									<CardTitle className="text-sm">Placeholder 2</CardTitle>
