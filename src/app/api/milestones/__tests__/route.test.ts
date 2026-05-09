@@ -1,11 +1,19 @@
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockGetAuthenticatedUser = vi.fn();
-const mockReadMilestones = vi.fn();
-const mockCreateMilestone = vi.fn();
-const mockUpdateMilestone = vi.fn();
-const mockDeleteMilestone = vi.fn();
+const {
+	mockGetAuthenticatedUser,
+	mockReadMilestones,
+	mockCreateMilestone,
+	mockUpdateMilestone,
+	mockDeleteMilestone,
+} = vi.hoisted(() => ({
+	mockGetAuthenticatedUser: vi.fn(),
+	mockReadMilestones: vi.fn(),
+	mockCreateMilestone: vi.fn(),
+	mockUpdateMilestone: vi.fn(),
+	mockDeleteMilestone: vi.fn(),
+}));
 
 vi.mock("@/lib/api-auth", () => ({
 	getAuthenticatedUser: (...args: unknown[]) =>
@@ -23,7 +31,7 @@ import { DELETE, GET, POST, PUT } from "../route";
 
 describe("Milestones API", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	it("returns milestones for authenticated users", async () => {

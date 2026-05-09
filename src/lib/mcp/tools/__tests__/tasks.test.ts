@@ -48,7 +48,7 @@ describe("MCP Task Tools", () => {
 	};
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	describe("createTaskTool", () => {

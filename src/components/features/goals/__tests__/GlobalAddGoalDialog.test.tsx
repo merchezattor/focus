@@ -13,7 +13,7 @@ vi.mock("jotai", () => ({
 
 describe("GlobalAddGoalDialog", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	it("renders dialog when atom is true", () => {
