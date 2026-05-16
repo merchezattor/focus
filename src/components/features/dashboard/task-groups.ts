@@ -42,10 +42,17 @@ function getNextTaskForRoadmapProject(projectTasks: Task[]) {
 
 	for (const section of topLevelTasks) {
 		const subtasks = sortedTasks.filter((task) => task.parentId === section.id);
-		const nextSubtask = subtasks.find((task) => task.status !== "done");
 
-		if (nextSubtask) {
-			return nextSubtask;
+		if (subtasks.length === 0) {
+			// Standalone top-level task
+			if (section.status !== "done") {
+				return section;
+			}
+		} else {
+			const nextSubtask = subtasks.find((task) => task.status !== "done");
+			if (nextSubtask) {
+				return nextSubtask;
+			}
 		}
 	}
 
@@ -114,13 +121,22 @@ export function getNextTasksByProjectType({
 		(project) => project.kind === "project" && project.status === "working",
 	);
 
+	if (activeProjects.length === 0) {
+		return groupedTasks;
+	}
+
+	// Index tasks by projectId for performance O(T)
+	const tasksByProject = new Map<string, Task[]>();
+	for (const task of tasks) {
+		if (!task.projectId || task.status === "done" || task.status === "archived")
+			continue;
+		const list = tasksByProject.get(task.projectId) || [];
+		list.push(task);
+		tasksByProject.set(task.projectId, list);
+	}
+
 	for (const project of activeProjects) {
-		const projectTasks = tasks.filter(
-			(task) =>
-				task.projectId === project.id &&
-				task.status !== "done" &&
-				task.status !== "archived",
-		);
+		const projectTasks = tasksByProject.get(project.id) || [];
 
 		if (projectTasks.length === 0) {
 			continue;

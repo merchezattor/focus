@@ -64,7 +64,6 @@ describe("Tasks API", () => {
 			});
 			mockSearchTasks.mockResolvedValueOnce([
 				{ id: "task-1", title: "Task 1", projectId: "project-1" },
-				{ id: "task-2", title: "Task 2", projectId: "project-2" },
 			]);
 
 			const request = {
@@ -76,6 +75,11 @@ describe("Tasks API", () => {
 			expect(response.status).toBe(200);
 			expect(data.tasks).toHaveLength(1);
 			expect(data.tasks[0].projectId).toBe("project-1");
+			expect(mockSearchTasks).toHaveBeenCalledWith("user-123", {
+				dueDateStr: undefined,
+				lastActionType: undefined,
+				projectId: "project-1",
+			});
 		});
 	});
 
