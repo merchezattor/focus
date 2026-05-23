@@ -97,6 +97,12 @@ export async function PATCH(
 			);
 		}
 
+		// Verify task belongs to user before update/sync
+		const existingTask = await getTaskByIdForUser(id, user.id);
+		if (!existingTask) {
+			return NextResponse.json({ error: "Task not found" }, { status: 404 });
+		}
+
 		// Perform Update
 		await updateTask(id, result.data, user.id, actorType, auth.tokenName);
 
