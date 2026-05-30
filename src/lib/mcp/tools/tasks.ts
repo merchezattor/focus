@@ -644,7 +644,7 @@ async function addCommentTool(
 
 		await createComment(parsed.taskId, comment, context.user.id, "agent");
 
-		const task = await getTaskById(parsed.taskId);
+		const task = await getTaskById(parsed.taskId, context.user.id);
 
 		logAction({
 			entityId: parsed.taskId,
