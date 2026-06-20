@@ -687,17 +687,31 @@ describe("Storage Layer", () => {
 			});
 
 			it("should accept taskId, newComments, actorId, actorType, and tokenName and add/delete correctly", async () => {
-				// Mock what's already in the DB
+				// Mock task ownership check (first select in getTaskByIdForUser)
 				mockDb.select.mockReturnValueOnce({
 					from: vi.fn(() => ({
-						where: vi.fn(() => [{ id: "comment-delete" }]), // This one will be deleted
+						where: vi.fn(() => [{ id: "task-1", title: "Test task" }]),
 					})),
 				});
 
-				// Mock getting task for the logAction
+				// Mock comments retrieval (second select in getTaskByIdForUser)
 				mockDb.select.mockReturnValueOnce({
 					from: vi.fn(() => ({
-						where: vi.fn(() => [{ title: "Test task" }]),
+						where: vi.fn(() => [{ id: "comment-delete", task_id: "task-1" }]), // This one will be deleted
+					})),
+				});
+
+				// Mock task retrieval for createComment (third select in createComment -> getTaskByIdForUser)
+				mockDb.select.mockReturnValueOnce({
+					from: vi.fn(() => ({
+						where: vi.fn(() => [{ id: "task-1", title: "Test task" }]),
+					})),
+				});
+
+				// Mock comments retrieval for createComment (fourth select in createComment -> getTaskByIdForUser)
+				mockDb.select.mockReturnValueOnce({
+					from: vi.fn(() => ({
+						where: vi.fn(() => []),
 					})),
 				});
 
