@@ -233,7 +233,7 @@ export async function updateProject(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	const dbUpdates: any = {};
+	const dbUpdates: Partial<typeof projects.$inferInsert> = {};
 	if (updates.name !== undefined) dbUpdates.name = updates.name;
 	if (updates.description !== undefined)
 		dbUpdates.description = updates.description;
@@ -881,7 +881,7 @@ export async function updateTask(
 	}
 
 	// Map partial Task to partial DB Task
-	const dbUpdates: any = {};
+	const dbUpdates: Partial<typeof tasks.$inferInsert> = {};
 	if (updates.title !== undefined) dbUpdates.title = updates.title;
 	if (updates.description !== undefined)
 		dbUpdates.description = updates.description;
