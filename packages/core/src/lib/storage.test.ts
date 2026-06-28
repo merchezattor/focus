@@ -14,7 +14,7 @@ const mockSelect = vi.fn().mockReturnValue({
 	from: mockFrom,
 });
 
-vi.mock("@/db", () => ({
+vi.mock("../db", () => ({
 	getDb: () => ({
 		select: mockSelect,
 	}),

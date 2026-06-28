@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Project } from "@/types";
+import type { Project } from "../../../../types";
 
 const mockReadProjects = vi.fn();
 const mockCreateProject = vi.fn();
 const mockUpdateProject = vi.fn();
 const mockDeleteProject = vi.fn();
 
-vi.mock("@/lib/storage", () => ({
+vi.mock("../../../storage", () => ({
 	readProjects: (...args: unknown[]) => mockReadProjects(...args),
 	createProject: (...args: unknown[]) => mockCreateProject(...args),
 	updateProject: (...args: unknown[]) => mockUpdateProject(...args),

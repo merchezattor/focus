@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { logAction } from "@/lib/actions";
-import { focus_create_agentic_action } from "@/lib/mcp/tools/actions";
-import type { MCPServerContext } from "@/lib/mcp/types";
-import * as storage from "@/lib/storage";
+import { logAction } from "../actions";
+import { focus_create_agentic_action } from "../mcp/tools/actions";
+import type { MCPServerContext } from "../mcp/types";
+import * as storage from "../storage";
 
 const mockDb = {
 	insert: vi.fn().mockReturnValue({
@@ -14,7 +14,7 @@ const mockDb = {
 	transaction: vi.fn(),
 };
 
-vi.mock("@/db", () => ({
+vi.mock("../../db", () => ({
 	getDb: vi.fn(() => mockDb),
 }));
 

@@ -4,14 +4,14 @@ import type {
 	MCPResponse,
 	MCPServerContext,
 	MCPToolHandler,
-} from "@/lib/mcp/types";
+} from "../types";
 import {
 	createProject,
 	deleteProject,
 	readProjects,
 	updateProject,
-} from "@/lib/storage";
-import type { Project } from "@/types/project";
+} from "../../storage";
+import type { Project } from "../../../types/project";
 
 // Input validation schemas
 const listProjectsInputSchema = z.object({

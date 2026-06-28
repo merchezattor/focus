@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Task } from "@/types";
+import type { Task } from "../../../../types";
 
 const mockCreateTasksBulk = vi.fn();
 const mockCreateTask = vi.fn();
@@ -11,7 +11,7 @@ const mockGetTaskByIdForUser = vi.fn();
 const mockCreateComment = vi.fn();
 const mockLogAction = vi.fn();
 
-vi.mock("@/lib/storage", () => ({
+vi.mock("../../../storage", () => ({
 	createTasksBulk: (...args: unknown[]) => mockCreateTasksBulk(...args),
 	createTask: (...args: unknown[]) => mockCreateTask(...args),
 	searchTasks: (...args: unknown[]) => mockSearchTasks(...args),
@@ -22,7 +22,7 @@ vi.mock("@/lib/storage", () => ({
 	createComment: (...args: unknown[]) => mockCreateComment(...args),
 }));
 
-vi.mock("@/lib/actions", () => ({
+vi.mock("../../../actions", () => ({
 	logAction: (...args: unknown[]) => mockLogAction(...args),
 }));
 

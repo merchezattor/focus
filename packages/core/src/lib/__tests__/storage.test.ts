@@ -66,7 +66,7 @@ const mockDb = {
 	transaction: vi.fn(),
 };
 
-vi.mock("@/db", () => ({
+vi.mock("../../db", () => ({
 	getDb: vi.fn(() => mockDb),
 }));
 

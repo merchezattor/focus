@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { logAction } from "@/lib/actions";
-import type { MCPServerContext } from "@/lib/mcp/types";
+import { logAction } from "../../actions";
+import type { MCPServerContext } from "../types";
 import {
 	createComment,
 	createTask,
@@ -11,9 +11,9 @@ import {
 	getTaskByIdForUser,
 	searchTasks,
 	updateTask,
-} from "@/lib/storage";
-import type { Task } from "@/types";
-import { commentSchema } from "@/types/task";
+} from "../../storage";
+import type { Task } from "../../../types";
+import { commentSchema } from "../../../types/task";
 
 // --- Schema Definitions ---
 

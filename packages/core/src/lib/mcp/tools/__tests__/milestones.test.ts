@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Milestone } from "@/types";
+import type { Milestone } from "../../../../types";
 
 const mockReadMilestones = vi.fn();
 const mockCreateMilestone = vi.fn();
 const mockUpdateMilestone = vi.fn();
 const mockDeleteMilestone = vi.fn();
 
-vi.mock("@/lib/storage", () => ({
+vi.mock("../../../storage", () => ({
 	readMilestones: (...args: unknown[]) => mockReadMilestones(...args),
 	createMilestone: (...args: unknown[]) => mockCreateMilestone(...args),
 	updateMilestone: (...args: unknown[]) => mockUpdateMilestone(...args),

@@ -9,7 +9,7 @@ const mockDb = {
 	delete: vi.fn(),
 };
 
-vi.mock("@/db", () => ({
+vi.mock("../../db", () => ({
 	getDb: vi.fn(() => mockDb),
 }));
 
