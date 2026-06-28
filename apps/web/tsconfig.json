@@ -1,0 +1,15 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"types": ["vite/client"],
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"],
+			"next/navigation": ["./src/compat/next-navigation.ts"],
+			"next/link": ["./src/compat/next-link.tsx"]
+		}
+	},
+	"include": ["src", "vite.config.ts"],
+	"exclude": ["node_modules", "dist"]
+}

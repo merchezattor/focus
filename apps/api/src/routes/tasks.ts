@@ -2,6 +2,7 @@ import {
 	createTask,
 	deleteTask,
 	getTaskByIdForUser,
+	getTaskCounts,
 	searchTasks,
 	syncComments,
 	type TaskFilters,
@@ -163,6 +164,18 @@ tasksRouter.get("/search", async (c) => {
 	} catch (error) {
 		console.error("Failed to search tasks:", error);
 		return c.json({ error: "Failed to search tasks" }, 500);
+	}
+});
+
+// GET /api/tasks/counts - per-status counts for the sidebar
+tasksRouter.get("/counts", async (c) => {
+	try {
+		const { user } = c.get("auth");
+		const counts = await getTaskCounts(user.id);
+		return c.json({ counts });
+	} catch (error) {
+		console.error("Failed to get task counts:", error);
+		return c.json({ error: "Failed to get task counts" }, 500);
 	}
 });
 

@@ -61,7 +61,7 @@ describe("Milestones API (Hono)", () => {
 		const res = await app.request("/api/milestones");
 		expect(res.status).toBe(200);
 		expect(h.storage.readMilestones).toHaveBeenCalledWith("user-123");
-		expect(await res.json()).toEqual({
+		expect((await res.json()) as any).toEqual({
 			milestones: [{ id: "milestone-1", title: "Promotion" }],
 		});
 	});
@@ -76,7 +76,7 @@ describe("Milestones API (Hono)", () => {
 				targetDate: "2026-09-01T00:00:00.000Z",
 			}),
 		);
-		const data = await res.json();
+		const data = (await res.json()) as any;
 		expect(res.status).toBe(201);
 		expect(data.milestone.title).toBe("Move to Japan");
 		expect(h.storage.createMilestone).toHaveBeenCalledOnce();

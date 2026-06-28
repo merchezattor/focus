@@ -61,7 +61,7 @@ describe("Tasks API (Hono)", () => {
 			h.state.auth = null;
 			const res = await app.request("/api/tasks");
 			expect(res.status).toBe(401);
-			expect((await res.json()).error).toBe("Unauthorized");
+			expect(((await res.json()) as any).error).toBe("Unauthorized");
 		});
 
 		it("returns tasks for authenticated user", async () => {
@@ -70,7 +70,7 @@ describe("Tasks API (Hono)", () => {
 				{ id: "task-2", title: "Task 2" },
 			]);
 			const res = await app.request("/api/tasks");
-			const data = await res.json();
+			const data = (await res.json()) as any;
 			expect(res.status).toBe(200);
 			expect(data.tasks).toHaveLength(2);
 			expect(h.storage.searchTasks).toHaveBeenCalledWith("user-123", {
@@ -85,7 +85,7 @@ describe("Tasks API (Hono)", () => {
 				{ id: "task-2", projectId: "project-2" },
 			]);
 			const res = await app.request("/api/tasks?projectId=project-1");
-			const data = await res.json();
+			const data = (await res.json()) as any;
 			expect(res.status).toBe(200);
 			expect(data.tasks).toHaveLength(1);
 			expect(data.tasks[0].projectId).toBe("project-1");
@@ -115,7 +115,7 @@ describe("Tasks API (Hono)", () => {
 					projectId: null,
 				}),
 			);
-			const data = await res.json();
+			const data = (await res.json()) as any;
 			expect(res.status).toBe(201);
 			expect(data.task).toBeDefined();
 			expect(data.task.title).toBe("New Task");

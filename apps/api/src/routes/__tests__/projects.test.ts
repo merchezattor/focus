@@ -58,7 +58,7 @@ describe("Projects API (Hono)", () => {
 		h.state.auth = null;
 		const res = await app.request("/api/projects");
 		expect(res.status).toBe(401);
-		expect(await res.json()).toEqual({ error: "Unauthorized" });
+		expect((await res.json()) as any).toEqual({ error: "Unauthorized" });
 	});
 
 	it("returns actionable projects only for authenticated users", async () => {
@@ -68,7 +68,7 @@ describe("Projects API (Hono)", () => {
 		const res = await app.request("/api/projects");
 		expect(res.status).toBe(200);
 		expect(h.storage.readActionableProjects).toHaveBeenCalledWith("user-123");
-		expect(await res.json()).toEqual({
+		expect((await res.json()) as any).toEqual({
 			projects: [
 				{ id: "project-1", name: "Actionable Project", kind: "project" },
 			],
@@ -86,7 +86,7 @@ describe("Projects API (Hono)", () => {
 				isFavorite: false,
 			}),
 		);
-		const data = await res.json();
+		const data = (await res.json()) as any;
 		expect(res.status).toBe(201);
 		expect(data.project.kind).toBe("group");
 		expect(h.storage.createProject).toHaveBeenCalledOnce();

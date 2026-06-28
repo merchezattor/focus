@@ -1,6 +1,7 @@
 import {
 	type EntityType,
 	getActions,
+	getUnreadActionsCount,
 	markActionsRead,
 	markAllActionsRead,
 } from "@focus/core/actions";
@@ -16,6 +17,17 @@ const markReadSchema = z.union([
 export const actionsRouter = new Hono<AppEnv>();
 
 actionsRouter.use("*", requireAuth);
+
+actionsRouter.get("/unread-count", async (c) => {
+	try {
+		const { user } = c.get("auth");
+		const count = await getUnreadActionsCount(user.id);
+		return c.json({ count });
+	} catch (error) {
+		console.error("Failed to get unread actions count:", error);
+		return c.json({ error: "Internal Server Error" }, 500);
+	}
+});
 
 actionsRouter.get("/", async (c) => {
 	try {

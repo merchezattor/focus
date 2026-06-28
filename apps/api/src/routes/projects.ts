@@ -1,7 +1,10 @@
 import {
 	createProject,
 	deleteProject,
+	getWorkingActionableProjectStats,
+	getWorkingProjectStats,
 	readActionableProjects,
+	readProjects,
 	updateProject,
 } from "@focus/core/storage";
 import { type Project, projectSchema } from "@focus/core/types";
@@ -15,10 +18,31 @@ export const projectsRouter = new Hono<AppEnv>();
 
 projectsRouter.use("*", requireAuth);
 
+// GET /api/projects/stats?scope=actionable|working - per-project task stats
+projectsRouter.get("/stats", async (c) => {
+	try {
+		const { user } = c.get("auth");
+		const scope = c.req.query("scope");
+		const stats =
+			scope === "working"
+				? await getWorkingProjectStats(user.id)
+				: await getWorkingActionableProjectStats(user.id);
+		return c.json({ stats });
+	} catch (error) {
+		console.error("Failed to get project stats:", error);
+		return c.json({ error: "Failed to get project stats" }, 500);
+	}
+});
+
 projectsRouter.get("/", async (c) => {
 	try {
 		const { user } = c.get("auth");
-		const projects = await readActionableProjects(user.id);
+		// `?all=true` returns every project (incl. groups) for parent pickers;
+		// default returns only actionable projects (sidebar/dashboard).
+		const all = c.req.query("all") === "true";
+		const projects = all
+			? await readProjects(user.id)
+			: await readActionableProjects(user.id);
 		return c.json({ projects });
 	} catch (error) {
 		console.error("Failed to read projects:", error);
