@@ -146,6 +146,37 @@ docker build --build-arg DATABASE_URL="postgresql://..." -t focus-app:latest .
 docker run -p 3000:3000 -e DATABASE_URL="..." focus-app:latest
 ```
 
+## Self-Hosting with Docker Compose (no Dokploy)
+
+For a homelab or any VPS without Dokploy, `docker-compose.yml` runs the full
+stack — the app plus its PostgreSQL database — on a single host.
+
+```bash
+# 1. Provide secrets (compose loads .env automatically)
+cp .env.docker.example .env
+# Edit .env: set POSTGRES_PASSWORD, BETTER_AUTH_SECRET (openssl rand -base64 32),
+# and point BETTER_AUTH_BASE_URL / NEXT_PUBLIC_APP_URL at how you reach the host
+# (e.g. http://192.168.1.50:3000).
+
+# 2. Build and start in the background
+docker compose up --build -d
+
+# 3. Follow logs (migrations run on app start, after the DB is healthy)
+docker compose logs -f app
+```
+
+The app is then reachable on `APP_PORT` (default `3000`). Postgres data persists
+in the `pgdata` named volume.
+
+Notes:
+- **`DATABASE_URL` uses the `db` service name as host**, not `localhost`. Compose
+  builds it for you from the `POSTGRES_*` vars.
+- The app's [Dockerfile](../Dockerfile) runs `scripts/migrate.mjs` on start, and
+  compose gates the app on the DB healthcheck, so migrations apply automatically.
+- **`NEXT_PUBLIC_APP_URL` is baked in at build time.** After changing it, rebuild
+  with `docker compose up --build -d` — a plain restart won't pick it up.
+- To update after pulling new code: `docker compose up --build -d`.
+
 ## Advanced: Multi-platform Builds
 
 The workflow builds for `linux/amd64`. To add ARM support:

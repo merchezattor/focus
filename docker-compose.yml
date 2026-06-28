@@ -1,0 +1,52 @@
+# Focus — full stack (app + PostgreSQL) for self-hosting without Dokploy.
+#
+#   1. cp .env.docker.example .env   # then fill in the secrets
+#   2. docker compose up --build -d
+#
+# The app image (multi-stage Dockerfile) runs `scripts/migrate.mjs` on start,
+# so migrations are applied automatically once the database is healthy.
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-focus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-focus}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Exposed so you can inspect the DB or run `bun dev` against it from the host.
+    # Comment out to keep Postgres reachable only on the internal compose network.
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-focus} -d ${POSTGRES_DB:-focus}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Host is the `db` service name on the compose network — NOT localhost.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-focus}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-focus}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
+      BETTER_AUTH_BASE_URL: ${BETTER_AUTH_BASE_URL:-http://localhost:3000}
+      # NOTE: NEXT_PUBLIC_* is baked in at BUILD time. Changing it needs a rebuild
+      # (docker compose build --build-arg / up --build), not just a restart.
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+volumes:
+  pgdata:
