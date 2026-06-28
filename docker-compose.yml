@@ -1,10 +1,10 @@
-# Focus — full stack (app + PostgreSQL) for self-hosting without Dokploy.
+# Focus — full stack for self-hosting without Dokploy.
 #
 #   1. cp .env.docker.example .env   # then fill in the secrets
 #   2. docker compose up --build -d
 #
-# The app image (multi-stage Dockerfile) runs `scripts/migrate.mjs` on start,
-# so migrations are applied automatically once the database is healthy.
+# Three services on one origin: Caddy (web) serves the SPA and reverse-proxies
+# /api to the Hono API, which migrates the database on startup once it's healthy.
 
 services:
   db:
@@ -16,7 +16,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-focus}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    # Exposed so you can inspect the DB or run `bun dev` against it from the host.
+    # Exposed so you can inspect the DB or run the app against it from the host.
     # Comment out to keep Postgres reachable only on the internal compose network.
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -27,10 +27,11 @@ services:
       retries: 5
       start_period: 10s
 
-  app:
+  api:
     build:
       context: .
       dockerfile: Dockerfile
+      target: api
     restart: unless-stopped
     depends_on:
       db:
@@ -39,14 +40,22 @@ services:
       # Host is the `db` service name on the compose network — NOT localhost.
       DATABASE_URL: postgresql://${POSTGRES_USER:-focus}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-focus}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
+      # Public origin the app is reached on (no trailing slash). Drives the
+      # auth cookie's Secure flag (https -> Secure) and the trusted origin.
       BETTER_AUTH_BASE_URL: ${BETTER_AUTH_BASE_URL:-http://localhost:3000}
-      # NOTE: NEXT_PUBLIC_* is baked in at BUILD time. Changing it needs a rebuild
-      # (docker compose build --build-arg / up --build), not just a restart.
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    restart: unless-stopped
+    depends_on:
+      - api
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "${APP_PORT:-3000}:80"
 
 volumes:
   pgdata:

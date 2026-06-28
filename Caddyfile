@@ -1,0 +1,17 @@
+# Single front door for Focus: serves the SPA and reverse-proxies the API on
+# the SAME origin, so the better-auth session cookie stays first-party.
+:80 {
+	encode zstd gzip
+
+	# API + auth -> the Hono service.
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+
+	# Everything else -> the static SPA, with history fallback for deep links.
+	handle {
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
+	}
+}

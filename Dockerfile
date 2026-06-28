@@ -1,109 +1,58 @@
-# ============================================
-# Stage 1: Dependencies Installation Stage
-# ============================================
-
-# IMPORTANT: Node.js Version Maintenance
-# This Dockerfile uses Node.js 24.13.0-slim, which was the latest LTS version at the time of writing.
-# To ensure security and compatibility, regularly update the NODE_VERSION ARG to the latest LTS version.
+# syntax=docker/dockerfile:1
+# ============================================================================
+# Focus monorepo image — two build targets:
+#   --target api  -> Node (bundled Hono server + Drizzle migrations)
+#   --target web  -> Caddy serving the static SPA + reverse-proxying /api
+# docker-compose builds both. Keep NODE_VERSION on the latest LTS.
+# ============================================================================
 ARG NODE_VERSION=24.13.0-slim
 
-FROM node:${NODE_VERSION} AS dependencies
-
-# Set working directory
+# ----------------------------------------------------------------------------
+# Stage 1: install workspace dependencies (with dev deps, needed to build)
+# ----------------------------------------------------------------------------
+FROM node:${NODE_VERSION} AS deps
 WORKDIR /app
+RUN corepack enable
+# Copy only manifests first for better layer caching.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/core/package.json packages/core/
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
-# Copy package-related files first to leverage Docker's caching mechanism
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* bun.lock* .npmrc* ./
-
-# Install project dependencies with frozen lockfile for reproducible builds
-RUN --mount=type=cache,target=/root/.npm \
-    --mount=type=cache,target=/usr/local/share/.cache/yarn \
-    --mount=type=cache,target=/root/.local/share/pnpm/store \
-    --mount=type=cache,target=/root/.bun/install/cache \
-  if [ -f package-lock.json ]; then \
-    npm ci --no-audit --no-fund; \
-  elif [ -f yarn.lock ]; then \
-    corepack enable yarn && yarn install --frozen-lockfile --production=false; \
-  elif [ -f pnpm-lock.yaml ]; then \
-    corepack enable pnpm && pnpm install --frozen-lockfile; \
-  elif [ -f bun.lock ]; then \
-    npm install -g bun && bun install --frozen-lockfile; \
-  else \
-    echo "No lockfile found." && exit 1; \
-  fi
-
-# ============================================
-# Stage 2: Build Next.js application in standalone mode
-# ============================================
-
-FROM node:${NODE_VERSION} AS builder
-
-# Set working directory
+# ----------------------------------------------------------------------------
+# Stage 2: build the API bundle and the web static assets
+# ----------------------------------------------------------------------------
+FROM node:${NODE_VERSION} AS build
 WORKDIR /app
-
-# Copy project dependencies from dependencies stage
-COPY --from=dependencies /app/node_modules ./node_modules
-
-# Copy application source code
+RUN corepack enable
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/core/node_modules ./packages/core/node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .
+RUN pnpm --filter @focus/api build && pnpm --filter @focus/web build
 
-ENV NODE_ENV=production
-
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED=1
-
-# Build Next.js application
-RUN --mount=type=cache,target=/app/.next/cache \
-  if [ -f package-lock.json ]; then \
-    npm run build; \
-  elif [ -f yarn.lock ]; then \
-    corepack enable yarn && yarn build; \
-  elif [ -f pnpm-lock.yaml ]; then \
-    corepack enable pnpm && pnpm build; \
-  elif [ -f bun.lock ]; then \
-    npm install -g bun && bun run build; \
-  else \
-    echo "No lockfile found." && exit 1; \
-  fi
-
-# ============================================
-# Stage 3: Run Next.js application
-# ============================================
-
-FROM node:${NODE_VERSION} AS runner
-
-# Set working directory
+# ----------------------------------------------------------------------------
+# Stage 3a: API runtime — bundled server + migrations, no node_modules needed
+# ----------------------------------------------------------------------------
+FROM node:${NODE_VERSION} AS api
 WORKDIR /app
-
-# Set production environment variables
 ENV NODE_ENV=production
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the run time.
-# ENV NEXT_TELEMETRY_DISABLED=1
-
-# Copy production assets
-COPY --from=builder --chown=node:node /app/public ./public
-COPY --from=builder --chown=node:node /app/.next/standalone ./
-COPY --from=builder --chown=node:node /app/.next/static ./.next/static
-COPY --from=builder --chown=node:node /app/.next/server ./.next/server
-
-# Copy database migration assets
-COPY --from=builder --chown=node:node /app/scripts/migrate.mjs ./scripts/migrate.mjs
-COPY --from=builder --chown=node:node /app/drizzle ./drizzle
-COPY --from=dependencies --chown=node:node /app/node_modules/postgres ./node_modules/postgres
-COPY --from=dependencies --chown=node:node /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
-
-# Switch to non-root user for security best practices
+ENV PORT=3001
+ENV RUN_MIGRATIONS=true
+ENV MIGRATIONS_DIR=/app/drizzle
+COPY --from=build --chown=node:node /app/apps/api/dist ./
+COPY --from=build --chown=node:node /app/packages/core/drizzle ./drizzle
 USER node
+EXPOSE 3001
+CMD ["node", "index.js"]
 
-# Expose port 3000 to allow HTTP traffic
-EXPOSE 3000
-
-# Run database migrations, then start Next.js standalone server
-CMD ["sh", "-c", "node scripts/migrate.mjs && node server.js"]
+# ----------------------------------------------------------------------------
+# Stage 3b: Web runtime — Caddy serves the SPA and reverse-proxies /api
+# ----------------------------------------------------------------------------
+FROM caddy:2-alpine AS web
+COPY Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /app/apps/web/dist /srv/web
+EXPOSE 80
