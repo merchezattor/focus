@@ -233,7 +233,7 @@ export async function updateProject(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	const dbUpdates: any = {};
+	const dbUpdates: Partial<typeof projects.$inferInsert> = {};
 	if (updates.name !== undefined) dbUpdates.name = updates.name;
 	if (updates.description !== undefined)
 		dbUpdates.description = updates.description;
@@ -327,7 +327,7 @@ export async function updateGoal(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	const dbUpdates: any = {};
+	const dbUpdates: Partial<typeof goals.$inferInsert> = {};
 	if (updates.name !== undefined) dbUpdates.name = updates.name;
 	if (updates.description !== undefined)
 		dbUpdates.description = updates.description;
@@ -340,7 +340,7 @@ export async function updateGoal(
 		const result = await getDb()
 			.update(goals)
 			.set(dbUpdates)
-			.where(eq(goals.id, id))
+			.where(and(eq(goals.id, id), eq(goals.userId, actorId)))
 			.returning({ name: goals.name });
 
 		logAction({
@@ -364,7 +364,7 @@ export async function deleteGoal(
 ): Promise<void> {
 	const result = await getDb()
 		.delete(goals)
-		.where(eq(goals.id, id))
+		.where(and(eq(goals.id, id), eq(goals.userId, actorId)))
 		.returning({ name: goals.name });
 
 	logAction({
@@ -881,7 +881,7 @@ export async function updateTask(
 	}
 
 	// Map partial Task to partial DB Task
-	const dbUpdates: any = {};
+	const dbUpdates: Partial<typeof tasks.$inferInsert> = {};
 	if (updates.title !== undefined) dbUpdates.title = updates.title;
 	if (updates.description !== undefined)
 		dbUpdates.description = updates.description;
@@ -1062,8 +1062,9 @@ export async function syncComments(
 	const toAdd = newComments.filter((c) => !existingIds.has(c.id));
 
 	if (toAdd.length > 0) {
-		const task = await getTaskById(taskId);
-		const taskTitle = task?.title;
+		const task = await getTaskByIdForUser(taskId, actorId);
+		if (!task) return;
+		const taskTitle = task.title;
 
 		for (const c of toAdd) {
 			await createComment(taskId, c, actorId, actorType);

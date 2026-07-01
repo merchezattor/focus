@@ -52,19 +52,20 @@ describe("Tasks API", () => {
 			expect(response.status).toBe(200);
 			expect(data.tasks).toHaveLength(2);
 			expect(mockSearchTasks).toHaveBeenCalledWith("user-123", {
+				projectId: undefined,
 				dueDateStr: undefined,
 				lastActionType: undefined,
+				status: undefined,
 			});
 		});
 
-		it("should filter tasks by projectId", async () => {
+		it("should pass projectId to searchTasks", async () => {
 			mockGetAuthenticatedUser.mockResolvedValueOnce({
 				user: { id: "user-123" },
 				actorType: "user",
 			});
 			mockSearchTasks.mockResolvedValueOnce([
 				{ id: "task-1", title: "Task 1", projectId: "project-1" },
-				{ id: "task-2", title: "Task 2", projectId: "project-2" },
 			]);
 
 			const request = {
@@ -75,7 +76,12 @@ describe("Tasks API", () => {
 
 			expect(response.status).toBe(200);
 			expect(data.tasks).toHaveLength(1);
-			expect(data.tasks[0].projectId).toBe("project-1");
+			expect(mockSearchTasks).toHaveBeenCalledWith("user-123", {
+				projectId: "project-1",
+				dueDateStr: undefined,
+				lastActionType: undefined,
+				status: undefined,
+			});
 		});
 	});
 
