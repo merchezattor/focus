@@ -75,7 +75,7 @@ export const TaskItem = memo(function TaskItem({
 						!compact && "min-h-[1.25rem]",
 					)}
 				>
-					{showOrigin && (projectName || parentTitle) && (
+					{showOrigin && (
 						<>
 							{projectName && (
 								<span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -99,7 +99,7 @@ export const TaskItem = memo(function TaskItem({
 						</>
 					)}
 
-					{showOrigin && (projectName || parentTitle) && task.dueDate && (
+					{showOrigin && task.dueDate && (
 						<span className="text-xs text-muted-foreground/60">•</span>
 					)}
 

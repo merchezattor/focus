@@ -1,0 +1,45 @@
+$ next dev
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+- Experiments (use with caution):
+  · serverActions
+  · staleTimes
+
+✓ Starting...
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+✓ Ready in 1648ms
+○ Compiling /login ...
+ GET /login 200 in 5.6s (compile: 5.0s, render: 569ms)
+○ Compiling / ...
+⨯ Error: DATABASE_URL environment variable is not set
+    at getDb (src/db/index.ts:26:10)
+    at module evaluation (src/lib/auth.ts:7:32)
+    at module evaluation (src/app/(main)/layout.tsx:15:1)
+    at module evaluation (.next/dev/server/chunks/ssr/[root-of-the-server]__36b16555._.js:18:47)
+  24 | 				return createPlaceholderDb();
+  25 | 			}
+> 26 | 			throw new Error("DATABASE_URL environment variable is not set");
+     | 			      ^
+  27 | 		}
+  28 |
+  29 | 		clientInstance = postgres(connectionString, {
+⨯ Error: DATABASE_URL environment variable is not set
+    at getDb (src/db/index.ts:26:10)
+    at module evaluation (src/lib/auth.ts:7:32)
+    at module evaluation (src/app/(main)/layout.tsx:15:1)
+    at module evaluation (.next/dev/server/chunks/ssr/[root-of-the-server]__36b16555._.js:18:47)
+  24 | 				return createPlaceholderDb();
+  25 | 			}
+> 26 | 			throw new Error("DATABASE_URL environment variable is not set");
+     | 			      ^
+  27 | 		}
+  28 |
+  29 | 		clientInstance = postgres(connectionString, { {
+  page: '/'
+}
+ GET / 500 in 14.9s (compile: 14.7s, render: 227ms)

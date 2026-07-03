@@ -42,8 +42,15 @@ function getNextTaskForRoadmapProject(projectTasks: Task[]) {
 
 	for (const section of topLevelTasks) {
 		const subtasks = sortedTasks.filter((task) => task.parentId === section.id);
-		const nextSubtask = subtasks.find((task) => task.status !== "done");
 
+		if (subtasks.length === 0) {
+			if (section.status !== "done") {
+				return section;
+			}
+			continue;
+		}
+
+		const nextSubtask = subtasks.find((task) => task.status !== "done");
 		if (nextSubtask) {
 			return nextSubtask;
 		}

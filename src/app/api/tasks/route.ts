@@ -118,7 +118,8 @@ export async function GET(request: NextRequest) {
 		const { user } = auth;
 
 		const { searchParams } = new URL(request.url);
-		const projectId = searchParams.get("projectId");
+		const projectId = searchParams.get("projectId") || undefined;
+		const planDateStr = searchParams.get("planDateStr") || undefined;
 
 		const dueDateStr = searchParams.get("dueDateStr") || undefined;
 		const lastActionTypeParam = searchParams.get("lastActionType");
@@ -138,20 +139,13 @@ export async function GET(request: NextRequest) {
 					)
 			: undefined;
 
-		let tasks = await searchTasks(user.id, {
+		const tasks = await searchTasks(user.id, {
 			dueDateStr,
+			planDateStr,
 			lastActionType,
 			status,
+			projectId,
 		});
-
-		// Filter by project if specified
-		if (projectId) {
-			if (projectId === "inbox") {
-				tasks = tasks.filter((task: Task) => task.projectId === null);
-			} else {
-				tasks = tasks.filter((task: Task) => task.projectId === projectId);
-			}
-		}
 
 		return NextResponse.json({ tasks });
 	} catch (error) {

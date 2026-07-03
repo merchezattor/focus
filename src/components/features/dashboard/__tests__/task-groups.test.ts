@@ -167,7 +167,9 @@ describe("getNextTasksByProjectType", () => {
 			tasks,
 		});
 
-		expect(result.roadmap).toEqual([]);
+		expect(result.roadmap.map((entry) => entry.task.id)).toEqual([
+			"roadmap-section",
+		]);
 		expect(result.board).toEqual([]);
 		expect(result.list).toEqual([]);
 	});
