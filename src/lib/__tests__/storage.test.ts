@@ -31,30 +31,28 @@ import {
 
 // Helper to create a chainable query result for SELECT queries
 const createSelectResult = (result: unknown[] = []) => {
-	const whereFn = vi.fn().mockReturnValue({
-		groupBy: vi.fn().mockReturnValue({
-			orderBy: vi.fn().mockReturnValue(result),
-			returning: vi.fn().mockReturnValue(result),
-		}),
-		orderBy: vi.fn().mockReturnValue({
-			limit: vi.fn().mockReturnValue(result),
-			returning: vi.fn().mockReturnValue(result),
-		}),
-		limit: vi.fn().mockReturnValue(result),
-		returning: vi.fn().mockReturnValue(result),
-	});
+	const chain: any = {
+		groupBy: vi.fn(() => chain),
+		orderBy: vi.fn(() => chain),
+		limit: vi.fn(() => chain),
+		returning: vi.fn(() => chain),
+		where: vi.fn(() => chain),
+		leftJoin: vi.fn(() => chain),
+	};
+	// Let's make it a thenable to be safe
+	// biome-ignore lint/suspicious/noThenProperty: necessary for mocking Drizzle's awaitable query builder
+	chain.then = (onFulfilled: any) => {
+		const finalResult = chain._result || result;
+		return Promise.resolve(finalResult).then(onFulfilled);
+	};
+	chain.withResult = (r: any) => {
+		chain._result = r;
+		return chain;
+	};
+
 	return {
-		where: whereFn,
-		leftJoin: vi.fn().mockReturnValue({
-			where: vi.fn().mockReturnValue({
-				groupBy: vi.fn().mockReturnValue({
-					orderBy: vi.fn().mockReturnValue(result),
-					returning: vi.fn().mockReturnValue(result),
-				}),
-				limit: vi.fn().mockReturnValue(result),
-				returning: vi.fn().mockReturnValue(result),
-			}),
-		}),
+		...chain,
+		from: vi.fn(() => chain),
 	};
 };
 
@@ -80,9 +78,7 @@ describe("Storage Layer", () => {
 		vi.clearAllMocks();
 
 		// Default: return empty results for any select query
-		mockDb.select.mockReturnValue({
-			from: vi.fn(() => createSelectResult([])),
-		});
+		mockDb.select.mockImplementation(() => createSelectResult([]));
 		mockDb.insert.mockReturnValue({
 			values: vi.fn(() => ({
 				returning: vi.fn(() => []),
@@ -687,19 +683,20 @@ describe("Storage Layer", () => {
 			});
 
 			it("should accept taskId, newComments, actorId, actorType, and tokenName and add/delete correctly", async () => {
-				// Mock what's already in the DB
-				mockDb.select.mockReturnValueOnce({
-					from: vi.fn(() => ({
-						where: vi.fn(() => [{ id: "comment-delete" }]), // This one will be deleted
-					})),
-				});
-
-				// Mock getting task for the logAction
-				mockDb.select.mockReturnValueOnce({
-					from: vi.fn(() => ({
-						where: vi.fn(() => [{ title: "Test task" }]),
-					})),
-				});
+				// 1. getTaskByIdForUser -> select tasks
+				mockDb.select.mockImplementationOnce(() =>
+					createSelectResult([{ id: "task-1", title: "Test task" }]),
+				);
+				// 2. getTaskByIdForUser -> select comments
+				mockDb.select.mockImplementationOnce(() => createSelectResult([]));
+				// 3. syncComments -> select existing comments
+				mockDb.select.mockImplementationOnce(() =>
+					createSelectResult([{ id: "comment-delete" }]),
+				);
+				// 4. createComment -> select tasks to verify ownership
+				mockDb.select.mockImplementationOnce(() =>
+					createSelectResult([{ id: "task-1" }]),
+				);
 
 				const newComments = [
 					{ id: "comment-add", content: "New comment", postedAt: new Date() },

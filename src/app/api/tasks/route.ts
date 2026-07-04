@@ -41,7 +41,7 @@ const createTaskSchema = taskSchema
 			),
 		// Optional status override - client can specify initial status
 		status: z
-			.enum(["todo", "in_progress", "review", "done", "cold"])
+			.enum(["todo", "in_progress", "review", "done", "cold", "archived"])
 			.optional(),
 		// Optional order number for subtask ordering
 		orderNum: z.number().optional(),
@@ -138,20 +138,12 @@ export async function GET(request: NextRequest) {
 					)
 			: undefined;
 
-		let tasks = await searchTasks(user.id, {
+		const tasks = await searchTasks(user.id, {
+			projectId: projectId || undefined,
 			dueDateStr,
 			lastActionType,
 			status,
 		});
-
-		// Filter by project if specified
-		if (projectId) {
-			if (projectId === "inbox") {
-				tasks = tasks.filter((task: Task) => task.projectId === null);
-			} else {
-				tasks = tasks.filter((task: Task) => task.projectId === projectId);
-			}
-		}
 
 		return NextResponse.json({ tasks });
 	} catch (error) {
