@@ -340,7 +340,7 @@ export async function updateGoal(
 		const result = await getDb()
 			.update(goals)
 			.set(dbUpdates)
-			.where(eq(goals.id, id))
+			.where(and(eq(goals.id, id), eq(goals.userId, actorId)))
 			.returning({ name: goals.name });
 
 		logAction({
@@ -364,7 +364,7 @@ export async function deleteGoal(
 ): Promise<void> {
 	const result = await getDb()
 		.delete(goals)
-		.where(eq(goals.id, id))
+		.where(and(eq(goals.id, id), eq(goals.userId, actorId)))
 		.returning({ name: goals.name });
 
 	logAction({
@@ -552,6 +552,17 @@ export async function searchTasks(
 	if (filters.projectId) {
 		if (filters.projectId === "inbox") {
 			conditions.push(isNull(tasks.project_id));
+
+			// When viewing inbox, we specifically want to see "cold" tasks
+			// We need to find and remove the default "not in [cold, archived]" filter if it exists
+			const statusFilterIndex = conditions.findIndex(
+				(c) => c.toString().includes("NOT IN") && c.toString().includes("cold"),
+			);
+			if (statusFilterIndex !== -1) {
+				conditions.splice(statusFilterIndex, 1);
+				// Still exclude archived
+				conditions.push(ne(tasks.status, "archived"));
+			}
 		} else {
 			conditions.push(eq(tasks.project_id, filters.projectId));
 		}
@@ -1016,7 +1027,12 @@ export async function createComment(
 	comment: Comment,
 	userId?: string,
 	actorType?: "user" | "agent" | "system",
-): Promise<void> {
+): Promise<boolean> {
+	if (userId) {
+		const task = await getTaskByIdForUser(taskId, userId);
+		if (!task) return false;
+	}
+
 	await getDb()
 		.insert(comments)
 		.values({
@@ -1027,6 +1043,8 @@ export async function createComment(
 			userId: userId || comment.userId,
 			actorType: actorType || comment.actorType,
 		});
+
+	return true;
 }
 
 export async function deleteComment(
@@ -1045,11 +1063,11 @@ export async function syncComments(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
-	const existingDbComments = await getDb()
-		.select()
-		.from(comments)
-		.where(eq(comments.task_id, taskId));
-	const existingIds = new Set(existingDbComments.map((c) => c.id));
+	const task = await getTaskByIdForUser(taskId, actorId);
+	if (!task) return;
+
+	const existingDbComments = task.comments || [];
+	const existingIds = new Set(existingDbComments.map((c: Comment) => c.id));
 	const newIds = new Set(newComments.map((c) => c.id));
 
 	// Identify deletions
@@ -1062,11 +1080,11 @@ export async function syncComments(
 	const toAdd = newComments.filter((c) => !existingIds.has(c.id));
 
 	if (toAdd.length > 0) {
-		const task = await getTaskById(taskId);
-		const taskTitle = task?.title;
+		const taskTitle = task.title;
 
 		for (const c of toAdd) {
-			await createComment(taskId, c, actorId, actorType);
+			const success = await createComment(taskId, c, actorId, actorType);
+			if (!success) continue;
 
 			logAction({
 				entityId: taskId,
