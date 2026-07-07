@@ -46,6 +46,41 @@ describe("getNextTasksByProjectType", () => {
 		]);
 	});
 
+	it("returns a top-level task if it has no subtasks and is not done", () => {
+		const roadmapProject = createProject({
+			id: "project-roadmap-flat",
+			viewType: "roadmap",
+			status: "working",
+		});
+
+		const tasks = [
+			createTask({
+				id: "section-done",
+				projectId: roadmapProject.id,
+				parentId: null,
+				orderNum: 0,
+				status: "done",
+			}),
+			createTask({
+				id: "section-todo",
+				title: "Next Section",
+				projectId: roadmapProject.id,
+				parentId: null,
+				orderNum: 1,
+				status: "todo",
+			}),
+		];
+
+		const result = getNextTasksByProjectType({
+			projects: [roadmapProject],
+			tasks,
+		});
+
+		expect(result.roadmap.map((entry) => entry.task.id)).toEqual([
+			"section-todo",
+		]);
+	});
+
 	it("selects the highest-priority TODO task for kanban projects", () => {
 		const boardProject = createProject({
 			id: "project-board",
@@ -158,7 +193,7 @@ describe("getNextTasksByProjectType", () => {
 				id: "roadmap-section",
 				projectId: emptyRoadmapProject.id,
 				parentId: null,
-				status: "todo",
+				status: "done",
 			}),
 		];
 

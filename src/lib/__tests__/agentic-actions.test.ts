@@ -5,11 +5,23 @@ import type { MCPServerContext } from "@/lib/mcp/types";
 import * as storage from "@/lib/storage";
 
 const mockDb = {
-	insert: vi.fn().mockReturnValue({
+	insert: vi.fn(() => ({
 		values: vi.fn().mockResolvedValue(undefined),
-	}),
-	select: vi.fn(),
-	update: vi.fn(),
+	})),
+	select: vi.fn(() => ({
+		from: vi.fn(() => ({
+			where: vi.fn(() => ({
+				orderBy: vi.fn(() => ({
+					limit: vi.fn().mockResolvedValue([]),
+				})),
+			})),
+		})),
+	})),
+	update: vi.fn(() => ({
+		set: vi.fn(() => ({
+			where: vi.fn().mockResolvedValue(undefined),
+		})),
+	})),
 	delete: vi.fn(),
 	transaction: vi.fn(),
 };
