@@ -276,7 +276,7 @@ describe("Storage Layer", () => {
 					})),
 				});
 
-				const result = await getTaskById("non-existent");
+				const result = await getTaskById("non-existent", "test-user");
 				expect(result).toBeUndefined();
 			});
 		});
@@ -687,17 +687,23 @@ describe("Storage Layer", () => {
 			});
 
 			it("should accept taskId, newComments, actorId, actorType, and tokenName and add/delete correctly", async () => {
-				// Mock what's already in the DB
+				// 1. Mock getTaskByIdForUser (first select in syncComments)
 				mockDb.select.mockReturnValueOnce({
 					from: vi.fn(() => ({
-						where: vi.fn(() => [{ id: "comment-delete" }]), // This one will be deleted
+						where: vi.fn(() => [{ title: "Test task", id: "task-1", userId: "user-123" }]),
+					})),
+				});
+				// Comments for getTaskByIdForUser (using findFirst pattern or similar)
+				mockDb.select.mockReturnValueOnce({
+					from: vi.fn(() => ({
+						where: vi.fn().mockReturnValue([]),
 					})),
 				});
 
-				// Mock getting task for the logAction
+				// 2. Mock existingDbComments (second select in syncComments)
 				mockDb.select.mockReturnValueOnce({
 					from: vi.fn(() => ({
-						where: vi.fn(() => [{ title: "Test task" }]),
+						where: vi.fn().mockReturnValue([{ id: "comment-delete" }]), // This one will be deleted
 					})),
 				});
 
