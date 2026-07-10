@@ -7,7 +7,6 @@ import {
 	createTask,
 	createTasksBulk,
 	deleteTask,
-	getTaskById,
 	getTaskByIdForUser,
 	searchTasks,
 	updateTask,
@@ -642,9 +641,24 @@ async function addCommentTool(
 			postedAt: new Date(),
 		});
 
-		await createComment(parsed.taskId, comment, context.user.id, "agent");
+		const task = await getTaskByIdForUser(parsed.taskId, context.user.id);
 
-		const task = await getTaskById(parsed.taskId);
+		if (!task) {
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify({
+							success: false,
+							error: "Task not found or access denied",
+						}),
+					},
+				],
+				isError: true,
+			};
+		}
+
+		await createComment(parsed.taskId, comment, context.user.id, "agent");
 
 		logAction({
 			entityId: parsed.taskId,
@@ -655,7 +669,7 @@ async function addCommentTool(
 			changes: { comments: "added" },
 			metadata: {
 				commentId: comment.id,
-				title: task?.title,
+				title: task.title,
 				tokenName: context.tokenName,
 			},
 			userId: context.user.id,
