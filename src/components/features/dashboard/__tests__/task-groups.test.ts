@@ -142,8 +142,8 @@ describe("getNextTasksByProjectType", () => {
 			viewType: "board",
 			status: "frozen",
 		});
-		const emptyRoadmapProject = createProject({
-			id: "project-roadmap-empty",
+		const roadmapProjectDone = createProject({
+			id: "project-roadmap-done",
 			viewType: "roadmap",
 			status: "working",
 		});
@@ -155,15 +155,14 @@ describe("getNextTasksByProjectType", () => {
 				status: "todo",
 			}),
 			createTask({
-				id: "roadmap-section",
-				projectId: emptyRoadmapProject.id,
-				parentId: null,
-				status: "todo",
+				id: "roadmap-done",
+				projectId: roadmapProjectDone.id,
+				status: "done",
 			}),
 		];
 
 		const result = getNextTasksByProjectType({
-			projects: [frozenProject, emptyRoadmapProject],
+			projects: [frozenProject, roadmapProjectDone],
 			tasks,
 		});
 
