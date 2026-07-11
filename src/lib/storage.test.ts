@@ -2,17 +2,28 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { searchTasks } from "./storage";
 
 // Let's create a robust mock for drizzle-orm's fluent interface
-const mockWhere = vi.fn().mockReturnThis();
-const mockOrderBy = vi.fn().mockReturnThis();
-const mockLimit = vi.fn().mockReturnValue([]);
-const mockFrom = vi.fn().mockReturnValue({
-	where: mockWhere,
-	orderBy: mockOrderBy,
-	limit: mockLimit,
-});
-const mockSelect = vi.fn().mockReturnValue({
-	from: mockFrom,
-});
+const { mockWhere, mockOrderBy, mockLimit, mockFrom, mockSelect } = vi.hoisted(
+	() => {
+		const where = vi.fn().mockReturnThis();
+		const orderBy = vi.fn().mockReturnThis();
+		const limit = vi.fn().mockReturnValue([]);
+		const from = vi.fn().mockReturnValue({
+			where: where,
+			orderBy: orderBy,
+			limit: limit,
+		});
+		const select = vi.fn().mockReturnValue({
+			from: from,
+		});
+		return {
+			mockWhere: where,
+			mockOrderBy: orderBy,
+			mockLimit: limit,
+			mockFrom: from,
+			mockSelect: select,
+		};
+	},
+);
 
 vi.mock("@/db", () => ({
 	getDb: () => ({
@@ -58,7 +69,7 @@ describe("storage.ts - searchTasks", () => {
 	const mockUserId = "user-123";
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	it("Test Case 1: passing lastActionType pushes the subquery condition", async () => {

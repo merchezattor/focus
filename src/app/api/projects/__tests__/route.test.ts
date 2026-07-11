@@ -1,11 +1,19 @@
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockGetAuthenticatedUser = vi.fn();
-const mockReadActionableProjects = vi.fn();
-const mockCreateProject = vi.fn();
-const mockUpdateProject = vi.fn();
-const mockDeleteProject = vi.fn();
+const {
+	mockGetAuthenticatedUser,
+	mockReadActionableProjects,
+	mockCreateProject,
+	mockUpdateProject,
+	mockDeleteProject,
+} = vi.hoisted(() => ({
+	mockGetAuthenticatedUser: vi.fn(),
+	mockReadActionableProjects: vi.fn(),
+	mockCreateProject: vi.fn(),
+	mockUpdateProject: vi.fn(),
+	mockDeleteProject: vi.fn(),
+}));
 
 vi.mock("@/lib/api-auth", () => ({
 	getAuthenticatedUser: (...args: unknown[]) =>
@@ -24,7 +32,7 @@ import { GET, POST, PUT } from "../route";
 
 describe("Projects API", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	describe("GET /api/projects", () => {

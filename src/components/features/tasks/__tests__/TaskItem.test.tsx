@@ -21,7 +21,7 @@ describe("TaskItem", () => {
 	};
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	describe("rendering", () => {

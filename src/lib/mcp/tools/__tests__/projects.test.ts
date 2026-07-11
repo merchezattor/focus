@@ -58,7 +58,7 @@ describe("MCP Project Tools", () => {
 	];
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 		mockReadProjects.mockResolvedValue(mockProjects);
 	});
 

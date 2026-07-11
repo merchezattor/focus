@@ -4,15 +4,17 @@ import { focus_create_agentic_action } from "@/lib/mcp/tools/actions";
 import type { MCPServerContext } from "@/lib/mcp/types";
 import * as storage from "@/lib/storage";
 
-const mockDb = {
-	insert: vi.fn().mockReturnValue({
-		values: vi.fn().mockResolvedValue(undefined),
-	}),
-	select: vi.fn(),
-	update: vi.fn(),
-	delete: vi.fn(),
-	transaction: vi.fn(),
-};
+const { mockDb } = vi.hoisted(() => ({
+	mockDb: {
+		insert: vi.fn().mockReturnValue({
+			values: vi.fn().mockResolvedValue(undefined),
+		}),
+		select: vi.fn(),
+		update: vi.fn(),
+		delete: vi.fn(),
+		transaction: vi.fn(),
+	},
+}));
 
 vi.mock("@/db", () => ({
 	getDb: vi.fn(() => mockDb),

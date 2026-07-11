@@ -27,7 +27,7 @@ afterEach(() => {
 
 describe("AddProjectDialog", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	describe("Add Mode", () => {
@@ -232,7 +232,7 @@ describe("AddProjectDialog", () => {
 
 describe("AddProjectDialog - Edit Mode", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	const projectToEdit = createProject({
@@ -404,7 +404,7 @@ describe("AddProjectDialog - Edit Mode", () => {
 
 describe("AddProjectDialog - Controlled vs Uncontrolled", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	it("works as controlled component when open is true", () => {

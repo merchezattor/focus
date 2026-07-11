@@ -23,7 +23,7 @@ describe("GlobalEditGoalDialog", () => {
 	});
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	it("renders edit dialog when goalToEdit is set", () => {

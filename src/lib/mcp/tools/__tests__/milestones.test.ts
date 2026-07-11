@@ -47,7 +47,7 @@ describe("MCP Milestone Tools", () => {
 	];
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 		mockReadMilestones.mockResolvedValue(mockMilestones);
 		mockCreateMilestone.mockResolvedValue(undefined);
 		mockUpdateMilestone.mockResolvedValue(undefined);

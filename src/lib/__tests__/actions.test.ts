@@ -1,13 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 
-const mockDb = {
-	select: vi.fn(),
-	insert: vi.fn(() => ({
-		values: vi.fn(),
-	})),
-	update: vi.fn(),
-	delete: vi.fn(),
-};
+const { mockDb } = vi.hoisted(() => ({
+	mockDb: {
+		select: vi.fn(),
+		insert: vi.fn(() => ({
+			values: vi.fn(),
+		})),
+		update: vi.fn(),
+		delete: vi.fn(),
+	},
+}));
 
 vi.mock("@/db", () => ({
 	getDb: vi.fn(() => mockDb),

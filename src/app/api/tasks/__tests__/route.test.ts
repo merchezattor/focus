@@ -2,10 +2,17 @@ import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST, PUT } from "../route";
 
-const mockGetAuthenticatedUser = vi.fn();
-const mockSearchTasks = vi.fn();
-const mockCreateTask = vi.fn();
-const mockUpdateTask = vi.fn();
+const {
+	mockGetAuthenticatedUser,
+	mockSearchTasks,
+	mockCreateTask,
+	mockUpdateTask,
+} = vi.hoisted(() => ({
+	mockGetAuthenticatedUser: vi.fn(),
+	mockSearchTasks: vi.fn(),
+	mockCreateTask: vi.fn(),
+	mockUpdateTask: vi.fn(),
+}));
 
 vi.mock("@/lib/api-auth", () => ({
 	getAuthenticatedUser: (...args: unknown[]) =>
@@ -20,7 +27,7 @@ vi.mock("@/lib/storage", () => ({
 
 describe("Tasks API", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	describe("GET /api/tasks", () => {

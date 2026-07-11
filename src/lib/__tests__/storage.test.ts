@@ -29,42 +29,45 @@ import {
 	updateTask,
 } from "../storage";
 
-// Helper to create a chainable query result for SELECT queries
-const createSelectResult = (result: unknown[] = []) => {
-	const whereFn = vi.fn().mockReturnValue({
-		groupBy: vi.fn().mockReturnValue({
-			orderBy: vi.fn().mockReturnValue(result),
-			returning: vi.fn().mockReturnValue(result),
-		}),
-		orderBy: vi.fn().mockReturnValue({
-			limit: vi.fn().mockReturnValue(result),
-			returning: vi.fn().mockReturnValue(result),
-		}),
-		limit: vi.fn().mockReturnValue(result),
-		returning: vi.fn().mockReturnValue(result),
-	});
-	return {
-		where: whereFn,
-		leftJoin: vi.fn().mockReturnValue({
-			where: vi.fn().mockReturnValue({
-				groupBy: vi.fn().mockReturnValue({
-					orderBy: vi.fn().mockReturnValue(result),
-					returning: vi.fn().mockReturnValue(result),
-				}),
+const { createSelectResult, mockDb } = vi.hoisted(() => {
+	const createSelectResult = (result: unknown[] = []) => {
+		const whereFn = vi.fn().mockReturnValue({
+			groupBy: vi.fn().mockReturnValue({
+				orderBy: vi.fn().mockReturnValue(result),
+				returning: vi.fn().mockReturnValue(result),
+			}),
+			orderBy: vi.fn().mockReturnValue({
 				limit: vi.fn().mockReturnValue(result),
 				returning: vi.fn().mockReturnValue(result),
 			}),
-		}),
+			limit: vi.fn().mockReturnValue(result),
+			returning: vi.fn().mockReturnValue(result),
+		});
+		return {
+			where: whereFn,
+			leftJoin: vi.fn().mockReturnValue({
+				where: vi.fn().mockReturnValue({
+					groupBy: vi.fn().mockReturnValue({
+						orderBy: vi.fn().mockReturnValue(result),
+						returning: vi.fn().mockReturnValue(result),
+					}),
+					limit: vi.fn().mockReturnValue(result),
+					returning: vi.fn().mockReturnValue(result),
+				}),
+			}),
+		};
 	};
-};
 
-const mockDb = {
-	select: vi.fn(),
-	insert: vi.fn(),
-	update: vi.fn(),
-	delete: vi.fn(),
-	transaction: vi.fn(),
-};
+	const mockDb = {
+		select: vi.fn(),
+		insert: vi.fn(),
+		update: vi.fn(),
+		delete: vi.fn(),
+		transaction: vi.fn(),
+	};
+
+	return { createSelectResult, mockDb };
+});
 
 vi.mock("@/db", () => ({
 	getDb: vi.fn(() => mockDb),
@@ -77,7 +80,7 @@ vi.mock("../actions", () => ({
 
 describe("Storage Layer", () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 
 		// Default: return empty results for any select query
 		mockDb.select.mockReturnValue({
