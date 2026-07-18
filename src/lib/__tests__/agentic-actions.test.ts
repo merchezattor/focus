@@ -37,7 +37,8 @@ describe("Agentic Actions", () => {
 	};
 
 	beforeEach(() => {
-		vi.resetAllMocks();
+		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	describe("logAction with comment", () => {

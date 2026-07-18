@@ -3,6 +3,15 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getDb } from "@/db";
 import * as schema from "@/db/schema";
 
+const socialProviders: Record<string, any> = {};
+
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+	socialProviders.google = {
+		clientId: process.env.GOOGLE_CLIENT_ID,
+		clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+	};
+}
+
 export const auth = betterAuth({
 	database: drizzleAdapter(getDb(), {
 		provider: "pg",
@@ -21,10 +30,5 @@ export const auth = betterAuth({
 	advanced: {
 		useSecureCookies: true,
 	},
-	socialProviders: {
-		google: {
-			clientId: process.env.GOOGLE_CLIENT_ID!,
-			clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-		},
-	},
+	socialProviders,
 });
