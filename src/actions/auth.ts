@@ -30,8 +30,11 @@ export async function generateApiToken() {
 	});
 	if (!session) throw new Error("Unauthorized");
 
-	const { generateApiToken } = await import("@/lib/crypto");
-	const newToken = generateApiToken();
+	const { generateApiToken: makeToken, hashToken } = await import(
+		"@/lib/crypto"
+	);
+	const newToken = makeToken();
+	const tokenHash = hashToken(newToken);
 
 	const existing = await getDb().query.apiTokens.findFirst({
 		where: eq(apiTokens.userId, session.user.id),
@@ -41,7 +44,7 @@ export async function generateApiToken() {
 		await getDb()
 			.update(apiTokens)
 			.set({
-				token: newToken,
+				token: tokenHash,
 				createdAt: new Date(),
 				name: existing.name || "Default Token",
 			})
@@ -49,7 +52,7 @@ export async function generateApiToken() {
 	} else {
 		await getDb().insert(apiTokens).values({
 			id: crypto.randomUUID(),
-			token: newToken,
+			token: tokenHash,
 			userId: session.user.id,
 			name: "Default Token",
 		});
