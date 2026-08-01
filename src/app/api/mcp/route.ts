@@ -11,6 +11,7 @@ const SESSION_TTL_MS = 30 * 60 * 1000;
 interface SessionEntry {
 	transport: WebStandardStreamableHTTPServerTransport;
 	createdAt: number;
+	userId: string;
 }
 
 const transports = new Map<string, SessionEntry>();
@@ -44,6 +45,16 @@ export async function POST(request: NextRequest) {
 
 		if (sessionId && transports.has(sessionId)) {
 			const entry = transports.get(sessionId)!;
+			if (entry.userId !== auth.user.id) {
+				return new Response(
+					JSON.stringify({
+						jsonrpc: "2.0",
+						error: { code: -32001, message: "Unauthorized" },
+						id: null,
+					}),
+					{ status: 401, headers: { "Content-Type": "application/json" } },
+				);
+			}
 			entry.createdAt = Date.now();
 			const response = await entry.transport.handleRequest(request);
 			return response;
@@ -52,7 +63,11 @@ export async function POST(request: NextRequest) {
 		const transport = new WebStandardStreamableHTTPServerTransport({
 			sessionIdGenerator: () => crypto.randomUUID(),
 			onsessioninitialized: (sid) => {
-				transports.set(sid, { transport, createdAt: Date.now() });
+				transports.set(sid, {
+					transport,
+					createdAt: Date.now(),
+					userId: auth.user.id,
+				});
 			},
 		});
 

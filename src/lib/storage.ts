@@ -340,7 +340,7 @@ export async function updateGoal(
 		const result = await getDb()
 			.update(goals)
 			.set(dbUpdates)
-			.where(eq(goals.id, id))
+			.where(and(eq(goals.id, id), eq(goals.userId, actorId)))
 			.returning({ name: goals.name });
 
 		logAction({
@@ -364,7 +364,7 @@ export async function deleteGoal(
 ): Promise<void> {
 	const result = await getDb()
 		.delete(goals)
-		.where(eq(goals.id, id))
+		.where(and(eq(goals.id, id), eq(goals.userId, actorId)))
 		.returning({ name: goals.name });
 
 	logAction({
