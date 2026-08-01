@@ -5,9 +5,7 @@ import type { MCPServerContext } from "@/lib/mcp/types";
 import * as storage from "@/lib/storage";
 
 const mockDb = {
-	insert: vi.fn().mockReturnValue({
-		values: vi.fn().mockResolvedValue(undefined),
-	}),
+	insert: vi.fn(),
 	select: vi.fn(),
 	update: vi.fn(),
 	delete: vi.fn(),
@@ -38,6 +36,9 @@ describe("Agentic Actions", () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
+		mockDb.insert.mockReturnValue({
+			values: vi.fn().mockResolvedValue(undefined),
+		});
 	});
 
 	describe("logAction with comment", () => {

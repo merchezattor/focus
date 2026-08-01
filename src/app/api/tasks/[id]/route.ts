@@ -48,6 +48,12 @@ export async function PATCH(
 		const { user, actorType } = auth;
 
 		const { id } = await params;
+
+		const existingTask = await getTaskByIdForUser(id, user.id);
+		if (!existingTask) {
+			return NextResponse.json({ error: "Task not found" }, { status: 404 });
+		}
+
 		const body = await request.json();
 
 		// Partial validation for update - all fields are optional
@@ -141,6 +147,11 @@ export async function DELETE(
 		const { user, actorType } = auth;
 
 		const { id } = await params;
+
+		const existingTask = await getTaskByIdForUser(id, user.id);
+		if (!existingTask) {
+			return NextResponse.json({ error: "Task not found" }, { status: 404 });
+		}
 
 		await deleteTask(id, user.id, actorType, auth.tokenName);
 

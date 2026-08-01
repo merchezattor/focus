@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 			const { markAllActionsRead } = await import("@/lib/actions");
 			await markAllActionsRead(auth.user.id);
 		} else if ("ids" in result.data) {
-			await markActionsRead(result.data.ids);
+			await markActionsRead(result.data.ids, auth.user.id);
 		}
 
 		return NextResponse.json({ success: true });
