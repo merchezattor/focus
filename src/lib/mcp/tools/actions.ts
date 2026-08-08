@@ -223,7 +223,7 @@ export const focus_create_agentic_action: MCPToolHandler<
 			};
 		}
 
-		logAction({
+		await logAction({
 			entityId,
 			entityType,
 			actorId: context.user.id,

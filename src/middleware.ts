@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getRateLimitOptions, rateLimit } from "@/lib/rate-limit";
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 
 	if (
@@ -12,7 +12,7 @@ export function proxy(request: NextRequest) {
 	}
 
 	const forwarded = request.headers.get("x-forwarded-for");
-	const ip = forwarded?.split(",")[0]?.trim() || "unknown";
+	const ip = request.ip || forwarded?.split(",")[0]?.trim() || "unknown";
 	const key = `${ip}:${pathname}`;
 	const options = getRateLimitOptions(pathname);
 	const result = rateLimit(key, options);
