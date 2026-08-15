@@ -74,7 +74,7 @@ export async function PATCH(
 					return val;
 				}),
 			status: z
-				.enum(["todo", "in_progress", "review", "done", "cold"])
+				.enum(["todo", "in_progress", "review", "done", "cold", "archived"])
 				.optional(),
 			comments: z
 				.array(
