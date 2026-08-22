@@ -701,6 +701,13 @@ describe("Storage Layer", () => {
 					})),
 				});
 
+				// Mock getting comments for task in getTaskByIdForUser
+				mockDb.select.mockReturnValueOnce({
+					from: vi.fn(() => ({
+						where: vi.fn(() => []),
+					})),
+				});
+
 				const newComments = [
 					{ id: "comment-add", content: "New comment", postedAt: new Date() },
 				];

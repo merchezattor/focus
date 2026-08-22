@@ -1062,7 +1062,7 @@ export async function syncComments(
 	const toAdd = newComments.filter((c) => !existingIds.has(c.id));
 
 	if (toAdd.length > 0) {
-		const task = await getTaskById(taskId);
+		const task = await getTaskByIdForUser(taskId, actorId);
 		const taskTitle = task?.title;
 
 		for (const c of toAdd) {
