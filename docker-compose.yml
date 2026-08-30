@@ -1,10 +1,14 @@
-# Focus — full stack for self-hosting without Dokploy.
+# Focus — full stack for self-hosting.
 #
 #   1. cp .env.docker.example .env   # then fill in the secrets
-#   2. docker compose up --build -d
+#   2. chmod 600 .env
+#   3. docker compose up --build -d
 #
 # Three services on one origin: Caddy (web) serves the SPA and reverse-proxies
 # /api to the Hono API, which migrates the database on startup once it's healthy.
+#
+# Only `web` is published, and only on loopback. Put a reverse proxy (Tailscale
+# Serve, Caddy, nginx) in front of it for remote access — never widen APP_BIND.
 
 services:
   db:
@@ -16,16 +20,20 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-focus}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    # Exposed so you can inspect the DB or run the app against it from the host.
-    # Comment out to keep Postgres reachable only on the internal compose network.
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    # Deliberately not published: only `api` needs it, over the compose network.
+    # For a host-side shell use:
+    #   docker compose exec db psql -U focus focus
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-focus} -d ${POSTGRES_DB:-focus}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   api:
     build:
@@ -38,13 +46,33 @@ services:
         condition: service_healthy
     environment:
       # Host is the `db` service name on the compose network — NOT localhost.
+      # POSTGRES_PASSWORD is interpolated raw, so it must be URL-safe.
       DATABASE_URL: postgresql://${POSTGRES_USER:-focus}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-focus}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
       # Public origin the app is reached on (no trailing slash). Drives the
       # auth cookie's Secure flag (https -> Secure) and the trusted origin.
-      BETTER_AUTH_BASE_URL: ${BETTER_AUTH_BASE_URL:-http://localhost:3000}
+      BETTER_AUTH_BASE_URL: ${BETTER_AUTH_BASE_URL:-http://localhost:3077}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    # node:slim has no curl; node 24 has a global fetch.
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      # Generous: the first boot applies the full migration history.
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   web:
     build:
@@ -53,9 +81,16 @@ services:
       target: web
     restart: unless-stopped
     depends_on:
-      - api
+      api:
+        # Wait for migrations, so Caddy never proxies to a dead upstream.
+        condition: service_healthy
     ports:
-      - "${APP_PORT:-3000}:80"
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-3077}:80"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   pgdata:

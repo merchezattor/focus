@@ -27,3 +27,13 @@ The main goal of Focus is to offer a reliable and fast task manager that doesn't
 - **Human-Agent Collaboration:** Focus keeps everything synchronized. You can check off items manually, or have an AI assistant orchestrate your workflow in the background—all within the same environment.
 
 Seamless integrations with OpenClaw (or any other similar agent) by using MCP and skills allows you to quickly establish your own planning flows. For example, you can create a flow that will automatically plan your week based on your goals and projects.
+
+## Self-hosting
+
+Focus runs as three containers (PostgreSQL + Hono API + Caddy/SPA) built from
+this repo. See [docs/deployment.md](docs/deployment.md).
+
+```bash
+cp .env.docker.example .env && chmod 600 .env   # fill in the secrets
+docker compose up --build -d
+```
