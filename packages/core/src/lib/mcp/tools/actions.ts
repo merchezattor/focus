@@ -133,7 +133,7 @@ export const focus_mark_actions_read: MCPToolHandler<
 
 		const { ids } = parsed.data;
 
-		await markActionsRead(ids);
+		await markActionsRead(ids, context.user.id);
 
 		return {
 			content: [

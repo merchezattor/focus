@@ -81,7 +81,7 @@ actionsRouter.post("/", async (c) => {
 		if ("markAll" in result.data && result.data.markAll) {
 			await markAllActionsRead(user.id);
 		} else if ("ids" in result.data) {
-			await markActionsRead(result.data.ids);
+			await markActionsRead(result.data.ids, user.id);
 		}
 
 		return c.json({ success: true });
