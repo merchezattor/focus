@@ -636,6 +636,19 @@ async function addCommentTool(
 	try {
 		const parsed = addCommentSchema.parse(args);
 
+		const task = await getTaskByIdForUser(parsed.taskId, context.user.id);
+		if (!task) {
+			return {
+				content: [
+					{
+						type: "text",
+						text: "Error adding comment: Access denied or task not found",
+					},
+				],
+				isError: true,
+			};
+		}
+
 		const comment = commentSchema.parse({
 			id: randomUUID(),
 			content: parsed.content,
@@ -643,8 +656,6 @@ async function addCommentTool(
 		});
 
 		await createComment(parsed.taskId, comment, context.user.id, "agent");
-
-		const task = await getTaskById(parsed.taskId);
 
 		logAction({
 			entityId: parsed.taskId,
@@ -655,7 +666,7 @@ async function addCommentTool(
 			changes: { comments: "added" },
 			metadata: {
 				commentId: comment.id,
-				title: task?.title,
+				title: task.title,
 				tokenName: context.tokenName,
 			},
 			userId: context.user.id,

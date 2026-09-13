@@ -178,14 +178,16 @@ describe("actions.ts", () => {
 
 			const dbUrl = process.env.DATABASE_URL;
 			delete process.env.DATABASE_URL;
-			await expect(markActionsRead(["action-1", "action-2"])).rejects.toThrow();
+			await expect(
+				markActionsRead("user-1", ["action-1", "action-2"]),
+			).rejects.toThrow();
 			if (dbUrl) process.env.DATABASE_URL = dbUrl;
 		});
 
 		it("should return early for empty array", async () => {
 			const { markActionsRead } = await import("../actions");
 
-			await expect(markActionsRead([])).resolves.toBeUndefined();
+			await expect(markActionsRead("user-1", [])).resolves.toBeUndefined();
 		});
 
 		it("should accept single action id", async () => {
@@ -193,7 +195,7 @@ describe("actions.ts", () => {
 
 			const dbUrl = process.env.DATABASE_URL;
 			delete process.env.DATABASE_URL;
-			await expect(markActionsRead(["action-1"])).rejects.toThrow();
+			await expect(markActionsRead("user-1", ["action-1"])).rejects.toThrow();
 			if (dbUrl) process.env.DATABASE_URL = dbUrl;
 		});
 	});
