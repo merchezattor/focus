@@ -1,11 +1,7 @@
 import { z } from "zod";
 import { getActions, logAction, markActionsRead } from "../../actions";
-import type {
-	MCPResponse,
-	MCPServerContext,
-	MCPToolHandler,
-} from "../types";
 import { getTaskByIdForUser } from "../../storage";
+import type { MCPResponse, MCPServerContext, MCPToolHandler } from "../types";
 
 const listActionsSchema = z.object({
 	actorType: z
@@ -133,7 +129,7 @@ export const focus_mark_actions_read: MCPToolHandler<
 
 		const { ids } = parsed.data;
 
-		await markActionsRead(ids);
+		await markActionsRead(context.user.id, ids);
 
 		return {
 			content: [

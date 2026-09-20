@@ -1,8 +1,8 @@
+import { getActions, markActionsRead } from "@focus/core/actions";
+import { getDb } from "@focus/core/db";
+import { actions, user } from "@focus/core/schema";
+import { createTask, deleteTask, updateTask } from "@focus/core/storage";
 import { eq } from "drizzle-orm";
-import { getDb } from "../src/db";
-import { actions, user } from "../src/db/schema";
-import { getActions, markActionsRead } from "../src/lib/actions";
-import { createTask, deleteTask, updateTask } from "../src/lib/storage";
 
 async function verify() {
 	console.log("Starting Actions Verification...");
@@ -118,7 +118,7 @@ async function verify() {
 	// 3. Mark as Read
 	if (createLog) {
 		console.log("3. Marking as Read...");
-		await markActionsRead([createLog.id]);
+		await markActionsRead("other-user", [createLog.id]);
 
 		// getActions filers by criteria. If we request isRead=true, we should find it.
 		// But wait, getActions excludes own actions. verify-user created it. other-user reads it.
