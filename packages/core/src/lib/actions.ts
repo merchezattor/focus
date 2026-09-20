@@ -134,13 +134,13 @@ export async function getActions(params: {
 	return result;
 }
 
-export async function markActionsRead(ids: string[]) {
+export async function markActionsRead(userId: string, ids: string[]) {
 	if (ids.length === 0) return;
 
 	await getDb()
 		.update(actions)
 		.set({ isRead: true })
-		.where(inArray(actions.id, ids));
+		.where(and(eq(actions.userId, userId), inArray(actions.id, ids)));
 }
 
 export async function markAllActionsRead(userId: string) {
