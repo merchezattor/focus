@@ -602,12 +602,13 @@ describe("Storage Layer", () => {
 				expect(typeof updateGoal).toBe("function");
 			});
 
-			it("should accept id, updates, actorId, actorType, and tokenName", async () => {
+			it("should accept id, updates, actorId, actorType, and tokenName and enforce ownership", async () => {
+				const whereSpy = vi.fn(() => ({
+					returning: vi.fn(() => [{ name: "Updated Goal" }]),
+				}));
 				mockDb.update.mockReturnValueOnce({
 					set: vi.fn(() => ({
-						where: vi.fn(() => ({
-							returning: vi.fn(() => [{ name: "Updated Goal" }]),
-						})),
+						where: whereSpy,
 					})),
 				});
 
@@ -619,6 +620,7 @@ describe("Storage Layer", () => {
 					undefined,
 				);
 				expect(mockDb.update).toHaveBeenCalled();
+				expect(whereSpy).toHaveBeenCalled();
 			});
 		});
 
@@ -627,15 +629,17 @@ describe("Storage Layer", () => {
 				expect(typeof deleteGoal).toBe("function");
 			});
 
-			it("should accept id, actorId, actorType, and tokenName", async () => {
+			it("should accept id, actorId, actorType, and tokenName and enforce ownership", async () => {
+				const whereSpy = vi.fn(() => ({
+					returning: vi.fn(() => [{ name: "Deleted Goal" }]),
+				}));
 				mockDb.delete.mockReturnValueOnce({
-					where: vi.fn(() => ({
-						returning: vi.fn(() => [{ name: "Deleted Goal" }]),
-					})),
+					where: whereSpy,
 				});
 
 				await deleteGoal("goal-1", "user-123", "user", undefined);
 				expect(mockDb.delete).toHaveBeenCalled();
+				expect(whereSpy).toHaveBeenCalled();
 			});
 		});
 	});

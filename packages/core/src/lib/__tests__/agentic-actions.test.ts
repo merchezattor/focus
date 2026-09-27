@@ -38,6 +38,10 @@ describe("Agentic Actions", () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
+
+		mockDb.insert.mockReturnValue({
+			values: vi.fn().mockResolvedValue(undefined),
+		});
 	});
 
 	describe("logAction with comment", () => {
