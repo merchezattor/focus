@@ -21,7 +21,8 @@
 	},
 	"pnpm": {
 		"overrides": {
-			"@playwright/test": "^1.58.2"
+			"@playwright/test": "^1.58.2",
+			"better-auth": "1.4.19"
 		}
 	},
 	"devDependencies": {
