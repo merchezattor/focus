@@ -32,6 +32,24 @@ needs no CORS, no API base URL, and no build-time public env var.
 **Building with `--target` is required.** A plain `docker build .` with no target
 produces the *last* stage — a Caddy image with no application in it.
 
+### Production dependency versions must be exact
+
+The `api` target's final `node_modules` comes from `pnpm --prod deploy --legacy`,
+not from `pnpm-lock.yaml`. That step resolves fresh against the npm registry on
+every build — it explicitly does not read or write the lockfile — so a `^`/`~`
+range on a runtime dependency of `apps/api` or `packages/core` can silently
+float to a new version on a later rebuild, with no code change to review.
+
+This already happened once: an unpinned `better-auth` range floated to a
+version whose Drizzle schema required a DB column ours didn't have, and broke
+sign-up/sign-in in production for over a week before anyone noticed.
+
+**Every runtime dependency in `apps/api/package.json` and
+`packages/core/package.json` must be an exact version, not a range** (`pnpm.overrides`
+in the root `package.json` pins the same set as defense in depth). If you add a
+new one, pin it exactly and re-run `pnpm install` to update the lockfile —
+don't rely on `^`/`~` for anything that ends up in the API's production image.
+
 ### Migrations
 
 The API image sets `RUN_MIGRATIONS=true`, so `apps/api/src/index.ts` calls
@@ -129,3 +147,4 @@ Restoring: `gunzip -c focus-YYYY-MM-DD.sql.gz | docker compose exec -T db psql -
 | `bind: address already in use` | `APP_PORT` is taken; pick another |
 | SPA loads but every request 502s | API unhealthy — check `docker compose logs api` for a failed migration |
 | Deep links 404 | Caddy's `try_files` fallback in `Caddyfile` was modified |
+| Sign-up/sign-in breaks after a rebuild with no related code change | A `^`/`~`-ranged runtime dependency in `apps/api` or `packages/core` floated to a new version via `pnpm deploy --legacy` (see [Production dependency versions must be exact](#production-dependency-versions-must-be-exact)) — pin it to an exact version and rebuild |
