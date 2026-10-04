@@ -340,19 +340,21 @@ export async function updateGoal(
 		const result = await getDb()
 			.update(goals)
 			.set(dbUpdates)
-			.where(eq(goals.id, id))
+			.where(and(eq(goals.id, id), eq(goals.userId, actorId)))
 			.returning({ name: goals.name });
 
-		logAction({
-			entityId: id,
-			entityType: "goal",
-			actorId: actorId,
-			actorType: actorType,
-			actionType: "update",
-			changes: updates,
-			metadata: { name: result[0]?.name, tokenName },
-			userId: actorId,
-		});
+		if (result.length > 0) {
+			logAction({
+				entityId: id,
+				entityType: "goal",
+				actorId: actorId,
+				actorType: actorType,
+				actionType: "update",
+				changes: updates,
+				metadata: { name: result[0]?.name, tokenName },
+				userId: actorId,
+			});
+		}
 	}
 }
 
@@ -364,18 +366,20 @@ export async function deleteGoal(
 ): Promise<void> {
 	const result = await getDb()
 		.delete(goals)
-		.where(eq(goals.id, id))
+		.where(and(eq(goals.id, id), eq(goals.userId, actorId)))
 		.returning({ name: goals.name });
 
-	logAction({
-		entityId: id,
-		entityType: "goal",
-		actorId: actorId,
-		actorType: actorType,
-		actionType: "delete",
-		metadata: { name: result[0]?.name, tokenName },
-		userId: actorId,
-	});
+	if (result.length > 0) {
+		logAction({
+			entityId: id,
+			entityType: "goal",
+			actorId: actorId,
+			actorType: actorType,
+			actionType: "delete",
+			metadata: { name: result[0]?.name, tokenName },
+			userId: actorId,
+		});
+	}
 }
 
 // --- Milestones ---
@@ -1045,6 +1049,11 @@ export async function syncComments(
 	actorType: ActorType = "user",
 	tokenName?: string,
 ): Promise<void> {
+	const task = await getTaskByIdForUser(taskId, actorId);
+	if (!task) {
+		return;
+	}
+
 	const existingDbComments = await getDb()
 		.select()
 		.from(comments)
@@ -1062,8 +1071,7 @@ export async function syncComments(
 	const toAdd = newComments.filter((c) => !existingIds.has(c.id));
 
 	if (toAdd.length > 0) {
-		const task = await getTaskById(taskId);
-		const taskTitle = task?.title;
+		const taskTitle = task.title;
 
 		for (const c of toAdd) {
 			await createComment(taskId, c, actorId, actorType);

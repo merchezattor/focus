@@ -9,10 +9,14 @@ import {
 } from "@focus/core/storage";
 import { type Project, projectSchema } from "@focus/core/types";
 import { Hono } from "hono";
+import { z } from "zod";
 import { type AppEnv, requireAuth } from "../auth-context";
 
 const createProjectSchema = projectSchema.omit({ id: true });
-const updateProjectSchema = projectSchema.partial().omit({ id: true });
+const updateProjectSchema = projectSchema.partial().omit({ id: true }).extend({
+	parentId: z.string().uuid().nullable().optional(),
+	parentType: z.enum(["goal", "project", "none"]).nullable().optional(),
+});
 
 export const projectsRouter = new Hono<AppEnv>();
 

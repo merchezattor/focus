@@ -63,7 +63,7 @@ const RATE_LIMITS: Record<string, RateLimitOptions> = {
 
 export function getRateLimitOptions(pathname: string): RateLimitOptions {
 	for (const [prefix, opts] of Object.entries(RATE_LIMITS)) {
-		if (pathname.startsWith(prefix)) return opts;
+		if (prefix !== "default" && pathname.startsWith(prefix)) return opts;
 	}
 	return RATE_LIMITS.default;
 }
