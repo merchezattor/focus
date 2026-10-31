@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { Button } from "@/components/ui/button";
 import { isAddProjectOpenAtom } from "@/lib/atoms";
 import type { Project } from "@/types";
-import { ProjectList } from "./ProjectList";
+import { ProjectsTable } from "./ProjectsTable";
 
 interface ProjectsPageClientProps {
 	initialProjects: Project[];
@@ -31,7 +31,7 @@ export function ProjectsPageClient({
 	return (
 		<>
 			<SiteHeader pageTitle="Projects" />
-			<div className="flex flex-1 flex-col p-4 md:p-6 max-w-4xl w-full mx-auto">
+			<div className="flex flex-1 flex-col p-4 md:p-6 w-full">
 				<div className="flex items-center justify-between mb-6">
 					<h1 className="text-2xl font-bold">All Projects</h1>
 					<Button onClick={() => setAddProjectOpen(true)} size="sm">
@@ -39,7 +39,23 @@ export function ProjectsPageClient({
 						Add Project
 					</Button>
 				</div>
-				<ProjectList projects={projects} />
+				{projects.length === 0 ? (
+					<div className="flex flex-col items-center justify-center py-16 text-center h-full">
+						<div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+							<IconPlus className="text-muted-foreground w-8 h-8" />
+						</div>
+						<h3 className="text-lg font-medium mb-2">No projects yet</h3>
+						<p className="text-muted-foreground max-w-sm mb-6">
+							Create your first project to start organizing your work.
+						</p>
+						<Button onClick={() => setAddProjectOpen(true)}>
+							<IconPlus className="w-4 h-4 mr-2" />
+							Add Project
+						</Button>
+					</div>
+				) : (
+					<ProjectsTable projects={projects} />
+				)}
 			</div>
 		</>
 	);
