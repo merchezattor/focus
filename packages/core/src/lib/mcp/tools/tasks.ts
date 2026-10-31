@@ -20,13 +20,15 @@ import type { MCPServerContext } from "../types";
 const statusFilterSchema = z
 	.union([
 		z.literal("all"),
-		z.array(
-			z.enum(["todo", "in_progress", "review", "done", "cold", "archived"]),
-		),
+		z
+			.array(
+				z.enum(["todo", "in_progress", "review", "done", "cold", "archived"]),
+			)
+			.min(1),
 	])
 	.optional()
 	.describe(
-		'Filter by status: "all" (every status, archived included) or an array of todo, in_progress, review, done, cold, archived (OR\'d). Omit for the Default listing, which hides cold and archived.',
+		'Filter by status: "all" (every status, archived included) or an array of todo, in_progress, review, done, cold, archived (OR\'d, non-empty; an empty array is rejected). Omit for the Default listing, which hides cold and archived.',
 	);
 
 const offsetSchema = z

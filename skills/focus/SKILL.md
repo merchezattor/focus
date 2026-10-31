@@ -47,7 +47,7 @@ If you are unsure about exact formatting, check these references:
 - **Never fetch all tasks then filter locally** — Always use server-side filters.
 - **Never guess UUIDs** — Always fetch IDs from list endpoints first.
 - **Never create tasks without priority** — priority is required.
-- **Never use "review" in status filters** — Use only `["todo", "in_progress", "done", "cold"]`.
+- **Never assume the default listing shows everything** — Without `status`, `focus_list_tasks` and `focus_list_inbox` hide `cold` and `archived` tasks. Pass `status: "all"` for every status, or an array of any of `todo`, `in_progress`, `review`, `done`, `cold`, `archived`.
 
 ### Always Do These
 - **Always use filters** — Even simple searches should use the server-side `search` parameter.
@@ -58,7 +58,9 @@ If you are unsure about exact formatting, check these references:
 ### Edge Cases
 - `focus_list_tasks` returns empty array → "No tasks match your filters. Try adjusting the search criteria."
 - If task/project/goal ID doesn't exist → Tool returns error with `isError: true`. Explain clearly to user.
-- Multiple array filters (priority, status) are OR'd within the array, but AND'd between different arrays.
+- Multiple array filters (priority, status) are OR'd within the array, but AND'd between different arrays. An empty `status` array is rejected; omit `status` for the default listing.
+- List results are paged: the response has `page: { total, offset, limit, hasMore }`. While `page.hasMore` is true, call again with `offset` increased by the number of results received.
+- Listed tasks carry `commentCount`, not comment bodies. Use `focus_get_task` to read comments.
 
 ---
 

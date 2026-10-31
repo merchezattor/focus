@@ -73,6 +73,12 @@ describe.each(["focus_list_tasks", "focus_list_inbox"])("%s", (name) => {
 		expect(mockSearchTasksPage.mock.calls[0][1].status).toBeUndefined();
 	});
 
+	it("rejects an empty status array instead of falling back to the Default listing", async () => {
+		const res = await tool(name).handler({ status: [] }, context);
+		expect(res.isError).toBe(true);
+		expect(mockSearchTasksPage).not.toHaveBeenCalled();
+	});
+
 	it("rejects an unknown status", async () => {
 		const res = await tool(name).handler({ status: "bogus" }, context);
 		expect(res.isError).toBe(true);
