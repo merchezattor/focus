@@ -12,6 +12,9 @@ An item with `kind = project`. It holds tasks and has a status.
 An item with `kind = group`. It organises projects and is a valid Parent. It has a status like any project.
 _Avoid_: folder, category
 
+**Kind**
+Whether an item is a Project (`kind = project`) or a Group (`kind = group`). On the Projects page it is a column and a filter, not a section heading.
+
 **Parent**
 The single thing a project or group sits under: one Goal, or one project or group, or nothing ("No Parent"). It is exclusive: never a Goal and a project at once.
 
