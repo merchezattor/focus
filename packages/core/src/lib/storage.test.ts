@@ -5,10 +5,12 @@ import { searchTasks } from "./storage";
 const mockWhere = vi.fn().mockReturnThis();
 const mockOrderBy = vi.fn().mockReturnThis();
 const mockLimit = vi.fn().mockReturnValue([]);
+const mockOffset = vi.fn().mockReturnThis();
 const mockFrom = vi.fn().mockReturnValue({
 	where: mockWhere,
 	orderBy: mockOrderBy,
 	limit: mockLimit,
+	offset: mockOffset,
 });
 const mockSelect = vi.fn().mockReturnValue({
 	from: mockFrom,
@@ -101,5 +103,26 @@ describe("storage.ts - searchTasks", () => {
 			(arg: any) => arg && arg.type === "and", // the nested AND for due_date < today AND completed = false
 		);
 		expect(hasOverdueCondition).toBe(true);
+	});
+
+	it('status "all" adds no status condition', async () => {
+		await searchTasks(mockUserId, { status: "all" });
+		const types = mockWhere.mock.calls[0][0].args.map((a: any) => a?.type);
+		expect(types).toEqual(["eq"]);
+	});
+
+	it("no status keeps the default that hides cold and archived", async () => {
+		await searchTasks(mockUserId, {});
+		const cond = mockWhere.mock.calls[0][0].args.find(
+			(a: any) => a?.type === "notInArray",
+		);
+		expect(cond.val).toEqual(["cold", "archived"]);
+	});
+
+	it("applies offset and id as the final sort key", async () => {
+		await searchTasks(mockUserId, { limit: 5, offset: 10 });
+		expect(mockOffset).toHaveBeenCalledWith(10);
+		expect(mockLimit).toHaveBeenCalledWith(5);
+		expect(mockOrderBy.mock.calls[0]).toHaveLength(3);
 	});
 });

@@ -25,6 +25,7 @@ export const taskSchema = z.object({
 		.optional()
 		.default("todo"),
 	comments: z.array(commentSchema).optional(),
+	commentCount: z.number().int().optional(),
 	orderNum: z.number().default(0),
 	createdAt: z.date(),
 	updatedAt: z.date(),

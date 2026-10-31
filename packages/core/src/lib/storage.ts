@@ -513,7 +513,10 @@ export async function getTaskByIdForUser(
 
 export interface TaskFilters {
 	priority?: ("p1" | "p2" | "p3" | "p4")[];
-	status?: ("todo" | "in_progress" | "review" | "done" | "cold" | "archived")[];
+	// "all" means every stored status, archived included. Omitted = Default listing.
+	status?:
+		| "all"
+		| ("todo" | "in_progress" | "review" | "done" | "cold" | "archived")[];
 	projectId?: string;
 	parentId?: string | null; // UUID or null for top-level
 	dueDateStr?: string; // "today", "overdue", "upcoming", or ISO date
@@ -521,12 +524,12 @@ export interface TaskFilters {
 	search?: string; // title/description search
 	lastActionType?: ActionType[]; // action type filter
 	limit?: number; // max results to return
+	offset?: number; // rows to skip
+	// "count" returns commentCount per task instead of the comment bodies.
+	comments?: "full" | "count";
 }
 
-export async function searchTasks(
-	userId: string,
-	filters: TaskFilters,
-): Promise<Task[]> {
+function buildTaskConditions(userId: string, filters: TaskFilters) {
 	const conditions = [eq(tasks.userId, userId)];
 
 	// 1. Priority (Array)
@@ -535,7 +538,9 @@ export async function searchTasks(
 	}
 
 	// 2. Status (Array)
-	if (filters.status && filters.status.length > 0) {
+	if (filters.status === "all") {
+		// No status condition: every stored status is returned.
+	} else if (filters.status && filters.status.length > 0) {
 		conditions.push(inArray(tasks.status, filters.status));
 
 		// If they explicitly ask for active statuses but NOT "done",
@@ -660,19 +665,45 @@ export async function searchTasks(
 		conditions.push(inArray(tasks.id, latestActionSubquery));
 	}
 
-	// Execute Query
-	const query = getDb()
+	return conditions;
+}
+
+export async function searchTasks(
+	userId: string,
+	filters: TaskFilters,
+): Promise<Task[]> {
+	const conditions = buildTaskConditions(userId, filters);
+
+	// Execute Query. id is the final sort key so pages never overlap or skip.
+	const dbTasks = await getDb()
 		.select()
 		.from(tasks)
 		.where(and(...conditions))
-		.orderBy(tasks.priority, desc(tasks.created_at));
+		.orderBy(tasks.priority, desc(tasks.created_at), tasks.id)
+		.offset(filters.offset ?? 0)
+		.limit(filters.limit ? filters.limit : 100);
 
-	const dbTasks = await (filters.limit
-		? query.limit(filters.limit)
-		: query.limit(100));
+	const taskIds = dbTasks.map((t) => t.id);
+
+	if (filters.comments === "count") {
+		const counts =
+			taskIds.length > 0
+				? await getDb()
+						.select({ taskId: comments.task_id, count: count() })
+						.from(comments)
+						.where(inArray(comments.task_id, taskIds))
+						.groupBy(comments.task_id)
+				: [];
+		const countByTaskId = new Map(
+			counts.map((c) => [c.taskId, Number(c.count)]),
+		);
+		return dbTasks.map((t) => {
+			const { comments: _omit, ...rest } = mapDbTask(t);
+			return { ...rest, commentCount: countByTaskId.get(t.id) ?? 0 };
+		});
+	}
 
 	// Fetch comments scoped to matched tasks only
-	const taskIds = dbTasks.map((t) => t.id);
 	const dbComments =
 		taskIds.length > 0
 			? await getDb()
@@ -683,6 +714,22 @@ export async function searchTasks(
 	const commentsByTaskId = groupCommentsByTaskId(dbComments);
 
 	return dbTasks.map((t) => mapDbTask(t, commentsByTaskId[t.id] || []));
+}
+
+/** A page of matches plus the total number of matches, ignoring limit and offset. */
+export async function searchTasksPage(
+	userId: string,
+	filters: TaskFilters,
+): Promise<{ tasks: Task[]; total: number }> {
+	const conditions = buildTaskConditions(userId, filters);
+	const [tasksPage, totalRows] = await Promise.all([
+		searchTasks(userId, filters),
+		getDb()
+			.select({ count: count() })
+			.from(tasks)
+			.where(and(...conditions)),
+	]);
+	return { tasks: tasksPage, total: Number(totalRows[0]?.count ?? 0) };
 }
 
 export async function readTasks(userId: string): Promise<Task[]> {

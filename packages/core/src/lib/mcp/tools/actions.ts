@@ -28,6 +28,16 @@ const listActionsSchema = z.object({
 		.max(100)
 		.optional()
 		.describe("Max number of results to return. Defaults to 50. Max 100."),
+	includeOwn: z
+		.boolean()
+		.optional()
+		.describe(
+			"Include the owner's own user actions. Defaults to false, which hides them.",
+		),
+	isRead: z
+		.boolean()
+		.optional()
+		.describe("Filter by read state. Omit for both read and unread."),
 });
 
 const markReadSchema = z.object({
@@ -72,7 +82,8 @@ export const focus_list_actions: MCPToolHandler<
 			};
 		}
 
-		const { actorType, entityType, entityId, limit } = parsed.data;
+		const { actorType, entityType, entityId, limit, includeOwn, isRead } =
+			parsed.data;
 
 		const actions = await getActions({
 			userId: context.user.id,
@@ -80,6 +91,8 @@ export const focus_list_actions: MCPToolHandler<
 			entityType,
 			entityId,
 			limit: limit ?? 50,
+			includeOwn,
+			isRead,
 		});
 
 		return {
@@ -266,7 +279,7 @@ export const actionTools = [
 	{
 		name: "focus_list_actions",
 		description:
-			"List activity log entries. Returns: { success, data: { actions } }. Use to see recent user/agent actions. Filter by actorType, entityType, entityId. Defaults to 50 results, max 100.",
+			"List activity log entries. Returns: { success, data: { actions } }. Use to see recent user/agent actions. Filter by actorType, entityType, entityId, isRead. Hides the owner's own user actions unless includeOwn: true. Defaults to 50 results, max 100.",
 		schema: listActionsSchema,
 		handler: focus_list_actions,
 	},
