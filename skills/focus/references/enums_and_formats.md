@@ -15,9 +15,11 @@
 | `"in_progress"` | Currently being worked on |
 | `"review"` | Pending review |
 | `"done"` | Completed |
+| `"cold"` | Backlog (hidden from the default listing) |
+| `"archived"` | Archived (filter only; hidden from the default listing) |
 
 > [!IMPORTANT]
-> **Filter vs. Create/Update mismatch**: When filtering tasks (`focus_list_tasks`, `focus_list_inbox`), the `status` filter only accepts `["todo", "in_progress", "done"]`. The value `"review"` is **not valid** in filter queries. However, `"review"` **is valid** when creating or updating a task.
+> **Status filters**: `focus_list_tasks` and `focus_list_inbox` accept `status: "all"` (every status, archived included) or a non-empty array of any stored status: `todo`, `in_progress`, `review`, `done`, `cold`, `archived`. Without `status`, the default listing hides `cold` and `archived`. Create/update accept `todo`, `in_progress`, `review`, `done`, `cold`.
 
 ### Date Format
 All dates must be **ISO 8601 UTC** strings with a `Z` suffix:

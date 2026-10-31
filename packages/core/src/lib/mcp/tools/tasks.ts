@@ -10,12 +10,35 @@ import {
 	deleteTask,
 	getTaskById,
 	getTaskByIdForUser,
-	searchTasks,
+	searchTasksPage,
 	updateTask,
 } from "../../storage";
 import type { MCPServerContext } from "../types";
 
 // --- Schema Definitions ---
+
+const statusFilterSchema = z
+	.union([
+		z.literal("all"),
+		z
+			.array(
+				z.enum(["todo", "in_progress", "review", "done", "cold", "archived"]),
+			)
+			.min(1),
+	])
+	.optional()
+	.describe(
+		'Filter by status: "all" (every status, archived included) or an array of todo, in_progress, review, done, cold, archived (OR\'d, non-empty; an empty array is rejected). Omit for the Default listing, which hides cold and archived.',
+	);
+
+const offsetSchema = z
+	.number()
+	.int()
+	.min(0)
+	.optional()
+	.describe(
+		"Number of results to skip. Defaults to 0. Continue with offset while page.hasMore is true.",
+	);
 
 const listTasksSchema = z.object({
 	priority: z
@@ -24,12 +47,7 @@ const listTasksSchema = z.object({
 		.describe(
 			"Filter by priority. p1=High, p2=Medium, p3=Low, p4=None. Multiple values are OR'd.",
 		),
-	status: z
-		.array(z.enum(["todo", "in_progress", "done", "cold"]))
-		.optional()
-		.describe(
-			'Filter by status. NOTE: "review" is NOT valid here (only in create/update). Multiple values are OR\'d.',
-		),
+	status: statusFilterSchema,
 
 	projectId: z
 		.string()
@@ -71,6 +89,7 @@ const listTasksSchema = z.object({
 		.max(100)
 		.optional()
 		.describe("Max results to return. Defaults to 10, max 100."),
+	offset: offsetSchema,
 	lastActionType: z
 		.array(
 			z.enum([
@@ -265,12 +284,7 @@ const listInboxSchema = z.object({
 		.describe(
 			"Filter by priority. p1=High, p2=Medium, p3=Low, p4=None. Multiple values are OR'd.",
 		),
-	status: z
-		.array(z.enum(["todo", "in_progress", "done", "cold"]))
-		.optional()
-		.describe(
-			'Filter by status. NOTE: "review" is NOT valid here (only in create/update). Multiple values are OR\'d.',
-		),
+	status: statusFilterSchema,
 
 	dueDate: z
 		.union([z.enum(["today", "overdue", "upcoming"]), z.string()])
@@ -297,6 +311,7 @@ const listInboxSchema = z.object({
 		.max(100)
 		.optional()
 		.describe("Max results to return. Defaults to 10, max 100."),
+	offset: offsetSchema,
 	lastActionType: z
 		.array(
 			z.enum([
@@ -329,7 +344,10 @@ async function listTasks(
 	try {
 		const parsed = listTasksSchema.parse(args);
 
-		const tasks = await searchTasks(context.user.id, {
+		const limit = parsed.limit ?? 10;
+		const offset = parsed.offset ?? 0;
+
+		const { tasks, total } = await searchTasksPage(context.user.id, {
 			priority: parsed.priority,
 			status: parsed.status,
 			projectId: parsed.projectId,
@@ -338,12 +356,23 @@ async function listTasks(
 			planDateStr: parsed.planDate,
 			search: parsed.search,
 			lastActionType: parsed.lastActionType as any,
-			limit: parsed.limit ?? 10,
+			limit,
+			offset,
+			comments: "count",
 		});
+		const page = {
+			total,
+			offset,
+			limit,
+			hasMore: offset + tasks.length < total,
+		};
 
 		return {
 			content: [
-				{ type: "text", text: JSON.stringify({ success: true, data: tasks }) },
+				{
+					type: "text",
+					text: JSON.stringify({ success: true, data: tasks, page }),
+				},
 			],
 		};
 	} catch (error) {
@@ -369,22 +398,40 @@ async function listInbox(
 	try {
 		const parsed = listInboxSchema.parse(args);
 
-		const inboxTasks = await searchTasks(context.user.id, {
-			priority: parsed.priority,
-			status: parsed.status,
-			projectId: "inbox",
-			dueDateStr: parsed.dueDate,
-			planDateStr: parsed.planDate,
-			search: parsed.search,
-			lastActionType: parsed.lastActionType as any,
-			limit: parsed.limit ?? 10,
-		});
+		const limit = parsed.limit ?? 10;
+		const offset = parsed.offset ?? 0;
+
+		const { tasks: inboxTasks, total } = await searchTasksPage(
+			context.user.id,
+			{
+				priority: parsed.priority,
+				status: parsed.status,
+				projectId: "inbox",
+				dueDateStr: parsed.dueDate,
+				planDateStr: parsed.planDate,
+				search: parsed.search,
+				lastActionType: parsed.lastActionType as any,
+				limit,
+				offset,
+				comments: "count",
+			},
+		);
+		const page = {
+			total,
+			offset,
+			limit,
+			hasMore: offset + inboxTasks.length < total,
+		};
 
 		return {
 			content: [
 				{
 					type: "text",
-					text: JSON.stringify({ success: true, data: inboxTasks }),
+					text: JSON.stringify({
+						success: true,
+						data: inboxTasks,
+						page,
+					}),
 				},
 			],
 		};
@@ -739,14 +786,14 @@ export const taskTools = [
 	{
 		name: "focus_list_tasks",
 		description:
-			"List and search tasks with filters. Returns: Array of Task objects (default 10, max 100). Use focus_list_projects to get valid projectId values. Note: status filter excludes 'review'.",
+			'List and search tasks with filters. Returns: { success, data: Task[], page: { total, offset, limit, hasMore } } (default limit 10, max 100). If page.hasMore is true, call again with offset to continue. Without status, the Default listing hides cold and archived tasks; use status: "all" for everything, or an array such as ["review"]. Tasks carry commentCount, not comment bodies; use focus_get_task for comments. Use focus_list_projects to get valid projectId values.',
 		schema: listTasksSchema,
 		handler: listTasks,
 	},
 	{
 		name: "focus_list_inbox",
 		description:
-			"List tasks without a project (inbox). Returns: Array of Task objects (default 10, max 100). Use when: You need unassigned tasks. For project tasks, use focus_list_tasks.",
+			'List tasks without a project (inbox). Returns: { success, data: Task[], page: { total, offset, limit, hasMore } } (default limit 10, max 100). If page.hasMore is true, call again with offset to continue. Without status, the Default listing hides cold and archived tasks; use status: "all" for everything. Tasks carry commentCount, not comment bodies; use focus_get_task for comments. For project tasks, use focus_list_tasks.',
 		schema: listInboxSchema,
 		handler: listInbox,
 	},
@@ -760,7 +807,7 @@ export const taskTools = [
 	{
 		name: "focus_create_task",
 		description:
-			"Create a new task with title and priority. Returns: Complete Task with generated id, status defaults to 'todo'. Use focus_list_projects first to get valid projectId.",
+			"Create a new task with title and priority. Returns: Complete Task with generated id, status defaults to 'cold' (backlog), not 'todo'; pass status: 'todo' for active work. Use focus_list_projects first to get valid projectId.",
 		schema: createTaskSchema,
 		handler: createTaskTool,
 	},
@@ -774,7 +821,7 @@ export const taskTools = [
 	{
 		name: "focus_update_task",
 		description:
-			"Update an existing task by ID. Returns: Updated Task object. Partial update: only include changed fields. Set nullable fields to null to clear (projectId, dueDate, planDate).",
+			"Update an existing task by ID. Returns: Updated Task object. Partial update: only include changed fields. To complete a task, set status to 'done'. Set nullable fields to null to clear (projectId, dueDate, planDate).",
 		schema: updateTaskSchema,
 		handler: updateTaskTool,
 	},

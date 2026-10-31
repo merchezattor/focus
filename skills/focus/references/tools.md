@@ -9,7 +9,7 @@ List and search tasks with server-side filtering. **ALWAYS use filters** — nev
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `priority` | `string[]` | No | Filter by priority: `["p1", "p2", "p3", "p4"]` |
-| `status` | `string[]` | No | Filter by status: `["todo", "in_progress", "done", "cold"]` (review NOT valid in filters) |
+| `status` | `"all"` \| `string[]` | No | `"all"` for every status (archived included), or an array of `todo`, `in_progress`, `review`, `done`, `cold`, `archived` (OR'd; must be non-empty). Omit for the default listing, which hides `cold` and `archived`. |
 | `completed` | `boolean` | No | Filter by completion flag |
 | `projectId` | `string` | No | Filter to specific project UUID |
 | `dueDate` | `string` | No | `"today"`, `"overdue"`, `"upcoming"`, or ISO date |
@@ -17,8 +17,9 @@ List and search tasks with server-side filtering. **ALWAYS use filters** — nev
 | `search` | `string` | No | Case-insensitive text search in title/description |
 | `lastActionType` | `string[]` | No | Filter by most recent action: `["create", "update", "reviewed", "groomed", "processed", "pending"]` |
 | `limit` | `number` | No | Max results to return (1–100, default: 10) |
+| `offset` | `number` | No | Results to skip (default: 0). Continue with it while `page.hasMore` is true |
 
-**Returns**: `{ success: true, data: Task[] }`
+**Returns**: `{ success: true, data: Task[], page: { total, offset, limit, hasMore } }`. Each task has `commentCount` instead of comment bodies; use `focus_get_task` for comments. `focus_list_inbox` (tasks without a project) takes the same `status`, `limit`, `offset` and returns the same shape.
 
 #### `focus_get_task`
 Get a single task by ID. Returns complete Task with comments. Use to verify after create/update or check current state of a known task.

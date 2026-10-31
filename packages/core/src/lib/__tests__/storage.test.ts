@@ -308,7 +308,9 @@ describe("Storage Layer", () => {
 					from: vi.fn(() => ({
 						where: vi.fn(() => ({
 							orderBy: vi.fn(() => ({
-								limit: vi.fn(() => []),
+								offset: vi.fn(() => ({
+									limit: vi.fn(() => []),
+								})),
 							})),
 						})),
 					})),
