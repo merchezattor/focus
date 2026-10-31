@@ -48,8 +48,6 @@ next-env.d.ts
 
 .sisyphus
 
-/docs
-
 .agents
 # Added by code-review-graph
 .code-review-graph/
