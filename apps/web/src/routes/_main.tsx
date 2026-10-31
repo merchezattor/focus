@@ -1,3 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import type { CSSProperties } from "react";
 import { GlobalAddGoalDialog } from "@/components/features/goals/GlobalAddGoalDialog";
 import { GlobalEditGoalDialog } from "@/components/features/goals/GlobalEditGoalDialog";
 import { GlobalAddMilestoneDialog } from "@/components/features/milestones/GlobalAddMilestoneDialog";
@@ -15,9 +18,6 @@ import {
 	taskCountsQuery,
 	unreadCountQuery,
 } from "@/lib/queries";
-import { useQuery } from "@tanstack/react-query";
-import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
-import type { CSSProperties } from "react";
 
 export const Route = createFileRoute("/_main")({
 	beforeLoad: async () => {

@@ -255,7 +255,9 @@ export function useGeneratedOptions<TData>(
 				if (limitToFilteredRows) {
 					const occurrenceMap = new Map<string, boolean>();
 					// counts map already has keys from optionSourceRows
-					counts.forEach((_, key) => occurrenceMap.set(key, true));
+					counts.forEach((_, key) => {
+						occurrenceMap.set(key, true);
+					});
 
 					result[colId] = meta.options.filter((opt: Option) =>
 						occurrenceMap.has(opt.value),

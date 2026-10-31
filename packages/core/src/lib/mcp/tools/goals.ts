@@ -1,7 +1,7 @@
 import { z } from "zod";
-import type { MCPToolHandler } from "../types";
-import { createGoal, deleteGoal, readGoals, updateGoal } from "../../storage";
 import type { Goal } from "../../../types/goal";
+import { createGoal, deleteGoal, readGoals, updateGoal } from "../../storage";
+import type { MCPToolHandler } from "../types";
 
 /**
  * Generate a new UUID for goal IDs

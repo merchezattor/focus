@@ -14,7 +14,8 @@
 			"**/*.jsx",
 			"**/*.mjs",
 			"**/*.cjs",
-			"**/*.json"
+			"**/*.json",
+			"!**/routeTree.gen.ts"
 		]
 	},
 	"formatter": {

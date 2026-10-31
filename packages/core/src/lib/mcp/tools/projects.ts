@@ -1,17 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import type {
-	MCPResponse,
-	MCPServerContext,
-	MCPToolHandler,
-} from "../types";
+import type { Project } from "../../../types/project";
 import {
 	createProject,
 	deleteProject,
 	readProjects,
 	updateProject,
 } from "../../storage";
-import type { Project } from "../../../types/project";
+import type { MCPResponse, MCPServerContext, MCPToolHandler } from "../types";
 
 // Input validation schemas
 const listProjectsInputSchema = z.object({

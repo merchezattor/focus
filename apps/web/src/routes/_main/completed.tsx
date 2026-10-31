@@ -1,8 +1,8 @@
-import { SiteHeader } from "@/components/layout/site-header";
-import { CompletedClient } from "@/pages/CompletedClient";
-import { projectsQuery, tasksQuery } from "@/lib/queries";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/layout/site-header";
+import { projectsQuery, tasksQuery } from "@/lib/queries";
+import { CompletedClient } from "@/pages/CompletedClient";
 
 export const Route = createFileRoute("/_main/completed")({
 	component: Completed,

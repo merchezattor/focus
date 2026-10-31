@@ -1,13 +1,9 @@
 {
-  "mcpServers": {
-    "code-review-graph": {
-      "command": "uvx",
-      "args": [
-        "code-review-graph",
-        "serve"
-      ],
-      "cwd": "/Users/mikhailukhin/Documents/repos/focus",
-      "type": "stdio"
-    }
-  }
+	"mcpServers": {
+		"code-review-graph": {
+			"command": "uvx",
+			"args": ["code-review-graph", "serve"],
+			"type": "stdio"
+		}
+	}
 }

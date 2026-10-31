@@ -5,6 +5,7 @@
 #   --target web  -> Caddy serving the static SPA + reverse-proxying /api
 # docker-compose builds both. Keep NODE_VERSION on the latest LTS.
 # ============================================================================
+# Keep in sync with .nvmrc (CI reads that file).
 ARG NODE_VERSION=24.13.0-slim
 
 # ----------------------------------------------------------------------------

@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import { DashboardClient } from "@/components/features/dashboard/DashboardClient";
 import {
 	milestonesQuery,
@@ -5,8 +7,6 @@ import {
 	projectsQuery,
 	tasksQuery,
 } from "@/lib/queries";
-import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_main/")({
 	component: Dashboard,

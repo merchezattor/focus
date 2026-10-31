@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import type { MCPResponse, MCPToolHandler } from "../types";
+import type { Milestone } from "../../../types";
 import {
 	createMilestone,
 	deleteMilestone,
 	readMilestones,
 	updateMilestone,
 } from "../../storage";
-import type { Milestone } from "../../../types";
+import type { MCPResponse, MCPToolHandler } from "../types";
 
 const listMilestonesInputSchema = z.object({});
 

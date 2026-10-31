@@ -1,7 +1,7 @@
-import { GoalsPageClient } from "@/components/features/goals/GoalsPageClient";
-import { goalsQuery } from "@/lib/queries";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { GoalsPageClient } from "@/components/features/goals/GoalsPageClient";
+import { goalsQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_main/goals")({
 	component: Goals,
