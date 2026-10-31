@@ -12,14 +12,14 @@
 	},
 	"dependencies": {
 		"@focus/core": "workspace:*",
-		"@hono/node-server": "^2.0.6",
-		"@modelcontextprotocol/sdk": "^1.26.0",
-		"better-auth": "^1.4.18",
-		"dotenv": "^17.2.3",
-		"drizzle-orm": "^0.45.1",
-		"hono": "^4.12.27",
-		"postgres": "^3.4.8",
-		"zod": "^4.3.6"
+		"@hono/node-server": "2.0.6",
+		"@modelcontextprotocol/sdk": "1.27.0",
+		"better-auth": "1.4.19",
+		"dotenv": "17.3.1",
+		"drizzle-orm": "0.45.1",
+		"hono": "4.12.27",
+		"postgres": "3.4.8",
+		"zod": "4.3.6"
 	},
 	"devDependencies": {
 		"@types/node": "^20",
