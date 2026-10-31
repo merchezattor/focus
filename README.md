@@ -1,5 +1,31 @@
 # Focus
 
+High-level structure: two apps share `@focus/core`, and the self-hosted Docker stack runs three containers behind one origin.
+
+```mermaid
+flowchart LR
+    subgraph Workspace["pnpm workspace"]
+        web["apps/web<br/>@focus/web (SPA)"]
+        api["apps/api<br/>@focus/api (Hono)"]
+        core["packages/core<br/>@focus/core (DB, schema, actions)"]
+        web -. uses .-> core
+        api -. uses .-> core
+    end
+
+    subgraph Stack["docker-compose.yml"]
+        user(["Browser"])
+        caddy["web container<br/>Caddy: serves SPA, proxies /api"]
+        apic["api container<br/>Hono API"]
+        db[("db container<br/>PostgreSQL 17")]
+        user -->|":3077 on loopback"| caddy
+        caddy -->|"/api"| apic
+        apic -->|"DATABASE_URL :5432"| db
+    end
+
+    web -. built into .-> caddy
+    api -. built into .-> apic
+```
+
 Focus is a streamlined task management application designed to bridge the gap between human productivity and AI assistance. It provides a clean, minimalistic interface for organizing your daily work, projects, and goals.
 
 The whole idea of this project is to help a user to be focused on only what's important for them at the moment, to avoid having any distractions, or be overfloded by the amount of projects and tasks they have to work on. This should be increadible helpful especially for people with ADHD.
