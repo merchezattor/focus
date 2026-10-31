@@ -51,6 +51,3 @@ next-env.d.ts
 .agents
 # Added by code-review-graph
 .code-review-graph/
-
-# tanstack router generated
-apps/web/src/routeTree.gen.ts
