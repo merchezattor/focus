@@ -299,7 +299,9 @@ function DataTableRootInternal<TData, TValue>({
 	React.useEffect(() => {
 		isMountedRef.current = true;
 		// Flush any pending updates that were queued during initial render
-		pendingUpdatesRef.current.forEach((update) => update());
+		pendingUpdatesRef.current.forEach((update) => {
+			update();
+		});
 		pendingUpdatesRef.current = [];
 	}, []);
 

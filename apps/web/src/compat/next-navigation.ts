@@ -2,7 +2,10 @@
 // working in the Vite SPA. Aliased to "next/navigation" in vite.config.ts +
 // tsconfig paths. `router.refresh()` maps to TanStack Query invalidation,
 // which is how the SPA re-fetches data that SSR used to re-render.
-import { useRouter as useTanstackRouter, useRouterState } from "@tanstack/react-router";
+import {
+	useRouterState,
+	useRouter as useTanstackRouter,
+} from "@tanstack/react-router";
 import { queryClient } from "@/lib/query-client";
 
 type Navigate = (opts: { to: string; replace?: boolean }) => void;

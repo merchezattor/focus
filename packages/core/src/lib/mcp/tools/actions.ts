@@ -1,11 +1,7 @@
 import { z } from "zod";
 import { getActions, logAction, markActionsRead } from "../../actions";
-import type {
-	MCPResponse,
-	MCPServerContext,
-	MCPToolHandler,
-} from "../types";
 import { getTaskByIdForUser } from "../../storage";
+import type { MCPResponse, MCPServerContext, MCPToolHandler } from "../types";
 
 const listActionsSchema = z.object({
 	actorType: z

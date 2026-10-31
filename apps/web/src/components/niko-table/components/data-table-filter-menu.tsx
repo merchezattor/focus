@@ -88,7 +88,8 @@ export function DataTableFilterMenu<TData>({
 	React.useMemo(() => {
 		if (!autoOptions) return;
 		table.getAllColumns().forEach((column) => {
-			const meta = (column.columnDef.meta ||= {});
+			column.columnDef.meta ||= {};
+			const meta = column.columnDef.meta;
 			const variant = meta.variant ?? FILTER_VARIANTS.TEXT;
 			if (
 				variant !== FILTER_VARIANTS.SELECT &&

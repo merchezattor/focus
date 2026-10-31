@@ -1,7 +1,7 @@
-import { MilestonesPageClient } from "@/components/features/milestones/MilestonesPageClient";
-import { milestonesQuery } from "@/lib/queries";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { MilestonesPageClient } from "@/components/features/milestones/MilestonesPageClient";
+import { milestonesQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_main/milestones")({
 	component: Milestones,

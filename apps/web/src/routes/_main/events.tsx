@@ -1,7 +1,7 @@
-import { ActionList } from "@/components/features/actions/ActionList";
-import { actionsQuery, unreadCountQuery } from "@/lib/queries";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { ActionList } from "@/components/features/actions/ActionList";
+import { actionsQuery, unreadCountQuery } from "@/lib/queries";
 
 type EventsSearch = { limit?: number; entityType?: string };
 
@@ -16,9 +16,7 @@ export const Route = createFileRoute("/_main/events")({
 
 function Events() {
 	const { limit, entityType } = Route.useSearch();
-	const actions = useQuery(
-		actionsQuery({ limit: limit ?? 50, entityType }),
-	);
+	const actions = useQuery(actionsQuery({ limit: limit ?? 50, entityType }));
 	const unread = useQuery(unreadCountQuery());
 
 	return (

@@ -1,7 +1,7 @@
-import { ProjectsPageClient } from "@/components/features/projects/ProjectsPageClient";
-import { projectsQuery } from "@/lib/queries";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { ProjectsPageClient } from "@/components/features/projects/ProjectsPageClient";
+import { projectsQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_main/projects")({
 	component: Projects,

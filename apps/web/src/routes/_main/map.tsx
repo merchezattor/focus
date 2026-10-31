@@ -1,13 +1,13 @@
-import { MapClient } from "@/components/features/map/MapClient";
-import { goalsQuery, projectsQuery, tasksQuery } from "@/lib/queries";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { MapClient } from "@/components/features/map/MapClient";
+import { goalsQuery, projectsQuery, tasksQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_main/map")({
-	component: Map,
+	component: MapPage,
 });
 
-function Map() {
+function MapPage() {
 	const projects = useQuery(projectsQuery(true));
 	const tasks = useQuery(tasksQuery());
 	const goals = useQuery(goalsQuery());

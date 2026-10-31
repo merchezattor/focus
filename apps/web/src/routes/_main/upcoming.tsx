@@ -1,8 +1,8 @@
-import { SiteHeader } from "@/components/layout/site-header";
-import { UpcomingClient } from "@/components/features/upcoming/upcoming-client";
-import { milestonesQuery, projectsQuery, tasksQuery } from "@/lib/queries";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { UpcomingClient } from "@/components/features/upcoming/upcoming-client";
+import { SiteHeader } from "@/components/layout/site-header";
+import { milestonesQuery, projectsQuery, tasksQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_main/upcoming")({
 	component: Upcoming,

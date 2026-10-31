@@ -1,6 +1,6 @@
+import { queryOptions } from "@tanstack/react-query";
 import type { ProjectStat } from "@/lib/storage";
 import type { Goal, Milestone, Project, Task } from "@/types";
-import { queryOptions } from "@tanstack/react-query";
 import { apiGet } from "./api";
 
 export interface TaskCounts {
@@ -27,7 +27,9 @@ export const projectsQuery = (all = false) =>
 			).then((d) => d.projects),
 	});
 
-export const projectStatsQuery = (scope: "actionable" | "working" = "actionable") =>
+export const projectStatsQuery = (
+	scope: "actionable" | "working" = "actionable",
+) =>
 	queryOptions({
 		queryKey: ["projectStats", scope],
 		queryFn: () =>
@@ -82,7 +84,10 @@ export interface ActivityAction {
 	userId: string;
 }
 
-export const actionsQuery = (params?: { limit?: number; entityType?: string }) =>
+export const actionsQuery = (params?: {
+	limit?: number;
+	entityType?: string;
+}) =>
 	queryOptions({
 		queryKey: ["actions", params ?? {}],
 		queryFn: () => {
