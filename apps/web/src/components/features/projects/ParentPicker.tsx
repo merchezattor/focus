@@ -66,7 +66,10 @@ export function ParentPicker({
 	}, [value, goals, projects]);
 
 	return (
-		<Popover open={open} onOpenChange={setOpen}>
+		// modal: the picker renders inside the Add/Edit Project Dialog, whose
+		// scroll lock cancels wheel/touch events on portaled content outside the
+		// dialog. A modal Popover takes its own scroll lock, so the list can scroll.
+		<Popover open={open} onOpenChange={setOpen} modal>
 			<PopoverTrigger asChild>
 				<Button
 					type="button"
