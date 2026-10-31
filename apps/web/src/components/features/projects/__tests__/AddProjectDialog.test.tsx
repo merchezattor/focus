@@ -161,6 +161,148 @@ describe("AddProjectDialog", () => {
 		});
 	});
 
+	describe("Parent picker", () => {
+		const pickerProjects = [
+			createProject({ id: "w1", name: "Website", status: "working" }),
+			createProject({ id: "f1", name: "Frozen plan", status: "frozen" }),
+			createProject({ id: "g1", name: "Platform group", kind: "group" }),
+		];
+
+		it("filters options as the user types in the search box", async () => {
+			const user = userEvent.setup();
+			render(
+				<AddProjectDialog
+					open={true}
+					onOpenChange={vi.fn()}
+					goals={mockGoals}
+					projects={pickerProjects}
+				/>,
+			);
+
+			await user.click(screen.getByRole("combobox", { name: /parent/i }));
+			expect(
+				screen.getByRole("option", { name: /frozen plan/i }),
+			).toBeInTheDocument();
+			expect(
+				screen.getByRole("option", { name: /platform group/i }),
+			).toBeInTheDocument();
+
+			await user.type(screen.getByPlaceholderText(/search parent/i), "froz");
+
+			expect(
+				screen.getByRole("option", { name: /frozen plan/i }),
+			).toBeInTheDocument();
+			expect(
+				screen.queryByRole("option", { name: /website/i }),
+			).not.toBeInTheDocument();
+			expect(
+				screen.queryByRole("option", { name: /platform group/i }),
+			).not.toBeInTheDocument();
+		});
+
+		async function pickAndSubmit(optionName: RegExp) {
+			const user = userEvent.setup();
+			const fetchMock = vi.fn().mockResolvedValue({
+				ok: true,
+				json: async () => ({ project: { id: "created-1" } }),
+			});
+			vi.stubGlobal("fetch", fetchMock);
+
+			render(
+				<AddProjectDialog
+					open={true}
+					onOpenChange={vi.fn()}
+					goals={mockGoals}
+					projects={pickerProjects}
+				/>,
+			);
+
+			await user.type(screen.getByPlaceholderText("Project name"), "Child");
+			await user.click(screen.getByRole("combobox", { name: /parent/i }));
+			await user.click(screen.getByRole("option", { name: optionName }));
+			await user.click(screen.getByRole("button", { name: /add project/i }));
+
+			await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+			return JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+		}
+
+		it("submits a frozen project as the parent project, with no goal", async () => {
+			expect(await pickAndSubmit(/frozen plan/i)).toMatchObject({
+				parentProjectId: "f1",
+				goalId: null,
+			});
+		});
+
+		it("submits a group as the parent project, with no goal", async () => {
+			expect(await pickAndSubmit(/platform group/i)).toMatchObject({
+				parentProjectId: "g1",
+				goalId: null,
+			});
+		});
+
+		it("shows the current parent on open, even when it is a frozen project", () => {
+			const edited = createProject({
+				id: "edited",
+				name: "Edited",
+				parentProjectId: "f1",
+			});
+			render(
+				<AddProjectDialog
+					open={true}
+					onOpenChange={vi.fn()}
+					projectToEdit={edited}
+					goals={mockGoals}
+					projects={[...pickerProjects, edited]}
+				/>,
+			);
+
+			expect(
+				screen.getByRole("combobox", { name: /parent/i }),
+			).toHaveTextContent("Frozen plan");
+		});
+
+		it("does not offer the edited project or its descendants as a parent", async () => {
+			const user = userEvent.setup();
+			const edited = createProject({ id: "edited", name: "Edited" });
+			const child = createProject({
+				id: "child",
+				name: "Edited child",
+				status: "archived",
+				parentProjectId: "edited",
+			});
+			const grandchildGroup = createProject({
+				id: "grandchild",
+				name: "Edited grandchild",
+				kind: "group",
+				parentProjectId: "child",
+			});
+			render(
+				<AddProjectDialog
+					open={true}
+					onOpenChange={vi.fn()}
+					projectToEdit={edited}
+					projects={[...pickerProjects, edited, child, grandchildGroup]}
+				/>,
+			);
+
+			await user.click(screen.getByRole("combobox", { name: /parent/i }));
+
+			expect(
+				screen.getByRole("option", { name: /website/i }),
+			).toBeInTheDocument();
+			expect(
+				screen.queryByRole("option", { name: /edited/i }),
+			).not.toBeInTheDocument();
+		});
+
+		it("submits a goal as the parent, with no parent project", async () => {
+			expect(await pickAndSubmit(/test goal/i)).toMatchObject({
+				goalId: "goal-1",
+				parentProjectId: null,
+			});
+		});
+	});
+
 	describe("Submit", () => {
 		it("submit button is disabled when name is empty", () => {
 			render(<AddProjectDialog open={true} onOpenChange={vi.fn()} />);

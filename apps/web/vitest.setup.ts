@@ -99,6 +99,15 @@ if (!HTMLElement.prototype.scrollIntoView) {
 	HTMLElement.prototype.scrollIntoView = () => {};
 }
 
+// jsdom has no ResizeObserver; cmdk and Radix popper need one.
+if (!globalThis.ResizeObserver) {
+	globalThis.ResizeObserver = class ResizeObserver {
+		observe() {}
+		unobserve() {}
+		disconnect() {}
+	};
+}
+
 // Filter console.error for React act() warnings in test environment
 const originalError = console.error;
 beforeAll(() => {

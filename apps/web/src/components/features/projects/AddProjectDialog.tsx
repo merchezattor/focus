@@ -18,15 +18,14 @@ import { Input } from "@/components/ui/input";
 import {
 	Select,
 	SelectContent,
-	SelectGroup,
 	SelectItem,
-	SelectLabel,
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { PRIORITY_OPTIONS } from "@/lib/priority-colors";
 import type { Goal, Project } from "@/types";
+import { ParentPicker } from "./ParentPicker";
 
 const createProjectSchema = z.object({
 	name: z.string().min(1, "Name is required"),
@@ -263,11 +262,6 @@ export function AddProjectDialog(
 		}
 	};
 
-	// Filter out the project being edited to prevent self-reference
-	const availableProjects = (props.projects || []).filter(
-		(p) => p.id !== projectToEdit?.id,
-	);
-
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
@@ -380,52 +374,13 @@ export function AddProjectDialog(
 
 						<div className="space-y-3">
 							<label className="text-sm font-medium">Parent</label>
-							<Select
+							<ParentPicker
 								value={encodeParentValue(goalId, parentProjectId)}
 								onValueChange={handleParentChange}
-							>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Select parent (optional)" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="none">No Parent</SelectItem>
-									{props.goals && props.goals.length > 0 && (
-										<SelectGroup>
-											<SelectLabel>Goals</SelectLabel>
-											{props.goals.map((goal) => (
-												<SelectItem key={goal.id} value={`goal:${goal.id}`}>
-													<div className="flex items-center gap-2">
-														<span
-															className="w-2 h-2 rounded-full"
-															style={{ backgroundColor: goal.color }}
-														/>
-														{goal.name}
-													</div>
-												</SelectItem>
-											))}
-										</SelectGroup>
-									)}
-									{availableProjects.length > 0 && (
-										<SelectGroup>
-											<SelectLabel>Projects</SelectLabel>
-											{availableProjects.map((project) => (
-												<SelectItem
-													key={project.id}
-													value={`project:${project.id}`}
-												>
-													<div className="flex items-center gap-2">
-														<span
-															className="w-2 h-2 rounded-full"
-															style={{ backgroundColor: project.color }}
-														/>
-														{project.name}
-													</div>
-												</SelectItem>
-											))}
-										</SelectGroup>
-									)}
-								</SelectContent>
-							</Select>
+								goals={props.goals}
+								projects={props.projects}
+								editingProjectId={projectToEdit?.id}
+							/>
 						</div>
 					</div>
 
