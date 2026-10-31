@@ -28,7 +28,7 @@ flowchart LR
 
 Focus is a streamlined task management application designed to bridge the gap between human productivity and AI assistance. It provides a clean, minimalistic interface for organizing your daily work, projects, and goals.
 
-The whole idea of this project is to help a user to be focused on only what's important for them at the moment, to avoid having any distractions, or be overfloded by the amount of projects and tasks they have to work on. This should be increadible helpful especially for people with ADHD.
+The whole idea of this project is to help a user to be focused on only what's important for them at the moment, to avoid having any distractions, or be overloaded by the amount of projects and tasks they have to work on. This should be incredibly helpful especially for people with ADHD.
 
 ## Purpose
 
