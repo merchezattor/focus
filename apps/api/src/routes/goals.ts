@@ -25,6 +25,19 @@ goalsRouter.get("/", async (c) => {
 	}
 });
 
+goalsRouter.get("/overdue", async (c) => {
+	try {
+		const { user } = c.get("auth");
+		const goals = await readGoals(user.id);
+		const now = new Date();
+		const overdue = goals.filter((goal) => goal.dueDate && goal.dueDate > now);
+		return c.json({ count: overdue.length, goals: overdue });
+	} catch (error) {
+		console.error("[GOALS_OVERDUE_GET]", error);
+		return c.json({ error: "Internal Server Error" }, 500);
+	}
+});
+
 goalsRouter.post("/", async (c) => {
 	try {
 		const { user, actorType, tokenName } = c.get("auth");
